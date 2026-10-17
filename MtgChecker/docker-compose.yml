@@ -1,0 +1,43 @@
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: mtgchecker-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-mtgchecker}
+      POSTGRES_USER: ${POSTGRES_USER:-mtgchecker}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mtgchecker}
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - mtgchecker_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mtgchecker-app
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${APP_PORT:-8081}:8080"
+    environment:
+      POSTGRES_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-mtgchecker}
+      POSTGRES_USER: ${POSTGRES_USER:-mtgchecker}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mtgchecker}
+      DDL_AUTO: ${DDL_AUTO:-update}
+      APPLICATION_SERVER_URL: ${APPLICATION_SERVER_URL:-http://localhost:8081}
+      JWT_SECRET: ${JWT_SECRET:-MtgCheckerDevSecretKeyMustBeAtLeast32Chars!}
+      JWT_ACCESS_EXPIRATION_MS: ${JWT_ACCESS_EXPIRATION_MS:-1800000}
+      JWT_REFRESH_EXPIRATION_MS: ${JWT_REFRESH_EXPIRATION_MS:-2592000000}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:3000,http://localhost:8081}
+      JAVA_TOOL_OPTIONS: ${JAVA_TOOL_OPTIONS:--XX:MaxRAMPercentage=75.0}
+
+volumes:
+  mtgchecker_pgdata:

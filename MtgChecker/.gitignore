@@ -35,4 +35,5 @@ build/
 
 ### Docker / local secrets ###
 .env
-.env.local
+.env.*
+!.env.example

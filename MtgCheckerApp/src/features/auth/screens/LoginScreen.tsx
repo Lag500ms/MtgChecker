@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -13,6 +14,8 @@ import { type Href, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Card } from '@/components/ui';
 import { useAuth } from '@/features/auth/AuthProvider';
+import { getApiErrorMessage } from '@/lib/apiError';
+import { API_BASE_URL } from '@/lib/apiConfig';
 import { useAppTheme } from '@/lib/ThemeProvider';
 import { borderRadius, spacing, typography } from '@/lib/theme';
 
@@ -25,12 +28,25 @@ export function LoginScreen() {
   const [loading, setLoading] = useState(false);
 
   const onSubmit = async () => {
+    const emailValue = email.trim();
+    const passwordValue = password;
+
+    if (!emailValue || !passwordValue) {
+      Alert.alert('Login failed', 'Email and password are required');
+      return;
+    }
+
     setLoading(true);
     try {
-      await login({ email: email.trim(), password });
+      await login({ email: emailValue, password: passwordValue });
       router.replace('/' as Href);
-    } catch (e: any) {
-      Alert.alert('Login failed', e?.response?.data?.message || e?.message || 'Try again');
+    } catch (e: unknown) {
+      const msg = getApiErrorMessage(e);
+      const hint =
+        msg.toLowerCase().includes('network')
+          ? `${msg}\n\nAPI: ${API_BASE_URL}`
+          : msg;
+      Alert.alert('Login failed', hint);
     } finally {
       setLoading(false);
     }
@@ -46,6 +62,9 @@ export function LoginScreen() {
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="email"
+            textContentType="emailAddress"
             keyboardType="email-address"
             placeholder="you@example.com"
             placeholderTextColor={theme.textMuted}
@@ -56,6 +75,8 @@ export function LoginScreen() {
             value={password}
             onChangeText={setPassword}
             secureTextEntry
+            autoComplete={Platform.OS === 'android' ? 'password' : 'current-password'}
+            textContentType="password"
             placeholder="••••••••"
             placeholderTextColor={theme.textMuted}
             style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.surfaceElevated }]}
@@ -74,6 +95,9 @@ export function LoginScreen() {
           <Pressable onPress={() => router.push('/register')} style={styles.linkWrap}>
             <Text style={{ color: theme.accent }}>Need an account? Register</Text>
           </Pressable>
+          {__DEV__ ? (
+            <Text style={[styles.debug, { color: theme.textMuted }]}>{API_BASE_URL}</Text>
+          ) : null}
         </Card>
       </View>
     </View>
@@ -100,4 +124,5 @@ const styles = StyleSheet.create({
   },
   btnText: { ...typography.button },
   linkWrap: { alignItems: 'center', marginTop: spacing.lg },
+  debug: { ...typography.caption, marginTop: spacing.md, textAlign: 'center' },
 });

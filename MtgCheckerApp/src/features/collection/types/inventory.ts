@@ -8,8 +8,24 @@ export type OwnedCard = {
   collectorNumber: string;
   lang: string;
   finish: string;
+  condition?: string;
+  acquiredPriceUsd?: string | null;
+  storageLocation?: string | null;
   quantity: number;
   priceUsd?: string | null;
+  totalPriceUsd?: string | null;
+  imageUri?: string | null;
+  rarity?: string | null;
+  manaCost?: string | null;
+};
+
+export type CollectionSummary = {
+  totalValueUsd: number;
+  totalCardsCount: number;
+  uniqueCardsCount: number;
+  deltaValue7d?: number | null;
+  deltaPercent7d?: number | null;
+  cards: OwnedCard[];
 };
 
 export type AddOwnedCardRequest = {
@@ -17,8 +33,14 @@ export type AddOwnedCardRequest = {
   collectorNumber: string;
   finish: string;
   quantity: number;
+  condition?: string;
+  acquiredPriceUsd?: string;
+  storageLocation?: string;
 };
 
 export type UpdateOwnedCardRequest = {
   quantity: number;
+  condition?: string;
+  acquiredPriceUsd?: string;
+  storageLocation?: string;
 };

@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.Map;
 
 @Data
 @Builder
@@ -38,4 +39,34 @@ public class CardResponse {
     private List<String> finishes;
 
     private CardPriceResponse prices;
+
+    private Map<String, String> imageUris;
+
+    private List<CardFaceResponse> cardFaces;
+
+    private List<String> colors;
+
+    private List<String> colorIdentity;
+
+    private List<String> keywords;
+
+    private Map<String, String> legalities;
+
+    private String power;
+
+    private String toughness;
+
+    private String loyalty;
+
+    private String artist;
+
+    private String flavorText;
+
+    private String releasedAt;
+
+    private String scryfallUri;
+
+    private Map<String, String> purchaseUris;
+
+    private Integer edhrecRank;
 }

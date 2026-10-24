@@ -64,6 +64,16 @@ public class OwnedCard {
     @Column(nullable = false, length = 10)
     private String lang;
 
+    @Column(nullable = false, length = 10)
+    @Builder.Default
+    private String condition = "NM";
+
+    @Column(name = "acquired_price_usd", length = 20)
+    private String acquiredPriceUsd;
+
+    @Column(name = "storage_location", length = 100)
+    private String storageLocation;
+
     @Column(nullable = false)
     private int quantity;
 

@@ -16,4 +16,10 @@ public class CardCollectionResponse {
     private List<CardResponse> cards;
 
     private List<String> notFound;
+
+    private Integer totalCards;
+
+    private Boolean hasMore;
+
+    private String nextPage;
 }

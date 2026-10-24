@@ -20,6 +20,11 @@ export function AppTabBar({ state, descriptors, navigation }: any) {
   const { theme } = useAppTheme();
   const insets = useSafeAreaInsets();
 
+  const currentRoute = state.routes[state.index];
+  if (currentRoute?.name === 'scan') {
+    return null;
+  }
+
   return (
     <View
       style={[

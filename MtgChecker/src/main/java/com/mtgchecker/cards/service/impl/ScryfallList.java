@@ -9,6 +9,7 @@ import java.util.List;
 record ScryfallList(
         @JsonProperty("has_more") Boolean hasMore,
         @JsonProperty("next_page") String nextPage,
+        @JsonProperty("total_cards") Integer totalCards,
         @JsonProperty("not_found") List<ScryfallIdentifier> notFound,
         List<ScryfallCard> data
 ) {

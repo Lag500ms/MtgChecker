@@ -1,12 +1,15 @@
 package com.mtgchecker.cards.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mtgchecker.cards.dto.response.CardCollectionResponse;
 import com.mtgchecker.cards.dto.response.CardPriceResponse;
 import com.mtgchecker.cards.dto.response.CardResponse;
+import com.mtgchecker.cards.repository.CachedCardRepository;
 import com.mtgchecker.cards.service.impl.CardServiceImpl;
 import com.mtgchecker.cards.service.impl.ScryfallClient;
 import com.mtgchecker.configs.ScryfallClientConfig;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import java.util.List;
 import java.util.Objects;
@@ -20,10 +23,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CardServiceTest {
 
-    private final ICardService cardService = new CardServiceImpl(new ScryfallClient(
-            new ScryfallClientConfig().scryfallRestClient(
-                    "https://api.scryfall.com",
-                    "MtgChecker/0.0.1 (personal card inventory)")));
+    private final CachedCardRepository cachedCardRepository = Mockito.mock(CachedCardRepository.class);
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    private final ICardService cardService = new CardServiceImpl(
+            new ScryfallClient(
+                    new ScryfallClientConfig().scryfallRestClient(
+                            "https://api.scryfall.com",
+                            "MtgChecker/0.0.1 (personal card inventory)")),
+            cachedCardRepository,
+            objectMapper
+    );
 
     @Test
     void exactNameReturnsCardDetailsAndPrices() {

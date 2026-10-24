@@ -57,14 +57,33 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/",
+                                "/error",
                                 "/health",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
-                                "/v3/api-docs/**",
-                                "/api/v1/auth/**"
+                                "/v3/api-docs/**"
                         ).permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/cards/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/cards/collection").permitAll()
+
+                        .requestMatchers(
+                                "/api/v1/auth/**",
+                                "/auth/**"
+                        ).permitAll()
+
+                        .requestMatchers("/api/v1/cards/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/sets/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/rulings/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/symbology/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/catalogs/**").permitAll()
+                        .requestMatchers("/api/v1/bulk-data/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/migrations/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/inventory", "/api/v1/inventory/**").hasAnyAuthority("ROLE_ADMIN", "INVENTORY_VIEW")
+
+                        .requestMatchers("/api/v1/inventory/**").hasAnyAuthority("ROLE_ADMIN", "INVENTORY_MANAGE")
+
+                        .requestMatchers("/api/v1/roles/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_MANAGE")
+
+                        .requestMatchers(HttpMethod.POST,"/api/v1/bulk-data/sync").hasAnyAuthority("ROLE_ADMIN", "ROLE_MANAGE")
+
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())

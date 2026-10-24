@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
+import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 record ScryfallCard(
@@ -19,6 +20,21 @@ record ScryfallCard(
         @JsonProperty("oracle_text") String oracleText,
         String rarity,
         List<String> finishes,
-        ScryfallPrices prices
+        ScryfallPrices prices,
+        @JsonProperty("image_uris") Map<String, String> imageUris,
+        @JsonProperty("card_faces") List<ScryfallCardFace> cardFaces,
+        List<String> colors,
+        @JsonProperty("color_identity") List<String> colorIdentity,
+        List<String> keywords,
+        Map<String, String> legalities,
+        String power,
+        String toughness,
+        String loyalty,
+        String artist,
+        @JsonProperty("flavor_text") String flavorText,
+        @JsonProperty("released_at") String releasedAt,
+        @JsonProperty("scryfall_uri") String scryfallUri,
+        @JsonProperty("purchase_uris") Map<String, String> purchaseUris,
+        @JsonProperty("edhrec_rank") Integer edhrecRank
 ) {
 }

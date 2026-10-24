@@ -14,4 +14,10 @@ public class UpdateOwnedCardRequest {
     @NotNull(message = "Quantity is required")
     @Min(value = 1, message = "Quantity must be at least 1")
     private Integer quantity;
+
+    private String condition;
+
+    private String acquiredPriceUsd;
+
+    private String storageLocation;
 }

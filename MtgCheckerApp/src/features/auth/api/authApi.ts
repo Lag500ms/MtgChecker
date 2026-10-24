@@ -3,12 +3,19 @@ import { apiClient } from '@/lib/apiClient';
 import type { Account, AuthResponse, LoginRequest, RegisterRequest } from '../types/auth';
 
 export async function login(payload: LoginRequest): Promise<AuthResponse> {
-  const { data } = await apiClient.post<AuthResponse>('/auth/login', payload);
+  const { data } = await apiClient.post<AuthResponse>('/auth/login', {
+    email: payload.email,
+    password: payload.password,
+  });
   return data;
 }
 
 export async function register(payload: RegisterRequest): Promise<AuthResponse> {
-  const { data } = await apiClient.post<AuthResponse>('/auth/register', payload);
+  const { data } = await apiClient.post<AuthResponse>('/auth/register', {
+    email: payload.email,
+    password: payload.password,
+    displayName: payload.displayName,
+  });
   return data;
 }
 

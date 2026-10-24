@@ -38,8 +38,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
     (async () => {
-      await refreshAccount();
       if (mounted) setReady(true);
+      await refreshAccount();
     })();
     return () => {
       mounted = false;

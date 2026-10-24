@@ -1,9 +1,19 @@
 import { apiClient } from '@/lib/apiClient';
 
-import type { AddOwnedCardRequest, OwnedCard, UpdateOwnedCardRequest } from '../types/inventory';
+import type {
+  AddOwnedCardRequest,
+  CollectionSummary,
+  OwnedCard,
+  UpdateOwnedCardRequest,
+} from '../types/inventory';
 
 export async function listOwnedCards(): Promise<OwnedCard[]> {
   const { data } = await apiClient.get<OwnedCard[]>('/inventory');
+  return data;
+}
+
+export async function getCollectionSummary(): Promise<CollectionSummary> {
+  const { data } = await apiClient.get<CollectionSummary>('/inventory/summary');
   return data;
 }
 
@@ -12,7 +22,10 @@ export async function addOwnedCard(payload: AddOwnedCardRequest): Promise<OwnedC
   return data;
 }
 
-export async function updateOwnedQuantity(id: string, payload: UpdateOwnedCardRequest): Promise<OwnedCard> {
+export async function updateOwnedQuantity(
+  id: string,
+  payload: UpdateOwnedCardRequest,
+): Promise<OwnedCard> {
   const { data } = await apiClient.put<OwnedCard>(`/inventory/${id}`, payload);
   return data;
 }

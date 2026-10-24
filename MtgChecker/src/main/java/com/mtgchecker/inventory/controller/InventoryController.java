@@ -2,6 +2,7 @@ package com.mtgchecker.inventory.controller;
 
 import com.mtgchecker.inventory.dto.request.AddOwnedCardRequest;
 import com.mtgchecker.inventory.dto.request.UpdateOwnedCardRequest;
+import com.mtgchecker.inventory.dto.response.CollectionSummaryResponse;
 import com.mtgchecker.inventory.dto.response.OwnedCardResponse;
 import com.mtgchecker.inventory.service.IInventoryService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,6 +30,12 @@ import java.util.List;
 public class InventoryController {
 
     private final IInventoryService inventoryService;
+
+    @GetMapping("/summary")
+    @Operation(summary = "Get collection portfolio summary including total value, 7-day delta, and card list")
+    public ResponseEntity<CollectionSummaryResponse> getSummary() {
+        return ResponseEntity.ok(inventoryService.getSummary());
+    }
 
     @GetMapping
     @Operation(summary = "List owned cards with the current price of each printing")

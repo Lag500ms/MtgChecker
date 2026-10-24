@@ -21,7 +21,7 @@ function processQueue(error: unknown, token: string | null = null) {
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 20000,
+  timeout: 12000,
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -37,7 +37,17 @@ apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    if (!originalRequest || error.response?.status !== 401 || originalRequest._retry) {
+    const url = String(originalRequest?.url ?? '');
+    const skipRefresh =
+      url.includes('/auth/login') ||
+      url.includes('/auth/register') ||
+      url.includes('/auth/refresh');
+    if (
+      !originalRequest ||
+      error.response?.status !== 401 ||
+      originalRequest._retry ||
+      skipRefresh
+    ) {
       return Promise.reject(error);
     }
 

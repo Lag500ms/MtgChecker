@@ -1,10 +1,11 @@
 package com.mtgchecker.accounts.dto.response;
 
-import com.mtgchecker.accounts.enums.AccountRole;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.Set;
 
 @Data
 @Builder
@@ -18,7 +19,11 @@ public class AccountResponse {
 
     private String displayName;
 
-    private AccountRole role;
+    private String role;
+
+    private Set<String> roles;
+
+    private Set<String> permissions;
 
     private boolean active;
 

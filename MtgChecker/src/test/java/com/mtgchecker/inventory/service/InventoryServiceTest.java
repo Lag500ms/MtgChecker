@@ -1,7 +1,8 @@
 package com.mtgchecker.inventory.service;
 
 import com.mtgchecker.accounts.entity.Account;
-import com.mtgchecker.accounts.enums.AccountRole;
+import com.mtgchecker.accounts.entity.Role;
+import com.mtgchecker.accounts.enums.AppPermissions;
 import com.mtgchecker.cards.dto.response.CardPriceResponse;
 import com.mtgchecker.cards.dto.response.CardResponse;
 import com.mtgchecker.cards.service.ICardService;
@@ -91,7 +92,10 @@ class InventoryServiceTest {
                 .email(accountId + "@example.com")
                 .password("hashed")
                 .displayName("Tester")
-                .role(AccountRole.USER)
+                .roles(java.util.Set.of(Role.builder()
+                        .name("USER")
+                        .permissions(java.util.Set.copyOf(AppPermissions.DEFAULT_USER_PERMISSIONS))
+                        .build()))
                 .active(true)
                 .build();
         CustomUserDetails userDetails = new CustomUserDetails(account);

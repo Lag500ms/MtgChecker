@@ -29,7 +29,21 @@ public class OwnedCardResponse {
 
     private String finish;
 
+    private String condition;
+
+    private String acquiredPriceUsd;
+
+    private String storageLocation;
+
     private int quantity;
 
     private String priceUsd;
+
+    private String totalPriceUsd;
+
+    private String imageUri;
+
+    private String rarity;
+
+    private String manaCost;
 }

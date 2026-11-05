@@ -1,3 +1,0 @@
-E:/BE/MtgChecker/_cxx/Debug/5691x1a1/arm64-v8a/CMakeFiles/reanimated.dir
-E:/BE/MtgChecker/_cxx/Debug/5691x1a1/arm64-v8a/CMakeFiles/edit_cache.dir
-E:/BE/MtgChecker/_cxx/Debug/5691x1a1/arm64-v8a/CMakeFiles/rebuild_cache.dir

@@ -1,1 +1,0 @@
-E:\BE\MtgChecker\MtgCheckerApp\node_modules\react-native-reanimated\android\CMakeLists.txt

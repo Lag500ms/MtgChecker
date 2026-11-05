@@ -61,3 +61,7 @@ MtgChecker/target/
 
 # Local Notes & Reference
 tailieu_thamkhao/
+
+# Ignore All Markdown Files
+*.md
+**/*.md

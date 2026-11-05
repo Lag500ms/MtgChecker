@@ -39,3 +39,25 @@ CONTEXT.md
 
 # Sensitive Seed Data (Local credentials)
 **/DataInitializer.java
+
+# Build & Debug Artifacts (RẤT QUAN TRỌNG)
+.cxx/
+_cxx/
+**/android/.gradle/
+**/android/app/build/
+**/android/build/
+*.apk
+*.aab
+
+# Node & Frontend
+**/node_modules/
+**/.expo/
+**/web-build/
+dist/
+
+# Backend Build Target
+**/target/
+MtgChecker/target/
+
+# Local Notes & Reference
+tailieu_thamkhao/

@@ -5,6 +5,7 @@ import com.mtgchecker.cards.service.IRulingService;
 import com.mtgchecker.exceptions.ExternalServiceException;
 import com.mtgchecker.exceptions.NotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientResponseException;
@@ -18,6 +19,7 @@ public class RulingServiceImpl implements IRulingService {
     private final ScryfallClient scryfallClient;
 
     @Override
+    @Cacheable(value = "rulings", key = "#cardId", unless = "#result == null")
     public List<RulingResponse> findByCardId(String cardId) {
         return execute(() -> scryfallClient.findRulingsByCardId(cardId));
     }
@@ -38,6 +40,7 @@ public class RulingServiceImpl implements IRulingService {
     }
 
     @Override
+    @Cacheable(value = "rulings", key = "#setCode + ':' + #collectorNumber", unless = "#result == null")
     public List<RulingResponse> findBySetAndCollectorNumber(String setCode, String collectorNumber) {
         return execute(() -> scryfallClient.findRulingsBySetAndNumber(setCode, collectorNumber));
     }

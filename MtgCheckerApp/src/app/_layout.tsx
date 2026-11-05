@@ -3,6 +3,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { ToastProvider } from '@/components/Toast';
 import { AuthProvider } from '@/features/auth/AuthProvider';
 import { ThemeProvider, useAppTheme } from '@/lib/ThemeProvider';
 
@@ -37,9 +38,11 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider>
-        <AuthProvider>
-          <RootNavigator />
-        </AuthProvider>
+        <ToastProvider>
+          <AuthProvider>
+            <RootNavigator />
+          </AuthProvider>
+        </ToastProvider>
       </ThemeProvider>
     </GestureHandlerRootView>
   );

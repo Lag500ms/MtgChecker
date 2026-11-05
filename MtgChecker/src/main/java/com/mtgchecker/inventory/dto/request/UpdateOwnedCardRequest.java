@@ -3,10 +3,12 @@ package com.mtgchecker.inventory.dto.request;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class UpdateOwnedCardRequest {
@@ -20,4 +22,8 @@ public class UpdateOwnedCardRequest {
     private String acquiredPriceUsd;
 
     private String storageLocation;
+
+    public UpdateOwnedCardRequest(Integer quantity) {
+        this.quantity = quantity;
+    }
 }

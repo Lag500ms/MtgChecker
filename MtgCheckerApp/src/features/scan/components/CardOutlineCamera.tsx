@@ -16,10 +16,9 @@ type NativeCardOutlineProps = ViewProps & {
 export const isCardOutlineAvailable =
   Platform.OS === 'android' && UIManager.getViewManagerConfig('CardOutlineCamera') != null;
 
-const NativeCardOutlineCamera =
-  Platform.OS === 'android'
-    ? requireNativeComponent<NativeCardOutlineProps>('CardOutlineCamera')
-    : null;
+const NativeCardOutlineCamera = isCardOutlineAvailable
+  ? requireNativeComponent<NativeCardOutlineProps>('CardOutlineCamera')
+  : null;
 
 export const CardOutlineCamera = React.forwardRef<any, NativeCardOutlineProps>(
   function CardOutlineCamera(props, ref) {
@@ -32,6 +31,6 @@ export function captureCardOutline(ref: React.RefObject<any>) {
   const tag = findNodeHandle(ref.current);
   if (tag == null) return;
   const command =
-    UIManager.getViewManagerConfig('CardOutlineCamera')?.Commands?.capture ?? 'capture';
+    (UIManager.getViewManagerConfig('CardOutlineCamera') as any)?.Commands?.capture ?? 'capture';
   UIManager.dispatchViewManagerCommand(tag, command, []);
 }

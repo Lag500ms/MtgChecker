@@ -12,6 +12,7 @@ import {
 import { type Href, useRouter } from 'expo-router';
 
 import { ScreenHeader } from '@/components/ScreenHeader';
+import { useToast } from '@/components/Toast';
 import { Card } from '@/components/ui';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { getApiErrorMessage } from '@/lib/apiError';
@@ -23,6 +24,7 @@ export function RegisterScreen() {
   const { theme } = useAppTheme();
   const { register } = useAuth();
   const router = useRouter();
+  const toast = useToast();
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -34,11 +36,11 @@ export function RegisterScreen() {
     const passwordValue = password;
 
     if (!displayNameValue || !emailValue || !passwordValue) {
-      Alert.alert('Register failed', 'Display name, email and password are required');
+      toast.info('Display name, email and password are required', 'Register failed');
       return;
     }
     if (passwordValue.length < 8) {
-      Alert.alert('Register failed', 'Password must be at least 8 characters');
+      toast.info('Password must be at least 8 characters', 'Register failed');
       return;
     }
 
@@ -49,6 +51,7 @@ export function RegisterScreen() {
         email: emailValue,
         password: passwordValue,
       });
+      toast.success('Account created successfully!');
       router.replace('/' as Href);
     } catch (e: unknown) {
       const msg = getApiErrorMessage(e);
@@ -56,7 +59,7 @@ export function RegisterScreen() {
         msg.toLowerCase().includes('network')
           ? `${msg}\n\nAPI: ${API_BASE_URL}`
           : msg;
-      Alert.alert('Register failed', hint);
+      toast.error(hint, 'Register failed');
     } finally {
       setLoading(false);
     }

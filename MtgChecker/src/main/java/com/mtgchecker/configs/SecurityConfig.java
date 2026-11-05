@@ -1,5 +1,6 @@
 package com.mtgchecker.configs;
 
+import com.mtgchecker.configs.ratelimit.RateLimitFilter;
 import com.mtgchecker.configs.security.JwtAuthenticationEntryPoint;
 import com.mtgchecker.configs.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
@@ -19,12 +20,14 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.LogoutFilter;
 
 @Configuration
 @RequiredArgsConstructor
 @EnableMethodSecurity
 public class SecurityConfig {
 
+    private final RateLimitFilter rateLimitFilter;
     private final JwtAuthenticationFilter jwtFilter;
     private final UserDetailsService userDetailsService;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
@@ -69,24 +72,29 @@ public class SecurityConfig {
                                 "/auth/**"
                         ).permitAll()
 
-                        .requestMatchers("/api/v1/cards/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/bulk-data/sync").hasAnyAuthority("ROLE_ADMIN", "ROLE_MANAGE")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/bulk-data/**").permitAll()
+
+                        .requestMatchers("/api/v1/cards/**", "/cards/**").permitAll()
+                        .requestMatchers("/api/v1/rules/**", "/rules/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/sets/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/rulings/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/symbology/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/catalogs/**").permitAll()
-                        .requestMatchers("/api/v1/bulk-data/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/migrations/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/inventory", "/api/v1/inventory/**").hasAnyAuthority("ROLE_ADMIN", "INVENTORY_VIEW")
 
+                        .requestMatchers(HttpMethod.GET, "/api/v1/deck-formats", "/api/v1/deck-formats/**").permitAll()
+                        .requestMatchers("/api/v1/deck-formats/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_MANAGE")
+
+                        .requestMatchers(HttpMethod.GET, "/api/v1/inventory", "/api/v1/inventory/**").hasAnyAuthority("ROLE_ADMIN", "INVENTORY_VIEW")
                         .requestMatchers("/api/v1/inventory/**").hasAnyAuthority("ROLE_ADMIN", "INVENTORY_MANAGE")
 
                         .requestMatchers("/api/v1/roles/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_MANAGE")
 
-                        .requestMatchers(HttpMethod.POST,"/api/v1/bulk-data/sync").hasAnyAuthority("ROLE_ADMIN", "ROLE_MANAGE")
-
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())
+                .addFilterBefore(rateLimitFilter, LogoutFilter.class)
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }

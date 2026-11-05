@@ -25,6 +25,10 @@ public class CustomUserDetails implements UserDetails {
         return account.getId();
     }
 
+    public int getTokenVersion() {
+        return account.getTokenVersion();
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Set<GrantedAuthority> authorities = new HashSet<>();

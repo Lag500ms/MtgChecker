@@ -46,7 +46,7 @@ public class Account {
     @Column(name = "display_name", nullable = false)
     private String displayName;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "account_roles",
             joinColumns = @JoinColumn(name = "account_id"),
@@ -60,6 +60,10 @@ public class Account {
 
     @Column(name = "discord_id", unique = true)
     private String discordId;
+
+    @Column(name = "token_version", nullable = false)
+    @Builder.Default
+    private int tokenVersion = 1;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

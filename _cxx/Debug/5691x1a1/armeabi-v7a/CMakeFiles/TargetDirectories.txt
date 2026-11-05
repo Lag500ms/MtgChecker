@@ -1,0 +1,3 @@
+E:/BE/MtgChecker/_cxx/Debug/5691x1a1/armeabi-v7a/CMakeFiles/reanimated.dir
+E:/BE/MtgChecker/_cxx/Debug/5691x1a1/armeabi-v7a/CMakeFiles/edit_cache.dir
+E:/BE/MtgChecker/_cxx/Debug/5691x1a1/armeabi-v7a/CMakeFiles/rebuild_cache.dir

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
-import { Image } from 'expo-image';
+import { StyleProp, StyleSheet, View } from 'react-native';
+import { Image, ImageStyle } from 'expo-image';
 import { Feather } from '@expo/vector-icons';
 
 import type { Card } from '@/features/cards/types/card';
@@ -9,7 +9,7 @@ import { pickCardImageUri } from '@/features/cards/utils/cardImage';
 type CardArtProps = {
   card: Card;
   size?: 'small' | 'normal';
-  style?: StyleProp<ViewStyle>;
+  style?: StyleProp<ImageStyle>;
   contentFit?: 'contain' | 'cover';
 };
 

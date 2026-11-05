@@ -45,7 +45,7 @@ public class Role {
     @Column(name = "is_system", nullable = false)
     private boolean system;
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "role_permissions", joinColumns = @JoinColumn(name = "role_id"))
     @Column(name = "permission", nullable = false, length = 50)
     @Builder.Default

@@ -14,6 +14,7 @@ import {
 import { Feather } from '@expo/vector-icons';
 
 import { ScreenHeader } from '@/components/ScreenHeader';
+import { useToast } from '@/components/Toast';
 import { EmptyState } from '@/components/ui';
 import { useAuth } from '@/features/auth/AuthProvider';
 import {
@@ -105,6 +106,7 @@ function CardSkeleton({ theme }: { theme: any }) {
 export function SearchScreen() {
   const { theme } = useAppTheme();
   const { account } = useAuth();
+  const toast = useToast();
 
   const flatListRef = useRef<FlatList<Card>>(null);
 
@@ -135,7 +137,7 @@ export function SearchScreen() {
   const [specificCardMode, setSpecificCardMode] = useState<string | null>(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
 
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const currentSort = SORT_OPTIONS.find((s) => s.id === selectedSortId) || SORT_OPTIONS[0];
 
@@ -328,7 +330,7 @@ export function SearchScreen() {
 
   const addToCollection = async (card: Card) => {
     if (!account) {
-      Alert.alert('Sign in required', 'Log in to save cards to your collection.');
+      toast.info('Log in to save cards to your collection.', 'Sign in required');
       return;
     }
     const finish = card.finishes?.[0] || 'nonfoil';
@@ -339,9 +341,9 @@ export function SearchScreen() {
         finish,
         quantity: 1,
       });
-      Alert.alert('Added', `${card.name} (${card.set.toUpperCase()}) saved.`);
+      toast.success(`${card.name} (${card.set.toUpperCase()}) saved.`);
     } catch (e: any) {
-      Alert.alert('Could not add', e?.response?.data?.message || e?.message || 'Request failed');
+      toast.error(e?.response?.data?.message || e?.message || 'Request failed');
     }
   };
 
@@ -536,7 +538,7 @@ export function SearchScreen() {
                   <CardSkeleton theme={theme} />
                   <CardSkeleton theme={theme} />
                 </View>
-              ) : null
+              ) : undefined
             }
           />
         )}
@@ -972,7 +974,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   modalTitle: {
-    ...typography.title,
+    ...typography.h2,
     fontWeight: '700',
   },
   modalScroll: {

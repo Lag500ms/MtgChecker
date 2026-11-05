@@ -123,7 +123,8 @@ public class AuthServiceImpl implements IAuthService {
         String accessToken = jwtUtil.generateAccessToken(
                 account.getId(),
                 account.getEmail(),
-                new ArrayList<>(roleNames));
+                new ArrayList<>(roleNames),
+                account.getTokenVersion());
         String refreshToken = UUID.randomUUID() + "." + UUID.randomUUID();
         refreshTokenRepository.save(RefreshToken.builder()
                 .account(account)

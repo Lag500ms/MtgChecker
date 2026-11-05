@@ -13,6 +13,7 @@ import com.mtgchecker.exceptions.ExternalServiceException;
 import com.mtgchecker.exceptions.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,7 @@ public class CardServiceImpl implements ICardService {
     private final ObjectMapper objectMapper;
 
     @Override
+    @Cacheable(value = "cards", key = "#id", unless = "#result == null")
     public CardResponse findById(String id) {
         Optional<CachedCard> cached = cachedCardRepository.findById(id);
         if (cached.isPresent()) {
@@ -59,6 +61,7 @@ public class CardServiceImpl implements ICardService {
     }
 
     @Override
+    @Cacheable(value = "card_named", key = "#name", unless = "#result == null")
     public CardResponse findByExactName(String name) {
         return findByName(name, null, null);
     }
@@ -93,6 +96,7 @@ public class CardServiceImpl implements ICardService {
     }
 
     @Override
+    @Cacheable(value = "card_printings", key = "#name", unless = "#result == null")
     public List<CardResponse> findPrintings(String name) {
         try {
             List<ScryfallCard> cards = scryfallClient.findPrintings(name);
@@ -116,6 +120,7 @@ public class CardServiceImpl implements ICardService {
     }
 
     @Override
+    @Cacheable(value = "cards", key = "#setCode + ':' + #collectorNumber + ':' + (#lang != null ? #lang : 'en')", unless = "#result == null")
     public CardResponse findBySetAndCollectorNumber(String setCode, String collectorNumber, String lang) {
         Optional<CachedCard> cached = (lang == null || lang.isBlank() || "en".equalsIgnoreCase(lang))
                 ? cachedCardRepository.findBySetCodeIgnoreCaseAndCollectorNumberIgnoreCase(setCode, collectorNumber)
@@ -266,8 +271,12 @@ public class CardServiceImpl implements ICardService {
     }
 
     @Override
+    @Cacheable(value = "card_autocomplete", key = "#q", unless = "#result == null")
     public List<String> autocomplete(String q) {
-        List<String> localSuggestions = cachedCardRepository.findNameSuggestions(q.toLowerCase(), PageRequest.of(0, 20));
+        String normalizedPrefix = normalizeName(q);
+        List<String> localSuggestions = normalizedPrefix.isBlank()
+                ? List.of()
+                : cachedCardRepository.findNameSuggestions(normalizedPrefix, PageRequest.of(0, 20));
         if (!localSuggestions.isEmpty() && localSuggestions.size() >= 10) {
             return localSuggestions;
         }

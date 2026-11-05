@@ -14,9 +14,8 @@ const TAB_META: Record<string, { label: string; icon: keyof typeof Feather.glyph
   scan: { label: 'Scan', icon: 'camera' },
 };
 
-/** Expo Router SDK 57 Tabs tabBar callback props (react-navigation bottom tabs). */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function AppTabBar({ state, descriptors, navigation }: any) {
+export function AppTabBar(props: any) {
+  const { state, descriptors, navigation, emitter, navigateToTab } = props;
   const { theme } = useAppTheme();
   const insets = useSafeAreaInsets();
 
@@ -43,13 +42,22 @@ export function AppTabBar({ state, descriptors, navigation }: any) {
         const color = focused ? theme.accent : theme.tabInactive;
 
         const onPress = () => {
-          const event = navigation.emit({
+          const event = emitter?.emit?.({
+            type: 'tabPress',
+            target: route.key,
+            canPreventDefault: true,
+          }) ?? navigation?.emit?.({
             type: 'tabPress',
             target: route.key,
             canPreventDefault: true,
           });
-          if (!focused && !event.defaultPrevented) {
-            navigation.navigate(route.name, route.params);
+
+          if (!focused && !event?.defaultPrevented) {
+            if (typeof navigateToTab === 'function') {
+              navigateToTab(route.key);
+            } else if (navigation?.navigate) {
+              navigation.navigate(route.name, route.params);
+            }
           }
         };
 

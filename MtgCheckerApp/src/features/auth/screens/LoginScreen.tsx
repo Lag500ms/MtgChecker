@@ -12,6 +12,7 @@ import {
 import { type Href, useRouter } from 'expo-router';
 
 import { ScreenHeader } from '@/components/ScreenHeader';
+import { useToast } from '@/components/Toast';
 import { Card } from '@/components/ui';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { getApiErrorMessage } from '@/lib/apiError';
@@ -23,6 +24,7 @@ export function LoginScreen() {
   const { theme } = useAppTheme();
   const { login } = useAuth();
   const router = useRouter();
+  const toast = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -32,13 +34,14 @@ export function LoginScreen() {
     const passwordValue = password;
 
     if (!emailValue || !passwordValue) {
-      Alert.alert('Login failed', 'Email and password are required');
+      toast.info('Email and password are required', 'Login failed');
       return;
     }
 
     setLoading(true);
     try {
       await login({ email: emailValue, password: passwordValue });
+      toast.success('Signed in successfully.');
       router.replace('/' as Href);
     } catch (e: unknown) {
       const msg = getApiErrorMessage(e);
@@ -46,7 +49,7 @@ export function LoginScreen() {
         msg.toLowerCase().includes('network')
           ? `${msg}\n\nAPI: ${API_BASE_URL}`
           : msg;
-      Alert.alert('Login failed', hint);
+      toast.error(hint, 'Login failed');
     } finally {
       setLoading(false);
     }

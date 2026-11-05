@@ -34,11 +34,16 @@ public class JwtUtil {
     }
 
     public String generateAccessToken(String accountId, String email, List<String> roles) {
+        return generateAccessToken(accountId, email, roles, 1);
+    }
+
+    public String generateAccessToken(String accountId, String email, List<String> roles, int version) {
         Date now = new Date();
         return Jwts.builder()
                 .subject(email)
                 .claim("accountId", accountId)
                 .claim("roles", roles)
+                .claim("version", version)
                 .issuedAt(now)
                 .expiration(new Date(now.getTime() + accessExpirationMs))
                 .signWith(signKey)

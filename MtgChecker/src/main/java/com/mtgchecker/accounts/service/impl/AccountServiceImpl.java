@@ -65,6 +65,7 @@ public class AccountServiceImpl implements IAccountService {
         }
 
         account.setRoles(roles);
+        account.setTokenVersion(account.getTokenVersion() + 1);
         Account saved = accountRepository.save(account);
         return AuthServiceImpl.toResponse(saved);
     }
@@ -79,6 +80,7 @@ public class AccountServiceImpl implements IAccountService {
                 .orElseThrow(() -> new NotFoundException("Role not found with name: " + roleName));
 
         account.getRoles().add(role);
+        account.setTokenVersion(account.getTokenVersion() + 1);
         Account saved = accountRepository.save(account);
         return AuthServiceImpl.toResponse(saved);
     }
@@ -94,6 +96,7 @@ public class AccountServiceImpl implements IAccountService {
         }
 
         account.getRoles().removeIf(r -> r.getName().equalsIgnoreCase(roleName));
+        account.setTokenVersion(account.getTokenVersion() + 1);
         Account saved = accountRepository.save(account);
         return AuthServiceImpl.toResponse(saved);
     }

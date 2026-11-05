@@ -1,0 +1,41 @@
+{
+  "buildFiles": [
+    "E:\\BE\\MtgChecker\\MtgCheckerApp\\node_modules\\react-native-reanimated\\android\\CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "C:\\Users\\LY THE VINH\\AppData\\Local\\Android\\Sdk\\cmake\\3.22.1\\bin\\ninja.exe",
+      "-C",
+      "E:\\BE\\MtgChecker\\_cxx\\Debug\\5691x1a1\\x86_64",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "C:\\Users\\LY THE VINH\\AppData\\Local\\Android\\Sdk\\cmake\\3.22.1\\bin\\ninja.exe",
+    "-C",
+    "E:\\BE\\MtgChecker\\_cxx\\Debug\\5691x1a1\\x86_64",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {
+    "reanimated::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "x86_64",
+      "artifactName": "reanimated",
+      "output": "E:\\BE\\MtgChecker\\MtgCheckerApp\\node_modules\\react-native-reanimated\\android\\build\\intermediates\\cxx\\Debug\\5691x1a1\\obj\\x86_64\\libreanimated.so",
+      "runtimeFiles": [
+        "E:\\BE\\MtgChecker\\MtgCheckerApp\\node_modules\\react-native-worklets\\android\\build\\intermediates\\cxx\\Debug\\4h2g3b4u\\obj\\x86_64\\libworklets.so"
+      ]
+    }
+  },
+  "toolchains": {
+    "toolchain": {
+      "cCompilerExecutable": "C:\\Users\\LY THE VINH\\AppData\\Local\\Android\\Sdk\\ndk\\27.1.12297006\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang.exe",
+      "cppCompilerExecutable": "C:\\Users\\LY THE VINH\\AppData\\Local\\Android\\Sdk\\ndk\\27.1.12297006\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang++.exe"
+    }
+  },
+  "cFileExtensions": [],
+  "cppFileExtensions": [
+    "cxx",
+    "cpp"
+  ]
+}

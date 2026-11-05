@@ -53,17 +53,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   side: {
-    width: 40,
-    height: 40,
+    minWidth: 40,
+    minHeight: 40,
     alignItems: 'flex-start',
     justifyContent: 'center',
+    flexShrink: 0,
   },
   right: {
     alignItems: 'flex-end',
+    justifyContent: 'center',
+    flexShrink: 0,
   },
   title: {
     ...typography.h3,
     flex: 1,
     textAlign: 'center',
+    marginHorizontal: spacing.xs,
   },
 });

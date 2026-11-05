@@ -5,6 +5,7 @@ import com.mtgchecker.cards.service.ISetService;
 import com.mtgchecker.exceptions.ExternalServiceException;
 import com.mtgchecker.exceptions.NotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientResponseException;
@@ -18,6 +19,7 @@ public class SetServiceImpl implements ISetService {
     private final ScryfallClient scryfallClient;
 
     @Override
+    @Cacheable(value = "sets_all", unless = "#result == null || #result.isEmpty()")
     public List<SetResponse> findAll() {
         try {
             ScryfallSetList setList = scryfallClient.findAllSets();
@@ -31,6 +33,7 @@ public class SetServiceImpl implements ISetService {
     }
 
     @Override
+    @Cacheable(value = "sets", key = "#code", unless = "#result == null")
     public SetResponse findByCode(String code) {
         try {
             ScryfallSet set = scryfallClient.findSetByCode(code);

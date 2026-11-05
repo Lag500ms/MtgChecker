@@ -19,11 +19,9 @@ public interface CachedCardRepository extends JpaRepository<CachedCard, String> 
 
     Optional<CachedCard> findBySetCodeIgnoreCaseAndCollectorNumberIgnoreCaseAndLangIgnoreCase(String setCode, String collectorNumber, String lang);
 
-    List<CachedCard> findByNormalizedNameOrderByReleasedAtDesc(String normalizedName);
-
     @Query("SELECT c FROM CachedCard c WHERE LOWER(c.name) LIKE LOWER(CONCAT('%', :query, '%')) ORDER BY c.name ASC")
     List<CachedCard> searchByNameLike(@Param("query") String query, Pageable pageable);
 
-    @Query("SELECT DISTINCT c.name FROM CachedCard c WHERE LOWER(c.name) LIKE LOWER(CONCAT(:prefix, '%')) ORDER BY c.name ASC")
+    @Query("SELECT DISTINCT c.name FROM CachedCard c WHERE c.normalizedName LIKE CONCAT(:prefix, '%') ORDER BY c.name ASC")
     List<String> findNameSuggestions(@Param("prefix") String prefix, Pageable pageable);
 }

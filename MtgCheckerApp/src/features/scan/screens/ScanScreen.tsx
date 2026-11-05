@@ -18,6 +18,7 @@ import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CardArt } from '@/components/CardArt';
+import { useToast } from '@/components/Toast';
 import {
   findCardBySetAndNumber,
   scanCardBase64,
@@ -36,6 +37,7 @@ import { parseMtgCardCode } from '../utils/ocrParser';
 
 export function ScanScreen() {
   const router = useRouter();
+  const toast = useToast();
   const insets = useSafeAreaInsets();
   const cameraRef = useRef<any>(null);
   const outlineRef = useRef<any>(null);
@@ -216,7 +218,7 @@ export function ScanScreen() {
     const cleanSet = setCode.trim().toLowerCase();
     const cleanNum = collectorNumber.trim();
     if (!cleanSet || !cleanNum) {
-      Alert.alert('Missing info', 'Please enter Set Code and Collector Number.');
+      toast.info('Please enter Set Code and Collector Number.', 'Missing info');
       return;
     }
 
@@ -231,12 +233,12 @@ export function ScanScreen() {
         setShowManualModal(false);
         setShowDetailSheet(true);
       } else {
-        Alert.alert('Not Found', `No card found for ${cleanSet.toUpperCase()} #${cleanNum}`);
+        toast.error(`No card found for ${cleanSet.toUpperCase()} #${cleanNum}`, 'Not Found');
       }
     } catch (e: any) {
-      Alert.alert(
-        'Card Not Found',
-        e?.response?.data?.message || e?.message || 'Check Set code and Number.'
+      toast.error(
+        e?.response?.data?.message || e?.message || 'Check Set code and Number.',
+        'Card Not Found'
       );
     } finally {
       setManualLoading(false);
@@ -251,9 +253,9 @@ export function ScanScreen() {
       setManualNumber(parsed.collectorNumber);
       handleManualLookup(parsed.setCode, parsed.collectorNumber);
     } else {
-      Alert.alert(
-        'Parse Result',
-        'Could not detect pattern. Use format like "FDN 125" or "ONE 157".'
+      toast.info(
+        'Could not detect pattern. Use format like "FDN 125" or "ONE 157".',
+        'Parse Result'
       );
     }
   };

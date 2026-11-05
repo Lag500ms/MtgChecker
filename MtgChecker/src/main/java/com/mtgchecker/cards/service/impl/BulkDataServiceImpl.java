@@ -13,6 +13,7 @@ import com.mtgchecker.exceptions.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientResponseException;
 
@@ -39,6 +40,7 @@ public class BulkDataServiceImpl implements IBulkDataService {
     private final ScryfallClient scryfallClient;
     private final CachedCardRepository cachedCardRepository;
     private final ObjectMapper objectMapper;
+    private final JdbcTemplate jdbcTemplate;
 
     private final AtomicBoolean isRunning = new AtomicBoolean(false);
     private final AtomicLong currentImportCount = new AtomicLong(0);
@@ -137,6 +139,7 @@ public class BulkDataServiceImpl implements IBulkDataService {
     }
 
     private void doSyncProcess(String downloadUri, Integer limit) {
+        dropSecondaryIndexes();
         try {
             URL url = URI.create(downloadUri).toURL();
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -150,7 +153,7 @@ public class BulkDataServiceImpl implements IBulkDataService {
                  BufferedReader reader = new BufferedReader(new InputStreamReader(gzip, StandardCharsets.UTF_8))) {
 
                 String line;
-                List<CachedCard> batch = new ArrayList<>(500);
+                List<CachedCard> batch = new ArrayList<>(1000);
                 long count = 0;
 
                 while ((line = reader.readLine()) != null) {
@@ -196,7 +199,7 @@ public class BulkDataServiceImpl implements IBulkDataService {
                         count++;
                         currentImportCount.set(count);
 
-                        if (batch.size() >= 500) {
+                        if (batch.size() >= 1000) {
                             cachedCardRepository.saveAll(batch);
                             batch.clear();
                         }
@@ -224,7 +227,50 @@ public class BulkDataServiceImpl implements IBulkDataService {
             currentMessage = "Sync failed: " + ex.getMessage();
             syncCompletedAt = LocalDateTime.now();
         } finally {
+            recreateSecondaryIndexes();
             isRunning.set(false);
+        }
+    }
+
+    private void dropSecondaryIndexes() {
+        try {
+            log.info("Dropping secondary B-tree and GIN indexes on cached_cards before bulk import...");
+            jdbcTemplate.execute("DROP INDEX IF EXISTS idx_cached_cards_name");
+            jdbcTemplate.execute("DROP INDEX IF EXISTS idx_cached_cards_normalized_name");
+            jdbcTemplate.execute("DROP INDEX IF EXISTS idx_cached_cards_set_collector");
+            jdbcTemplate.execute("DROP INDEX IF EXISTS idx_cached_cards_oracle_id");
+            jdbcTemplate.execute("DROP INDEX IF EXISTS idx_cached_cards_name_trgm");
+            log.info("Successfully dropped secondary indexes on cached_cards.");
+        } catch (Exception ex) {
+            log.warn("Could not drop secondary indexes prior to bulk sync: {}", ex.getMessage());
+        }
+    }
+
+    private void recreateSecondaryIndexes() {
+        try {
+            log.info("Recreating secondary B-tree indexes on cached_cards...");
+            jdbcTemplate.execute("CREATE INDEX IF NOT EXISTS idx_cached_cards_name ON cached_cards (name)");
+            jdbcTemplate.execute("CREATE INDEX IF NOT EXISTS idx_cached_cards_normalized_name ON cached_cards (normalized_name)");
+            jdbcTemplate.execute("CREATE INDEX IF NOT EXISTS idx_cached_cards_set_collector ON cached_cards (set_code, collector_number)");
+            jdbcTemplate.execute("CREATE INDEX IF NOT EXISTS idx_cached_cards_oracle_id ON cached_cards (oracle_id)");
+            log.info("Successfully recreated secondary B-tree indexes on cached_cards.");
+        } catch (Exception ex) {
+            log.error("Failed to recreate secondary B-tree indexes: {}", ex.getMessage(), ex);
+        }
+
+        try {
+            jdbcTemplate.execute("CREATE EXTENSION IF NOT EXISTS pg_trgm");
+            jdbcTemplate.execute("CREATE INDEX IF NOT EXISTS idx_cached_cards_name_trgm ON cached_cards USING gin (lower(name) gin_trgm_ops)");
+            log.info("Successfully recreated pg_trgm GIN index on cached_cards.");
+        } catch (Exception ex) {
+            log.debug("pg_trgm GIN index creation skipped or not supported on current database: {}", ex.getMessage());
+        }
+
+        try {
+            jdbcTemplate.execute("ANALYZE cached_cards");
+            log.info("Executed ANALYZE on cached_cards to update query planner statistics.");
+        } catch (Exception ex) {
+            log.debug("ANALYZE cached_cards skipped or not supported: {}", ex.getMessage());
         }
     }
 

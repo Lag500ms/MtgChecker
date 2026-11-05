@@ -1,0 +1,35 @@
+name: Local Docker CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Build & Deploy to Local Docker
+    runs-on: self-hosted
+
+    steps:
+      - name: 1. Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 2. Build Backend JAR with Maven
+        shell: powershell
+        run: |
+          Set-Location -Path "MtgChecker"
+          Write-Host "Building MtgChecker JAR with Maven..."
+          .\mvnw.cmd package -DskipTests
+
+      - name: 3. Deploy Containers with Docker Compose
+        shell: powershell
+        run: |
+          Set-Location -Path "MtgChecker"
+          Write-Host "Starting Docker containers..."
+          docker compose up --build -d
+
+      - name: 4. Verify Running Services
+        shell: powershell
+        run: |
+          Write-Host "Checking active Docker containers..."
+          docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"

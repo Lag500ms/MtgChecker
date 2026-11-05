@@ -1,0 +1,28 @@
+                        -HE:\BE\MtgChecker\MtgCheckerApp\node_modules\react-native-reanimated\android
+-DCMAKE_SYSTEM_NAME=Android
+-DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+-DCMAKE_SYSTEM_VERSION=24
+-DANDROID_PLATFORM=android-24
+-DANDROID_ABI=arm64-v8a
+-DCMAKE_ANDROID_ARCH_ABI=arm64-v8a
+-DANDROID_NDK=C:\Users\LY THE VINH\AppData\Local\Android\Sdk\ndk\27.1.12297006
+-DCMAKE_ANDROID_NDK=C:\Users\LY THE VINH\AppData\Local\Android\Sdk\ndk\27.1.12297006
+-DCMAKE_TOOLCHAIN_FILE=C:\Users\LY THE VINH\AppData\Local\Android\Sdk\ndk\27.1.12297006\build\cmake\android.toolchain.cmake
+-DCMAKE_MAKE_PROGRAM=C:\Users\LY THE VINH\AppData\Local\Android\Sdk\cmake\3.22.1\bin\ninja.exe
+-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=E:\BE\MtgChecker\MtgCheckerApp\node_modules\react-native-reanimated\android\build\intermediates\cxx\Debug\5691x1a1\obj\arm64-v8a
+-DCMAKE_RUNTIME_OUTPUT_DIRECTORY=E:\BE\MtgChecker\MtgCheckerApp\node_modules\react-native-reanimated\android\build\intermediates\cxx\Debug\5691x1a1\obj\arm64-v8a
+-DCMAKE_BUILD_TYPE=Debug
+-DCMAKE_FIND_ROOT_PATH=E:\BE\MtgChecker\_cxx\Debug\5691x1a1\prefab\arm64-v8a\prefab
+-BE:\BE\MtgChecker\_cxx\Debug\5691x1a1\arm64-v8a
+-GNinja
+-DCMAKE_OBJECT_PATH_MAX=1024
+-DANDROID_STL=c++_shared
+-DANDROID_TOOLCHAIN=clang
+-DREACT_NATIVE_DIR=E:/BE/MtgChecker/MtgCheckerApp/node_modules/react-native
+-DIS_REANIMATED_EXAMPLE_APP=false
+-DREANIMATED_PROFILING=false
+-DREANIMATED_VERSION=4.7.1
+-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON
+-DREANIMATED_FEATURE_FLAGS=[EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS:true][RUNTIME_TEST_FLAG:false][DISABLE_COMMIT_PAUSING_MECHANISM:false][ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS:false][IOS_CSS_CORE_ANIMATION:false][USE_LEGACY_LAYOUT_ANIMATIONS_PROXY:false][FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS:true][ENABLE_SHARED_ELEMENT_TRANSITIONS:false][IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS:false][USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS:true][ANDROID_CSS_PLATFORM_TRANSITIONS:false][USE_ANIMATION_BACKEND:false]
+                        Build command args: []
+                        Version: 2

@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -14,11 +14,15 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 
 import { ScreenHeader } from '@/components/ScreenHeader';
+import { useToast } from '@/components/Toast';
 import { EmptyState } from '@/components/ui';
 import { useAuth } from '@/features/auth/AuthProvider';
 import {
+  clearCollectionDirty,
   deleteOwnedCard,
   getCollectionSummary,
+  isCollectionCacheDirty,
+  subscribeToCollectionChanges,
   updateOwnedQuantity,
 } from '@/features/collection/api/inventoryApi';
 import type { CollectionSummary, OwnedCard } from '@/features/collection/types/inventory';
@@ -33,6 +37,7 @@ export function CollectionScreen() {
   const { theme } = useAppTheme();
   const { account } = useAuth();
   const router = useRouter();
+  const toast = useToast();
 
   const [summary, setSummary] = useState<CollectionSummary | null>(null);
   const [loading, setLoading] = useState(false);
@@ -53,23 +58,32 @@ export function CollectionScreen() {
       }
       const sameAccount = loadedForAccount.current === account.id;
       const fresh = lastLoadedAt.current > 0 && Date.now() - lastLoadedAt.current < STALE_MS;
-      if (!force && sameAccount && fresh) {
+      const dirty = isCollectionCacheDirty();
+      if (!force && !dirty && sameAccount && fresh) {
         return;
       }
-      setLoading(true);
+      clearCollectionDirty();
+      setLoading((prev) => (summary ? prev : true));
       try {
         const data = await getCollectionSummary();
         setSummary(data);
         loadedForAccount.current = account.id;
         lastLoadedAt.current = Date.now();
       } catch (e: any) {
-        Alert.alert('Error', e?.response?.data?.message || e?.message || 'Failed to load collection');
+        toast.error(e?.response?.data?.message || e?.message || 'Failed to load collection');
       } finally {
         setLoading(false);
       }
     },
-    [account],
+    [account, summary, toast],
   );
+
+  useEffect(() => {
+    const unsubscribe = subscribeToCollectionChanges(() => {
+      void load(true);
+    });
+    return unsubscribe;
+  }, [load]);
 
   useFocusEffect(
     useCallback(() => {
@@ -108,13 +122,14 @@ export function CollectionScreen() {
         };
       });
     } catch (e: any) {
-      Alert.alert('Error', e?.response?.data?.message || e?.message || 'Update failed');
+      toast.error(e?.response?.data?.message || e?.message || 'Update failed');
     }
   };
 
   const remove = async (card: OwnedCard) => {
     try {
       await deleteOwnedCard(card.id);
+      toast.info(`Removed ${card.name} from collection.`);
       setSummary((prev) => {
         if (!prev) return null;
         const newCards = prev.cards.filter((c) => c.id !== card.id);
@@ -134,7 +149,7 @@ export function CollectionScreen() {
         };
       });
     } catch (e: any) {
-      Alert.alert('Error', e?.response?.data?.message || e?.message || 'Delete failed');
+      toast.error(e?.response?.data?.message || e?.message || 'Delete failed');
     }
   };
 

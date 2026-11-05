@@ -13,8 +13,10 @@ import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CardArt } from '@/components/CardArt';
+import { HoloFoilCard } from '@/components/HoloFoilCard';
+import { useToast } from '@/components/Toast';
 import { useAuth } from '@/features/auth/AuthProvider';
-import { findPrintings } from '@/features/cards/api/cardsApi';
+import { findPrintings, fetchCardRulings, type CardRuling } from '@/features/cards/api/cardsApi';
 import type { Card } from '@/features/cards/types/card';
 import { addOwnedCard } from '@/features/collection/api/inventoryApi';
 import { useAppTheme } from '@/lib/ThemeProvider';
@@ -75,20 +77,25 @@ export function CardDetailSheet({
 }: CardDetailSheetProps) {
   const { theme } = useAppTheme();
   const { account } = useAuth();
+  const toast = useToast();
   const insets = useSafeAreaInsets();
 
   const [activeCard, setActiveCard] = useState<Card | null>(card);
   const [printings, setPrintings] = useState<Card[]>([]);
   const [loadingPrintings, setLoadingPrintings] = useState(false);
-  const [selectedFinish, setSelectedFinish] = useState<'nonfoil' | 'foil'>('nonfoil');
+  const [selectedFinish, setSelectedFinish] = useState<'nonfoil' | 'foil' | 'etched'>('nonfoil');
   const [quantity, setQuantity] = useState(1);
   const [adding, setAdding] = useState(false);
+  const [rulings, setRulings] = useState<CardRuling[]>([]);
+  const [loadingRulings, setLoadingRulings] = useState(false);
+  const [rulingsExpanded, setRulingsExpanded] = useState(false);
 
   useEffect(() => {
     setActiveCard(card);
     setQuantity(1);
     if (!card) {
       setPrintings([]);
+      setRulings([]);
       return;
     }
 
@@ -105,6 +112,24 @@ export function CardDetailSheet({
       });
   }, [card]);
 
+  useEffect(() => {
+    if (!activeCard?.id) {
+      setRulings([]);
+      return;
+    }
+    setLoadingRulings(true);
+    fetchCardRulings(activeCard.id)
+      .then((data) => {
+        setRulings(data || []);
+      })
+      .catch(() => {
+        setRulings([]);
+      })
+      .finally(() => {
+        setLoadingRulings(false);
+      });
+  }, [activeCard?.id]);
+
   if (!activeCard) return null;
 
   const current = activeCard;
@@ -114,7 +139,7 @@ export function CardDetailSheet({
 
   const handleAdd = async () => {
     if (!account) {
-      Alert.alert('Sign in required', 'Please sign in to add cards to your collection.');
+      toast.info('Please sign in to add cards to your collection.', 'Sign in required');
       return;
     }
 
@@ -126,9 +151,9 @@ export function CardDetailSheet({
         finish: selectedFinish,
         quantity,
       });
-      Alert.alert('Success', `Added ${quantity}x ${current.name} (${current.set.toUpperCase()}) to collection.`);
+      toast.success(`Added ${quantity}x ${current.name} (${current.set.toUpperCase()}) to collection.`);
     } catch (e: any) {
-      Alert.alert('Error', e?.response?.data?.message || e?.message || 'Could not add card');
+      toast.error(e?.response?.data?.message || e?.message || 'Could not add card');
     } finally {
       setAdding(false);
     }
@@ -175,7 +200,23 @@ export function CardDetailSheet({
             contentContainerStyle={styles.scrollContent}
           >
             <View style={styles.imageSection}>
-              <CardArt card={current} size="normal" contentFit="contain" style={styles.cardImage} />
+              <HoloFoilCard
+                card={current}
+                finish={selectedFinish}
+                size="normal"
+                contentFit="contain"
+                style={styles.cardImage}
+              />
+              {selectedFinish !== 'nonfoil' && (
+                <View style={styles.foilHintBadge}>
+                  <Feather name="zap" size={12} color="#FBBF24" />
+                  <Text style={styles.foilHintText}>
+                    {selectedFinish === 'etched'
+                      ? 'Nghiêng máy hoặc vuốt để xem ánh kim Etched'
+                      : 'Nghiêng máy hoặc vuốt để xem ánh nhũ Foil 3D'}
+                  </Text>
+                </View>
+              )}
             </View>
 
             {confidence && (
@@ -451,6 +492,85 @@ export function CardDetailSheet({
                 );
               })}
             </View>
+
+            <Pressable
+              onPress={() => setRulingsExpanded((prev) => !prev)}
+              style={({ pressed }) => [
+                styles.rulingsCollapsibleHeader,
+                {
+                  backgroundColor: theme.surface,
+                  borderColor: theme.border,
+                  opacity: pressed ? 0.85 : 1,
+                },
+              ]}
+            >
+              <View style={styles.rulingsHeaderLeft}>
+                <Feather name="shield" size={16} color="#E0AD62" />
+                <Text style={[styles.sectionTitle, { color: theme.text, marginLeft: spacing.sm }]}>
+                  Official WotC Rulings
+                </Text>
+                {rulings.length > 0 && (
+                  <View style={styles.rulingsBadge}>
+                    <Text style={styles.rulingsBadgeText}>{rulings.length}</Text>
+                  </View>
+                )}
+              </View>
+              <View style={styles.rulingsHeaderRight}>
+                {loadingRulings ? (
+                  <ActivityIndicator size="small" color="#E0AD62" />
+                ) : (
+                  <Feather
+                    name={rulingsExpanded ? 'chevron-up' : 'chevron-down'}
+                    size={18}
+                    color={theme.textMuted}
+                  />
+                )}
+              </View>
+            </Pressable>
+
+            {rulingsExpanded && (
+              <View style={styles.rulingsBody}>
+                {rulings.length === 0 ? (
+                  <View
+                    style={[
+                      styles.emptyRulingsBox,
+                      { backgroundColor: theme.background, borderColor: theme.border },
+                    ]}
+                  >
+                    <Feather name="check-circle" size={16} color="#22C55E" />
+                    <Text style={[styles.emptyRulingsText, { color: theme.textSecondary }]}>
+                      Không có ngoại lệ hoặc ruling đặc thù. Thẻ bài tuân theo luật cơ bản MTG Comprehensive Rules.
+                    </Text>
+                  </View>
+                ) : (
+                  rulings.map((item, idx) => (
+                    <View
+                      key={idx}
+                      style={[
+                        styles.rulingItemCard,
+                        { backgroundColor: theme.background, borderColor: theme.border },
+                      ]}
+                    >
+                      <View style={styles.rulingItemHeader}>
+                        <View style={styles.rulingSourceTag}>
+                          <Text style={styles.rulingSourceTagText}>
+                            {(item.source || 'WotC').toUpperCase()}
+                          </Text>
+                        </View>
+                        {item.publishedAt ? (
+                          <Text style={[styles.rulingDateText, { color: theme.textMuted }]}>
+                            {item.publishedAt}
+                          </Text>
+                        ) : null}
+                      </View>
+                      <Text style={[styles.rulingCommentText, { color: theme.text }]}>
+                        {item.comment}
+                      </Text>
+                    </View>
+                  ))
+                )}
+              </View>
+            )}
           </ScrollView>
 
           <View
@@ -507,6 +627,30 @@ export function CardDetailSheet({
                   Foil
                 </Text>
               </Pressable>
+
+              {current.finishes?.includes('etched') && (
+                <Pressable
+                  onPress={() => setSelectedFinish('etched')}
+                  style={[
+                    styles.finishChip,
+                    { borderColor: theme.border, backgroundColor: theme.background },
+                    selectedFinish === 'etched' && {
+                      backgroundColor: theme.accent,
+                      borderColor: theme.accent,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.finishChipText,
+                      { color: theme.text },
+                      selectedFinish === 'etched' && { color: theme.accentContrast, fontWeight: '700' },
+                    ]}
+                  >
+                    Etched
+                  </Text>
+                </Pressable>
+              )}
 
               <View style={[styles.quantityStepper, { borderColor: theme.border, backgroundColor: theme.background }]}>
                 <Pressable
@@ -618,9 +762,26 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   cardImage: {
-    width: 156,
-    height: 218,
+    width: 176,
+    height: 246,
     borderRadius: 12,
+  },
+  foilHintBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(251, 191, 36, 0.12)',
+    borderColor: 'rgba(251, 191, 36, 0.35)',
+    borderWidth: 1,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 5,
+    borderRadius: borderRadius.full,
+    marginTop: spacing.sm,
+  },
+  foilHintText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#FBBF24',
   },
   placeholderCard: {
     width: 220,
@@ -645,7 +806,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   cardTitle: {
-    ...typography.title,
+    ...typography.h2,
     fontWeight: '800',
     flex: 1,
   },
@@ -891,5 +1052,81 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     minWidth: 16,
     textAlign: 'center',
+  },
+  rulingsCollapsibleHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    marginTop: spacing.md,
+  },
+  rulingsHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  rulingsHeaderRight: {
+    paddingLeft: spacing.sm,
+  },
+  rulingsBadge: {
+    marginLeft: spacing.sm,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: borderRadius.full,
+    backgroundColor: 'rgba(224, 173, 98, 0.2)',
+  },
+  rulingsBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#E0AD62',
+  },
+  rulingsBody: {
+    marginTop: spacing.sm,
+    gap: spacing.sm,
+  },
+  emptyRulingsBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+    padding: spacing.md,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+  },
+  emptyRulingsText: {
+    ...typography.caption,
+    flex: 1,
+    lineHeight: 18,
+  },
+  rulingItemCard: {
+    padding: spacing.md,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    gap: spacing.xs,
+  },
+  rulingItemHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  rulingSourceTag: {
+    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: borderRadius.sm,
+  },
+  rulingSourceTagText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#38BDF8',
+    letterSpacing: 0.5,
+  },
+  rulingDateText: {
+    fontSize: 11,
+  },
+  rulingCommentText: {
+    ...typography.bodySmall,
+    lineHeight: 20,
   },
 });

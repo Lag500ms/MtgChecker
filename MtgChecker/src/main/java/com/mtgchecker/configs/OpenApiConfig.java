@@ -10,6 +10,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Configuration
 public class OpenApiConfig {
 
@@ -18,10 +21,16 @@ public class OpenApiConfig {
             @Value("${application-title:MtgChecker API}") String title,
             @Value("${application-description:Look up Magic cards and track your collection.}") String description,
             @Value("${application-version:0.0.1}") String version,
-            @Value("${application-server-url:http://localhost:8080}") String serverUrl
+            @Value("${application-server-url:}") String serverUrl
     ) {
+        List<Server> servers = new ArrayList<>();
+        servers.add(new Server().url("/").description("Current Host / Relative URL"));
+        if (serverUrl != null && !serverUrl.isBlank() && !"/".equals(serverUrl.trim())) {
+            servers.add(new Server().url(serverUrl).description("Configured Server URL"));
+        }
+
         return new OpenAPI()
-                .addServersItem(new Server().url(serverUrl))
+                .servers(servers)
                 .addSecurityItem(new SecurityRequirement().addList("Bearer Authentication"))
                 .components(new Components().addSecuritySchemes("Bearer Authentication", bearerScheme()))
                 .info(new Info()

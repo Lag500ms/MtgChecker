@@ -40,6 +40,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 Claims claims = jwtUtil.getClaims(token);
                 String email = claims.getSubject();
                 UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+
+                Integer tokenVersion = claims.get("version", Integer.class);
+                if (userDetails instanceof CustomUserDetails customUser) {
+                    int currentVersion = customUser.getTokenVersion();
+                    if (tokenVersion != null && tokenVersion < currentVersion) {
+                        log.debug("Rejecting token with outdated version {} (current: {}) for user {}",
+                                tokenVersion, currentVersion, email);
+                        SecurityContextHolder.clearContext();
+                        response.setHeader("X-Token-Version-Outdated", "true");
+                        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token version is outdated");
+                        return;
+                    }
+                }
+
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

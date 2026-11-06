@@ -1,7 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -13,7 +12,7 @@ import {
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -71,6 +70,23 @@ export function ScanScreen() {
   const isSheetOpenRef = useRef(false);
   isSheetOpenRef.current = showDetailSheet || showManualModal;
 
+  const [isFocused, setIsFocused] = useState(false);
+  const isFocusedRef = useRef(false);
+  isFocusedRef.current = isFocused;
+
+  useFocusEffect(
+    useCallback(() => {
+      setIsFocused(true);
+      return () => {
+        setIsFocused(false);
+        setEnableTorch(false);
+        setIsProcessing(false);
+        lockGuard.current = false;
+        isBusyRef.current = false;
+      };
+    }, [])
+  );
+
   const handleClose = () => {
     if (router.canGoBack()) {
       router.back();
@@ -80,11 +96,13 @@ export function ScanScreen() {
   };
 
   useEffect(() => {
+    if (!isFocused) return;
     if (isCardOutlineAvailable) return;
     if (!autoScanEnabled || !permission?.granted) return;
 
     const liveScanInterval = setInterval(async () => {
       if (
+        !isFocusedRef.current ||
         isBusyRef.current ||
         !autoScanRef.current ||
         isSheetOpenRef.current ||
@@ -101,9 +119,9 @@ export function ScanScreen() {
           skipProcessing: true,
         });
 
-        if (photo && photo.base64 && !isSheetOpenRef.current) {
+        if (photo && photo.base64 && isFocusedRef.current && !isSheetOpenRef.current) {
           const result: ScanCardResult = await scanCardBase64(photo.base64);
-          if (result && result.card && !isSheetOpenRef.current) {
+          if (result && result.card && isFocusedRef.current && !isSheetOpenRef.current) {
             setConfidence(result.confidence);
             setRecognizedText(result.recognizedText);
             setCurrentCard(result.card);
@@ -118,7 +136,7 @@ export function ScanScreen() {
     }, 1800);
 
     return () => clearInterval(liveScanInterval);
-  }, [autoScanEnabled, permission?.granted]);
+  }, [isFocused, autoScanEnabled, permission?.granted]);
 
   const handlePhotoScan = async (
     base64: string,
@@ -163,7 +181,7 @@ export function ScanScreen() {
   const handleCardLocked = (event: {
     nativeEvent: { base64: string; width: number; height: number };
   }) => {
-    if (lockGuard.current || isProcessing || showDetailSheet || showManualModal) return;
+    if (!isFocusedRef.current || lockGuard.current || isProcessing || showDetailSheet || showManualModal) return;
     const { base64, width, height } = event.nativeEvent;
     if (!base64) return;
     lockGuard.current = true;
@@ -190,7 +208,7 @@ export function ScanScreen() {
         await handlePhotoScan(photo.base64, photo.uri, photo.width, photo.height);
       }
     } catch (e: any) {
-      Alert.alert('Capture Error', e?.message || 'Could not take picture.');
+      toast.error(e?.message || 'Không thể chụp ảnh lúc này.', 'Lỗi Chụp Ảnh');
     }
   };
 
@@ -211,7 +229,7 @@ export function ScanScreen() {
         }
       }
     } catch (e: any) {
-      Alert.alert('Image Pick Error', e?.message || 'Failed to select photo.');
+      toast.error(e?.message || 'Không thể chọn ảnh từ thư viện.', 'Lỗi Thư Viện');
     }
   };
 
@@ -282,21 +300,25 @@ export function ScanScreen() {
             <Text style={styles.permissionButtonText}>Allow Camera Access</Text>
           </Pressable>
         </View>
-      ) : isCardOutlineAvailable ? (
-        <CardOutlineCamera
-          ref={outlineRef}
-          style={StyleSheet.absoluteFill}
-          enabled={autoScanEnabled && !isProcessing && !showDetailSheet && !showManualModal}
-          torch={enableTorch}
-          onCardLocked={handleCardLocked}
-        />
+      ) : isFocused ? (
+        isCardOutlineAvailable ? (
+          <CardOutlineCamera
+            ref={outlineRef}
+            style={StyleSheet.absoluteFill}
+            enabled={autoScanEnabled && !isProcessing && !showDetailSheet && !showManualModal}
+            torch={enableTorch}
+            onCardLocked={handleCardLocked}
+          />
+        ) : (
+          <CameraView
+            ref={cameraRef}
+            style={StyleSheet.absoluteFill}
+            facing="back"
+            enableTorch={enableTorch}
+          />
+        )
       ) : (
-        <CameraView
-          ref={cameraRef}
-          style={StyleSheet.absoluteFill}
-          facing="back"
-          enableTorch={enableTorch}
-        />
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: '#000' }]} />
       )}
 
       {hasCameraPermission && (

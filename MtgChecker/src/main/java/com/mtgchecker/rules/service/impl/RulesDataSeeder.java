@@ -40,12 +40,32 @@ public class RulesDataSeeder implements ApplicationRunner {
     public void run(ApplicationArguments args) {
         try {
             seedCheatSheets();
+        } catch (Exception e) {
+            log.warn("Failed to seed cheat sheets: {}", e.getMessage());
+        }
+
+        try {
             seedQuickDisputes();
+        } catch (Exception e) {
+            log.warn("Failed to seed quick disputes: {}", e.getMessage());
+        }
+
+        try {
             seedFormatRules();
+        } catch (Exception e) {
+            log.warn("Failed to seed format rules: {}", e.getMessage());
+        }
+
+        try {
             seedComprehensiveRules();
+        } catch (Exception e) {
+            log.warn("Failed to seed comprehensive rules: {}", e.getMessage());
+        }
+
+        try {
             seedRuleGlossary();
         } catch (Exception e) {
-            log.warn("Failed to seed rules data: {}", e.getMessage(), e);
+            log.warn("Failed to seed rule glossary: {}", e.getMessage());
         }
     }
 
@@ -596,6 +616,7 @@ public class RulesDataSeeder implements ApplicationRunner {
 
     private void seedComprehensiveRules() {
         if (comprehensiveRuleRepository.count() > 0) {
+            log.info("Comprehensive rules already present in database (count: {})", comprehensiveRuleRepository.count());
             return;
         }
         try (InputStream stream = getClass().getResourceAsStream("/rules/cr_rules.json")) {
@@ -604,8 +625,13 @@ public class RulesDataSeeder implements ApplicationRunner {
                 return;
             }
             List<ComprehensiveRule> rules = objectMapper.readValue(stream, new TypeReference<List<ComprehensiveRule>>() {});
-            comprehensiveRuleRepository.saveAll(rules);
-            log.info("Seeded {} Comprehensive Rules into database", rules.size());
+            log.info("Starting to seed {} Comprehensive Rules into database in batches...", rules.size());
+            int batchSize = 200;
+            for (int i = 0; i < rules.size(); i += batchSize) {
+                int end = Math.min(i + batchSize, rules.size());
+                comprehensiveRuleRepository.saveAll(rules.subList(i, end));
+            }
+            log.info("Successfully seeded {} Comprehensive Rules into database", rules.size());
         } catch (Exception e) {
             log.error("Failed to seed Comprehensive Rules: {}", e.getMessage(), e);
         }
@@ -613,6 +639,7 @@ public class RulesDataSeeder implements ApplicationRunner {
 
     private void seedRuleGlossary() {
         if (ruleGlossaryRepository.count() > 0) {
+            log.info("Rule glossary already present in database (count: {})", ruleGlossaryRepository.count());
             return;
         }
         try (InputStream stream = getClass().getResourceAsStream("/rules/cr_glossary.json")) {
@@ -621,8 +648,13 @@ public class RulesDataSeeder implements ApplicationRunner {
                 return;
             }
             List<RuleGlossary> glossary = objectMapper.readValue(stream, new TypeReference<List<RuleGlossary>>() {});
-            ruleGlossaryRepository.saveAll(glossary);
-            log.info("Seeded {} Rule Glossary terms into database", glossary.size());
+            log.info("Starting to seed {} Rule Glossary terms into database in batches...", glossary.size());
+            int batchSize = 200;
+            for (int i = 0; i < glossary.size(); i += batchSize) {
+                int end = Math.min(i + batchSize, glossary.size());
+                ruleGlossaryRepository.saveAll(glossary.subList(i, end));
+            }
+            log.info("Successfully seeded {} Rule Glossary terms into database", glossary.size());
         } catch (Exception e) {
             log.error("Failed to seed Rule Glossary: {}", e.getMessage(), e);
         }

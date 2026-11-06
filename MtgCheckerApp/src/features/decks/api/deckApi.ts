@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiClient } from '@/lib/apiClient';
+import { getAccessToken } from '@/lib/tokenStorage';
 import type {
   CreateDeckPayload,
   Deck,
@@ -77,6 +78,11 @@ export async function fetchActiveFormats(): Promise<DeckFormat[]> {
 }
 
 export async function listUserDecks(): Promise<DeckSummary[]> {
+  const token = await getAccessToken();
+  if (!token) {
+    return [];
+  }
+
   try {
     const response = await apiClient.get<DeckSummary[]>('/decks');
     if (Array.isArray(response.data)) {
@@ -101,6 +107,18 @@ export async function listUserDecks(): Promise<DeckSummary[]> {
 }
 
 export async function getDeckDetail(id: string): Promise<Deck | null> {
+  const token = await getAccessToken();
+  if (!token) {
+    const cached = await AsyncStorage.getItem(`${STORAGE_KEY_DECK_DETAIL_PREFIX}${id}`);
+    if (cached) {
+      try {
+        return JSON.parse(cached);
+      } catch {
+      }
+    }
+    return null;
+  }
+
   try {
     const response = await apiClient.get<Deck>(`/decks/${id}`);
     if (response.data) {

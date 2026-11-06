@@ -11,10 +11,12 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { useAppTheme } from '@/lib/ThemeProvider';
 import { useToast } from '@/components/Toast';
-import { ConfirmModal } from '@/components/ui';
+import { ConfirmModal, EmptyState } from '@/components/ui';
+import { useAuth } from '@/features/auth/AuthProvider';
 import {
   createDeck,
   deleteDeck,
@@ -37,6 +39,8 @@ const COLOR_MAP: Record<string, { label: string; bg: string; text: string }> = {
 
 export function DecksScreen() {
   const { theme } = useAppTheme();
+  const { account } = useAuth();
+  const router = useRouter();
   const toast = useToast();
   const [formats, setFormats] = useState<DeckFormat[]>([]);
   const [decks, setDecks] = useState<DeckSummary[]>([]);
@@ -52,18 +56,21 @@ export function DecksScreen() {
 
   const loadData = useCallback(async () => {
     try {
-      const [fetchedFormats, fetchedDecks] = await Promise.all([
-        fetchActiveFormats(),
-        listUserDecks(),
-      ]);
+      const fetchedFormats = await fetchActiveFormats();
       setFormats(fetchedFormats);
-      setDecks(fetchedDecks);
+
+      if (account) {
+        const fetchedDecks = await listUserDecks();
+        setDecks(fetchedDecks);
+      } else {
+        setDecks([]);
+      }
     } catch {
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, []);
+  }, [account]);
 
   useEffect(() => {
     loadData();
@@ -146,6 +153,22 @@ export function DecksScreen() {
     const partnerMatch = (d.partnerCommanderCardName || '').toLowerCase().includes(q);
     return nameMatch || cmdMatch || partnerMatch;
   });
+
+  if (!account) {
+    return (
+      <View style={[styles.root, { backgroundColor: theme.background }]}>
+        <ScreenHeader title="Bộ Bài Của Tôi" />
+        <EmptyState
+          icon="lock"
+          title="Đăng nhập để xem & quản lý bộ bài"
+          message="Danh sách bộ bài và chiến thuật được đồng bộ và bảo mật theo tài khoản của bạn."
+        />
+        <Pressable onPress={() => router.push('/login')} style={styles.loginLinkWrap}>
+          <Text style={[styles.loginLink, { color: theme.accent }]}>Đăng nhập ngay</Text>
+        </Pressable>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.root, { backgroundColor: theme.background }]}>
@@ -666,5 +689,16 @@ const styles = StyleSheet.create({
     color: '#0D0E12',
     fontSize: 13,
     fontWeight: '800',
+  },
+  loginLinkWrap: {
+    alignSelf: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    marginTop: 8,
+  },
+  loginLink: {
+    fontSize: 15,
+    fontWeight: '700',
+    textDecorationLine: 'underline',
   },
 });

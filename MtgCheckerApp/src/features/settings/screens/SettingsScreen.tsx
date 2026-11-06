@@ -1,10 +1,10 @@
-import React from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { type Href, useRouter } from 'expo-router';
 
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { Card, ListRow, SectionPill } from '@/components/ui';
+import { Card, ConfirmModal, ListRow, SectionPill } from '@/components/ui';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { APP_NAME, API_BASE_URL } from '@/lib/apiConfig';
 import { useAppTheme } from '@/lib/ThemeProvider';
@@ -16,18 +16,10 @@ export function SettingsScreen() {
   const { theme } = useAppTheme();
   const { account, logout } = useAuth();
   const router = useRouter();
+  const [logoutConfirmVisible, setLogoutConfirmVisible] = useState(false);
 
   const onLogout = () => {
-    Alert.alert('Sign out', 'Clear local session?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Sign out',
-        style: 'destructive',
-        onPress: () => {
-          void logout().then(() => router.replace('/' as Href));
-        },
-      },
-    ]);
+    setLogoutConfirmVisible(true);
   };
 
   return (
@@ -77,6 +69,21 @@ export function SettingsScreen() {
           />
         ) : null}
       </ScrollView>
+
+      <ConfirmModal
+        visible={logoutConfirmVisible}
+        title="Đăng xuất tài khoản"
+        message="Bạn có chắc chắn muốn kết thúc phiên đăng nhập hiện tại trên thiết bị này không?"
+        confirmLabel="Đăng xuất"
+        cancelLabel="Hủy"
+        icon="log-out"
+        isDestructive={true}
+        onConfirm={() => {
+          setLogoutConfirmVisible(false);
+          void logout().then(() => router.replace('/' as Href));
+        }}
+        onCancel={() => setLogoutConfirmVisible(false)}
+      />
     </View>
   );
 }

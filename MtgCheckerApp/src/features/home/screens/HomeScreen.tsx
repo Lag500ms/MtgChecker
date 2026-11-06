@@ -280,21 +280,13 @@ export function HomeScreen() {
       <ScreenHeader
         title="Judge Desk"
         rightAction={
-          <View style={styles.headerRightRow}>
-            <Pressable
-              onPress={() => {
-                setLifeTrackerLife(40);
-                setLifeTrackerVisible(true);
-              }}
-              hitSlop={10}
-              style={styles.headerIconBtn}
-            >
-              <Feather name="shield" size={20} color="#E0AD62" />
-            </Pressable>
-            <Pressable onPress={() => router.push('/settings')} hitSlop={10} style={styles.headerIconBtn}>
-              <Feather name="settings" size={20} color={theme.text} />
-            </Pressable>
-          </View>
+          <Pressable
+            onPress={() => router.push('/settings')}
+            hitSlop={12}
+            style={styles.headerIconBtn}
+          >
+            <Feather name="settings" size={20} color={theme.text} />
+          </Pressable>
         }
       />
 
@@ -303,106 +295,59 @@ export function HomeScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <Pressable
-          onPress={() => {
-            setLifeTrackerLife(40);
-            setLifeTrackerVisible(true);
-          }}
-          style={({ pressed }) => [
-            styles.lifeTrackerBanner,
-            {
-              backgroundColor: theme.surfaceElevated,
-              borderColor: 'rgba(224, 173, 98, 0.4)',
-              opacity: pressed ? 0.85 : 1,
-            },
-          ]}
-        >
-          <View style={[styles.navIconBox, { backgroundColor: 'rgba(224, 173, 98, 0.15)' }]}>
-            <Feather name="shield" size={20} color="#E0AD62" />
-          </View>
-          <View style={styles.lifeTrackerBannerTextWrap}>
-            <View style={styles.lifeTrackerBannerTitleRow}>
-              <Text style={[styles.lifeTrackerBannerTitle, { color: theme.text }]}>
-                Bàn Đấu & Tính Máu (Life Tracker 4P)
-              </Text>
-              <View style={styles.hotBadge}>
-                <Text style={styles.hotBadgeText}>HOT</Text>
-              </View>
-            </View>
-            <Text style={[styles.lifeTrackerBannerSub, { color: theme.textSecondary }]}>
-              Commander 40 HP · Sát thương tướng · Poison · Xúc xắc & Đồng xu
-            </Text>
-          </View>
-          <Feather name="play" size={16} color="#E0AD62" />
-        </Pressable>
-
-        <View style={styles.navGrid}>
+        <View style={styles.heroSection}>
           <Pressable
-            onPress={() => router.push('/search')}
+            onPress={() => {
+              setLifeTrackerLife(40);
+              setLifeTrackerVisible(true);
+            }}
             style={({ pressed }) => [
-              styles.navCard,
+              styles.heroCard,
               {
-                backgroundColor: theme.surfaceElevated,
-                borderColor: theme.border,
-                opacity: pressed ? 0.85 : 1,
+                backgroundColor: '#1C1914',
+                borderColor: 'rgba(234, 179, 8, 0.45)',
+                opacity: pressed ? 0.9 : 1,
               },
             ]}
           >
-            <View style={[styles.navIconBox, { backgroundColor: 'rgba(56, 189, 248, 0.12)' }]}>
-              <Feather name="search" size={18} color="#38BDF8" />
+            <View style={[styles.heroIconBox, { backgroundColor: 'rgba(234, 179, 8, 0.18)' }]}>
+              <Feather name="shield" size={24} color="#FACC15" />
             </View>
-            <Text style={[styles.navLabel, { color: theme.text }]}>Card Search</Text>
+            <View style={styles.heroTextWrap}>
+              <View style={styles.heroTitleRow}>
+                <Text style={[styles.heroTitle, { color: '#FACC15' }]}>Bàn Đấu 4 Người</Text>
+                <View style={styles.heroBadge}>
+                  <Text style={styles.heroBadgeText}>HOT</Text>
+                </View>
+              </View>
+              <Text style={[styles.heroSub, { color: theme.textSecondary }]}>
+                Commander 40 HP · Sát thương tướng · D20
+              </Text>
+            </View>
+            <Feather name="chevron-right" size={18} color="#FACC15" />
           </Pressable>
 
           <Pressable
             onPress={() => router.push('/scan')}
             style={({ pressed }) => [
-              styles.navCard,
+              styles.heroCard,
               {
-                backgroundColor: theme.surfaceElevated,
-                borderColor: theme.border,
-                opacity: pressed ? 0.85 : 1,
+                backgroundColor: '#0E1F17',
+                borderColor: 'rgba(34, 197, 94, 0.4)',
+                opacity: pressed ? 0.9 : 1,
               },
             ]}
           >
-            <View style={[styles.navIconBox, { backgroundColor: 'rgba(34, 197, 94, 0.12)' }]}>
-              <Feather name="camera" size={18} color="#22C55E" />
+            <View style={[styles.heroIconBox, { backgroundColor: 'rgba(34, 197, 94, 0.18)' }]}>
+              <Feather name="camera" size={24} color="#22C55E" />
             </View>
-            <Text style={[styles.navLabel, { color: theme.text }]}>Scanner</Text>
-          </Pressable>
-
-          <Pressable
-            onPress={() => router.push('/collection')}
-            style={({ pressed }) => [
-              styles.navCard,
-              {
-                backgroundColor: theme.surfaceElevated,
-                borderColor: theme.border,
-                opacity: pressed ? 0.85 : 1,
-              },
-            ]}
-          >
-            <View style={[styles.navIconBox, { backgroundColor: 'rgba(224, 173, 98, 0.12)' }]}>
-              <Feather name="layers" size={18} color="#E0AD62" />
+            <View style={styles.heroTextWrap}>
+              <Text style={[styles.heroTitle, { color: '#22C55E' }]}>Quét Thẻ Bài OCR</Text>
+              <Text style={[styles.heroSub, { color: theme.textSecondary }]}>
+                Nhận diện nhanh thẻ bài vật lý qua camera
+              </Text>
             </View>
-            <Text style={[styles.navLabel, { color: theme.text }]}>Collection</Text>
-          </Pressable>
-
-          <Pressable
-            onPress={() => router.push('/decks')}
-            style={({ pressed }) => [
-              styles.navCard,
-              {
-                backgroundColor: theme.surfaceElevated,
-                borderColor: theme.border,
-                opacity: pressed ? 0.85 : 1,
-              },
-            ]}
-          >
-            <View style={[styles.navIconBox, { backgroundColor: 'rgba(168, 85, 247, 0.12)' }]}>
-              <Feather name="book" size={18} color="#A855F7" />
-            </View>
-            <Text style={[styles.navLabel, { color: theme.text }]}>Decks</Text>
+            <Feather name="chevron-right" size={18} color="#22C55E" />
           </Pressable>
         </View>
 
@@ -757,67 +702,52 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.huge,
   },
-  lifeTrackerBanner: {
+  heroSection: {
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
+  },
+  heroCard: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: spacing.md,
     borderRadius: borderRadius.lg,
     borderWidth: 1.5,
-    marginBottom: spacing.md,
     gap: spacing.md,
   },
-  lifeTrackerBannerTextWrap: {
+  heroIconBox: {
+    width: 46,
+    height: 46,
+    borderRadius: borderRadius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  heroTextWrap: {
     flex: 1,
   },
-  lifeTrackerBannerTitleRow: {
+  heroTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
     marginBottom: 2,
   },
-  lifeTrackerBannerTitle: {
-    fontSize: 14,
-    fontWeight: '700',
+  heroTitle: {
+    fontSize: 15,
+    fontWeight: '800',
   },
-  lifeTrackerBannerSub: {
-    fontSize: 11,
-    lineHeight: 15,
-  },
-  hotBadge: {
+  heroBadge: {
     backgroundColor: '#EF4444',
     paddingHorizontal: 5,
     paddingVertical: 1,
     borderRadius: borderRadius.xs,
   },
-  hotBadgeText: {
+  heroBadgeText: {
     color: '#FFF',
     fontSize: 9,
     fontWeight: '900',
   },
-  navGrid: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginBottom: spacing.lg,
-  },
-  navCard: {
-    flex: 1,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  navIconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: borderRadius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  navLabel: {
-    ...typography.caption,
-    fontWeight: '600',
-    fontSize: 11,
+  heroSub: {
+    fontSize: 12,
+    lineHeight: 16,
   },
   formatSection: {
     marginBottom: spacing.xs,

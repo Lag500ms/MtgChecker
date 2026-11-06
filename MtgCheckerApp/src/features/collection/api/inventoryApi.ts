@@ -1,4 +1,5 @@
 import { apiClient } from '@/lib/apiClient';
+import { getAccessToken } from '@/lib/tokenStorage';
 
 import type {
   AddOwnedCardRequest,
@@ -36,6 +37,10 @@ export function subscribeToCollectionChanges(listener: () => void): () => void {
 }
 
 export async function listOwnedCards(): Promise<OwnedCard[]> {
+  const token = await getAccessToken();
+  if (!token) {
+    return [];
+  }
   const { data } = await apiClient.get<OwnedCard[]>('/inventory');
   return data;
 }

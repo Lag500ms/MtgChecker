@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-  Alert,
   Modal,
   Pressable,
   StatusBar,
@@ -11,6 +10,7 @@ import {
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { ConfirmModal } from '@/components/ui';
 import { borderRadius, spacing } from '@/lib/theme';
 import { PlayerCard } from './PlayerCard';
 import { TableToolsModal } from './TableToolsModal';
@@ -73,6 +73,7 @@ export function LifeTrackerModal({
   );
   const [history, setHistory] = useState<MatchHistoryEntry[]>([]);
   const [toolsVisible, setToolsVisible] = useState(false);
+  const [resetConfirmVisible, setResetConfirmVisible] = useState(false);
 
   const resetGame = (newStartingLife: StartingLifeMode, newCount?: PlayerCount) => {
     const count = newCount !== undefined ? newCount : playerCount;
@@ -83,21 +84,7 @@ export function LifeTrackerModal({
   };
 
   const handleConfirmReset = () => {
-    Alert.alert(
-      'Ván đấu mới',
-      'Bạn có muốn xóa toàn bộ điểm số và bắt đầu ván mới không?',
-      [
-        { text: 'Hủy', style: 'cancel' },
-        {
-          text: 'Ván mới (40 HP)',
-          onPress: () => resetGame(40),
-        },
-        {
-          text: 'Ván mới (20 HP)',
-          onPress: () => resetGame(20),
-        },
-      ]
-    );
+    setResetConfirmVisible(true);
   };
 
   const logHistoryChange = (
@@ -407,6 +394,21 @@ export function LifeTrackerModal({
           onClose={() => setToolsVisible(false)}
           players={players}
           history={history}
+        />
+
+        <ConfirmModal
+          visible={resetConfirmVisible}
+          title="Bắt đầu ván đấu mới?"
+          message="Toàn bộ điểm máu, sát thương tướng và bộ đếm sẽ được khôi phục về trạng thái ban đầu."
+          confirmLabel={`Làm mới (${startingLife} HP)`}
+          cancelLabel="Hủy"
+          icon="rotate-ccw"
+          isDestructive={true}
+          onConfirm={() => {
+            resetGame(startingLife);
+            setResetConfirmVisible(false);
+          }}
+          onCancel={() => setResetConfirmVisible(false)}
         />
       </View>
     </Modal>

@@ -95,29 +95,31 @@ export function TableToolsModal({
     <Modal
       visible={visible}
       animationType="slide"
-      presentationStyle="pageSheet"
+      transparent
       onRequestClose={onClose}
     >
-      <View style={[styles.root, { backgroundColor: theme.background }]}>
-        <View
-          style={[
-            styles.header,
-            {
-              paddingTop: Math.max(insets.top, 16),
-              borderBottomColor: theme.border,
-            },
-          ]}
-        >
-          <View style={styles.headerTitleWrap}>
-            <Text style={[styles.title, { color: theme.text }]}>Công Cụ Bàn Đấu</Text>
-            <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
-              Xúc xắc, đồng xu & chọn lượt chơi
-            </Text>
+      <View style={styles.overlay}>
+        <Pressable style={styles.backdrop} onPress={onClose} />
+        <View style={[styles.sheet, { backgroundColor: theme.surface }]}>
+          <View style={styles.dragHandleBar}>
+            <View style={[styles.dragHandle, { backgroundColor: theme.border }]} />
           </View>
-          <Pressable onPress={onClose} hitSlop={12} style={styles.closeBtn}>
-            <Feather name="x" size={22} color={theme.text} />
-          </Pressable>
-        </View>
+          <View
+            style={[
+              styles.header,
+              { borderBottomColor: theme.border },
+            ]}
+          >
+            <View style={styles.headerTitleWrap}>
+              <Text style={[styles.title, { color: theme.text }]}>Công Cụ Bàn Đấu</Text>
+              <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
+                Xúc xắc, đồng xu & chọn lượt chơi
+              </Text>
+            </View>
+            <Pressable onPress={onClose} hitSlop={12} style={styles.closeBtn}>
+              <Feather name="x" size={20} color={theme.text} />
+            </Pressable>
+          </View>
 
         <View style={[styles.tabBar, { borderBottomColor: theme.border }]}>
           <Pressable
@@ -366,14 +368,40 @@ export function TableToolsModal({
             </View>
           )}
         </ScrollView>
+        </View>
       </View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  root: {
+  overlay: {
     flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+  },
+  backdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  sheet: {
+    height: '84%',
+    borderTopLeftRadius: borderRadius.xl,
+    borderTopRightRadius: borderRadius.xl,
+    overflow: 'hidden',
+  },
+  dragHandleBar: {
+    alignItems: 'center',
+    paddingTop: spacing.sm,
+    paddingBottom: 4,
+  },
+  dragHandle: {
+    width: 38,
+    height: 4,
+    borderRadius: 2,
   },
   header: {
     paddingHorizontal: spacing.lg,

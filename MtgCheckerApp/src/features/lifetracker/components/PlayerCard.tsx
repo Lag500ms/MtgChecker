@@ -141,10 +141,9 @@ export function PlayerCard({
         </View>
       )}
 
-      {/* Chế độ 1: LIFE DISPLAY CHÍNH */}
+      {/* Chế độ 1: LIFE DISPLAY CHÍNH VỚI VÙNG CHẠM TÀNG HÌNH CHIA ĐÔI */}
       {viewMode === 'life' && (
         <View style={styles.mainLifeArea}>
-          {/* Cảnh báo tử trận */}
           {isDefeated && (
             <View style={styles.defeatedBadge}>
               <Text style={styles.defeatedText}>
@@ -157,21 +156,45 @@ export function PlayerCard({
             </View>
           )}
 
-          <View style={styles.lifeValueRow}>
-            {/* Nút giảm máu -1 (tap) hoặc -5 (long press) */}
+          <View style={styles.splitTouchArea}>
+            {/* Nửa bên trái: Nhấp là -1, giữ lâu là -5 */}
             <Pressable
               onPress={() => onUpdateLife(player.id, -1)}
               onLongPress={() => onUpdateLife(player.id, -5)}
               style={({ pressed }) => [
-                styles.lifeAdjustBtn,
-                { opacity: pressed ? 0.6 : 1 },
+                styles.splitHalf,
+                styles.splitHalfLeft,
+                pressed && { backgroundColor: 'rgba(239, 68, 68, 0.16)' },
               ]}
             >
-              <Feather name="minus" size={32} color={themeConfig.accent} />
+              <Feather
+                name="minus"
+                size={28}
+                color={themeConfig.accent}
+                style={styles.splitIconHint}
+              />
             </Pressable>
 
-            {/* Số máu hiển thị to trung tâm */}
-            <View style={styles.lifeNumberBox}>
+            {/* Nửa bên phải: Nhấp là +1, giữ lâu là +5 */}
+            <Pressable
+              onPress={() => onUpdateLife(player.id, 1)}
+              onLongPress={() => onUpdateLife(player.id, 5)}
+              style={({ pressed }) => [
+                styles.splitHalf,
+                styles.splitHalfRight,
+                pressed && { backgroundColor: 'rgba(34, 197, 94, 0.16)' },
+              ]}
+            >
+              <Feather
+                name="plus"
+                size={28}
+                color={themeConfig.accent}
+                style={styles.splitIconHint}
+              />
+            </Pressable>
+
+            {/* Số máu to hiển thị trung tâm, pointerEvents="none" để chạm xuyên thấu */}
+            <View style={styles.lifeCenterOverlay} pointerEvents="none">
               <Text
                 style={[
                   styles.lifeNumber,
@@ -182,35 +205,10 @@ export function PlayerCard({
               >
                 {player.life}
               </Text>
+              <Text style={[styles.lifeTapHint, { color: themeConfig.accent }]}>
+                - Chạm Trái  |  Chạm Phải +
+              </Text>
             </View>
-
-            {/* Nút tăng máu +1 (tap) hoặc +5 (long press) */}
-            <Pressable
-              onPress={() => onUpdateLife(player.id, 1)}
-              onLongPress={() => onUpdateLife(player.id, 5)}
-              style={({ pressed }) => [
-                styles.lifeAdjustBtn,
-                { opacity: pressed ? 0.6 : 1 },
-              ]}
-            >
-              <Feather name="plus" size={32} color={themeConfig.accent} />
-            </Pressable>
-          </View>
-
-          {/* Dải nút bước nhảy +5 / -5 nhanh */}
-          <View style={styles.quickStepsRow}>
-            <Pressable
-              onPress={() => onUpdateLife(player.id, -5)}
-              style={styles.quickStepBtn}
-            >
-              <Text style={[styles.quickStepText, { color: themeConfig.accent }]}>-5</Text>
-            </Pressable>
-            <Pressable
-              onPress={() => onUpdateLife(player.id, 5)}
-              style={styles.quickStepBtn}
-            >
-              <Text style={[styles.quickStepText, { color: themeConfig.accent }]}>+5</Text>
-            </Pressable>
           </View>
         </View>
       )}
@@ -474,60 +472,64 @@ const styles = StyleSheet.create({
   },
   mainLifeArea: {
     flex: 1,
+    position: 'relative',
     justifyContent: 'center',
-    alignItems: 'center',
   },
   defeatedBadge: {
+    position: 'absolute',
+    top: 2,
+    alignSelf: 'center',
     backgroundColor: '#EF4444',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: borderRadius.xs,
-    marginBottom: 4,
+    zIndex: 10,
   },
   defeatedText: {
     color: '#FFF',
     fontSize: 10,
     fontWeight: '900',
   },
-  lifeValueRow: {
+  splitTouchArea: {
+    flex: 1,
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
-    paddingHorizontal: spacing.sm,
+    position: 'relative',
   },
-  lifeAdjustBtn: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    alignItems: 'center',
+  splitHalf: {
+    flex: 1,
     justifyContent: 'center',
   },
-  lifeNumberBox: {
-    flex: 1,
+  splitHalfLeft: {
+    alignItems: 'flex-start',
+    paddingLeft: spacing.md,
+  },
+  splitHalfRight: {
+    alignItems: 'flex-end',
+    paddingRight: spacing.md,
+  },
+  splitIconHint: {
+    opacity: 0.3,
+  },
+  lifeCenterOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     alignItems: 'center',
     justifyContent: 'center',
   },
   lifeNumber: {
-    fontSize: 54,
+    fontSize: 58,
     fontWeight: '900',
     textAlign: 'center',
   },
-  quickStepsRow: {
-    flexDirection: 'row',
-    gap: 16,
-    marginTop: 4,
-  },
-  quickStepBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 2,
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
-    borderRadius: borderRadius.xs,
-  },
-  quickStepText: {
-    fontSize: 12,
+  lifeTapHint: {
+    fontSize: 9,
     fontWeight: '700',
+    opacity: 0.45,
+    marginTop: -2,
+    letterSpacing: 0.5,
   },
   countersArea: {
     flex: 1,

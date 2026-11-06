@@ -19,11 +19,11 @@ interface ColorStat {
 }
 
 const COLOR_CONFIG = [
-  { color: 'W' as const, name: 'Trắng', hex: '#F8E7B9' },
-  { color: 'U' as const, name: 'Lam', hex: '#0284C7' },
-  { color: 'B' as const, name: 'Đen', hex: '#334155' },
-  { color: 'R' as const, name: 'Đỏ', hex: '#DC2626' },
-  { color: 'G' as const, name: 'Lục', hex: '#16A34A' },
+  { color: 'W' as const, name: 'White', hex: '#F8E7B9' },
+  { color: 'U' as const, name: 'Blue', hex: '#0284C7' },
+  { color: 'B' as const, name: 'Black', hex: '#334155' },
+  { color: 'R' as const, name: 'Red', hex: '#DC2626' },
+  { color: 'G' as const, name: 'Green', hex: '#16A34A' },
 ];
 
 function analyzeManaBase(cards: DeckCardItem[]): {
@@ -126,14 +126,14 @@ function ManaBaseAnalyzerComponent({ cards }: ManaBaseAnalyzerProps) {
     <View style={[styles.container, { backgroundColor: theme.surface, borderColor: theme.border }]}>
       <View style={styles.headerRow}>
         <View>
-          <Text style={[styles.title, { color: theme.text }]}>Cân Bằng Nguồn Mana (Mana Base)</Text>
+          <Text style={[styles.title, { color: theme.text }]}>Mana Base Balance</Text>
           <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
-            So sánh Tỷ lệ Hạt Mana yêu cầu (Spells) vs Nguồn Đất cung cấp (Lands)
+            Compare Mana Pip Demand (Spells) vs Land Production (Lands)
           </Text>
         </View>
         <View style={styles.landBadge}>
           <Text style={[styles.landBadgeText, { color: theme.accent }]}>
-            {analysis.totalLands} Đất / {analysis.totalSpells} Phép
+            {analysis.totalLands} Lands / {analysis.totalSpells} Spells
           </Text>
         </View>
       </View>
@@ -155,10 +155,10 @@ function ManaBaseAnalyzerComponent({ cards }: ManaBaseAnalyzerProps) {
                 {/* Needs Bar */}
                 <View style={styles.barLabelRow}>
                   <Text style={[styles.barLabel, { color: theme.textSecondary }]}>
-                    Yêu cầu: {stat.pips} ({stat.pipPct}%)
+                    Demand: {stat.pips} ({stat.pipPct}%)
                   </Text>
                   <Text style={[styles.barLabel, { color: theme.textSecondary }]}>
-                    Nguồn cấp: {stat.sources} ({stat.sourcePct}%)
+                    Sources: {stat.sources} ({stat.sourcePct}%)
                   </Text>
                 </View>
 
@@ -194,7 +194,7 @@ function ManaBaseAnalyzerComponent({ cards }: ManaBaseAnalyzerProps) {
               <View style={styles.diffWrap}>
                 {isWarning ? (
                   <View style={styles.warningBadge}>
-                    <Text style={styles.warningText}>Thiếu</Text>
+                    <Text style={styles.warningText}>Low</Text>
                   </View>
                 ) : (
                   <Text style={[styles.diffText, { color: diff >= 0 ? '#22C55E' : theme.textMuted }]}>

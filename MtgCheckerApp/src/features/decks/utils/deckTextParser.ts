@@ -84,7 +84,7 @@ export function parseDeckText(rawText: string): DeckParseResult {
           raw: original,
         });
       } else {
-        errors.push(`Dòng ${idx + 1}: Không nhận dạng được: "${original}"`);
+        errors.push(`Line ${idx + 1}: Unrecognized card line: "${original}"`);
       }
     }
   }

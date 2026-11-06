@@ -35,12 +35,12 @@ interface CreateDeckModalProps {
 }
 
 const COLOR_MAP: Record<string, { label: string; bg: string; text: string }> = {
-  W: { label: 'Trắng', bg: '#F9FAF4', text: '#222222' },
-  U: { label: 'Xanh lam', bg: '#0E68AB', text: '#FFFFFF' },
-  B: { label: 'Đen', bg: '#1E1B18', text: '#FFFFFF' },
-  R: { label: 'Đỏ', bg: '#D3202A', text: '#FFFFFF' },
-  G: { label: 'Xanh lục', bg: '#00733E', text: '#FFFFFF' },
-  C: { label: 'Không màu', bg: '#A69F9D', text: '#111111' },
+  W: { label: 'White', bg: '#F9FAF4', text: '#222222' },
+  U: { label: 'Blue', bg: '#0E68AB', text: '#FFFFFF' },
+  B: { label: 'Black', bg: '#1E1B18', text: '#FFFFFF' },
+  R: { label: 'Red', bg: '#D3202A', text: '#FFFFFF' },
+  G: { label: 'Green', bg: '#00733E', text: '#FFFFFF' },
+  C: { label: 'Colorless', bg: '#A69F9D', text: '#111111' },
 };
 
 const DEFAULT_FALLBACK_FORMAT: DeckFormat = {
@@ -281,12 +281,12 @@ export function CreateDeckModal({ visible, formats, onClose, onCreate }: CreateD
 
   const handleCreate = async () => {
     if (!name.trim()) {
-      setErrorMessage('Vui lòng nhập tên bộ bài');
+      setErrorMessage('Please enter a deck name');
       return;
     }
 
     if (isCommanderFormat && !selectedCommander) {
-      setErrorMessage('Thể thức Commander yêu cầu bạn phải chọn 1 Vị Tướng (Commander)');
+      setErrorMessage('Commander format requires selecting a Commander card');
       return;
     }
 
@@ -333,7 +333,7 @@ export function CreateDeckModal({ visible, formats, onClose, onCreate }: CreateD
       setPastedDeckList('');
       onClose();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Lỗi không xác định';
+      const msg = err instanceof Error ? err.message : 'Unknown error';
       setErrorMessage(msg);
     } finally {
       setIsSubmitting(false);
@@ -376,7 +376,7 @@ export function CreateDeckModal({ visible, formats, onClose, onCreate }: CreateD
               <View style={styles.helperRow}>
                 <Feather name="shield" size={13} color={theme.accent} style={{ marginTop: 2 }} />
                 <Text style={[styles.helperText, { color: theme.textSecondary }]}>
-                  MtgChecker bảo vệ bộ bài của bạn và tự động đồng bộ khi có kết nối mạng.
+                  MtgChecker secures your decks and automatically syncs when online.
                 </Text>
               </View>
             </View>
@@ -805,11 +805,11 @@ export function CreateDeckModal({ visible, formats, onClose, onCreate }: CreateD
                       />
                       {pastedDeckList.trim().length > 0 ? (
                         <Text style={[styles.pasteHint, { color: theme.accent, fontWeight: '700' }]}>
-                          ✓ Đã nhận diện: {parseDeckText(pastedDeckList).totalCards} lá bài
+                          ✓ Detected: {parseDeckText(pastedDeckList).totalCards} cards
                         </Text>
                       ) : (
                         <Text style={[styles.pasteHint, { color: theme.textSecondary }]}>
-                          Chức năng import tự động sẽ phân tích cú pháp bài dạng văn bản.
+                          Automatic import parses your plain text card list format.
                         </Text>
                       )}
                     </View>

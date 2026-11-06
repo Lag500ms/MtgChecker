@@ -117,7 +117,7 @@ function DeckCompletionWidgetComponent({ cards }: DeckCompletionWidgetProps) {
       <View style={[styles.loadingBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
         <ActivityIndicator size="small" color={theme.accent} />
         <Text style={[styles.loadingText, { color: theme.textSecondary }]}>
-          Đang so khớp với Kho bộ sưu tập...
+          Comparing with collection inventory...
         </Text>
       </View>
     );
@@ -137,14 +137,14 @@ function DeckCompletionWidgetComponent({ cards }: DeckCompletionWidgetProps) {
       {/* Header */}
       <View style={styles.headerRow}>
         <View style={styles.titleWrap}>
-          <Text style={[styles.title, { color: theme.text }]}>Mức Độ Hoàn Thiện (Deck Completion)</Text>
+          <Text style={[styles.title, { color: theme.text }]}>Deck Completion</Text>
           <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
-            So khớp bài trong Deck với Kho sưu tập cá nhân
+            Matching deck cards against your personal collection
           </Text>
         </View>
 
         <View style={[styles.pctBadge, { backgroundColor: pctColor + '20', borderColor: pctColor }]}>
-          <Text style={[styles.pctBadgeText, { color: pctColor }]}>{analysis.completionPct}% ĐÃ CÓ</Text>
+          <Text style={[styles.pctBadgeText, { color: pctColor }]}>{analysis.completionPct}% OWNED</Text>
         </View>
       </View>
 
@@ -161,16 +161,16 @@ function DeckCompletionWidgetComponent({ cards }: DeckCompletionWidgetProps) {
       {/* Stats Cards */}
       <View style={styles.statsGrid}>
         <View style={[styles.statBox, { backgroundColor: theme.background, borderColor: theme.border }]}>
-          <Text style={[styles.statBoxLabel, { color: theme.textMuted }]}>ĐÃ SỞ HỮU</Text>
+          <Text style={[styles.statBoxLabel, { color: theme.textMuted }]}>OWNED</Text>
           <Text style={[styles.statBoxValue, { color: '#22C55E' }]}>
-            {analysis.totalCardsOwned} / {analysis.totalCardsRequired} lá
+            {analysis.totalCardsOwned} / {analysis.totalCardsRequired} cards
           </Text>
         </View>
 
         <View style={[styles.statBox, { backgroundColor: theme.background, borderColor: theme.border }]}>
-          <Text style={[styles.statBoxLabel, { color: theme.textMuted }]}>CÒN THIẾU</Text>
+          <Text style={[styles.statBoxLabel, { color: theme.textMuted }]}>MISSING</Text>
           <Text style={[styles.statBoxValue, { color: analysis.totalMissing > 0 ? '#EF4444' : '#22C55E' }]}>
-            {analysis.totalMissing === 0 ? 'Đủ 100%' : `${analysis.totalMissing} lá`}
+            {analysis.totalMissing === 0 ? '100% Complete' : `${analysis.totalMissing} cards`}
           </Text>
         </View>
       </View>
@@ -186,7 +186,7 @@ function DeckCompletionWidgetComponent({ cards }: DeckCompletionWidgetProps) {
         >
           <Feather name="alert-circle" size={14} color="#EF4444" />
           <Text style={styles.viewMissingText}>
-            Xem danh sách {analysis.totalMissing} lá còn thiếu
+            View {analysis.totalMissing} missing cards
           </Text>
           <Feather name="chevron-right" size={14} color="#EF4444" />
         </Pressable>
@@ -194,7 +194,7 @@ function DeckCompletionWidgetComponent({ cards }: DeckCompletionWidgetProps) {
         <View style={styles.fullOwnedBadge}>
           <Feather name="check-circle" size={14} color="#22C55E" />
           <Text style={styles.fullOwnedText}>
-            Bạn đã sở hữu đầy đủ tất cả lá bài trong bộ bài này!
+            You own all cards in this deck!
           </Text>
         </View>
       )}
@@ -211,10 +211,10 @@ function DeckCompletionWidgetComponent({ cards }: DeckCompletionWidgetProps) {
             <View style={styles.modalHeader}>
               <View>
                 <Text style={[styles.modalTitle, { color: theme.text }]}>
-                  Danh Sách {analysis.totalMissing} Thẻ Bài Còn Thiếu
+                  {analysis.totalMissing} Missing Cards
                 </Text>
                 <Text style={[styles.modalSubtitle, { color: theme.textSecondary }]}>
-                  Cần tìm mua hoặc đổi bài (Trade) để hoàn thiện deck
+                  Cards needed from trade or singles to complete deck
                 </Text>
               </View>
               <Pressable onPress={() => setShowMissingModal(false)} hitSlop={10}>
@@ -241,7 +241,7 @@ function DeckCompletionWidgetComponent({ cards }: DeckCompletionWidgetProps) {
                           <SetSymbol setCode={item.setCode} size={11} />
                         ) : null}
                         <Text style={[styles.missingSubText, { color: theme.textMuted }]}>
-                          Cần: {item.needed} · Kho có: {item.owned}
+                          Needed: {item.needed} · Owned: {item.owned}
                         </Text>
                       </View>
                     </View>
@@ -254,7 +254,7 @@ function DeckCompletionWidgetComponent({ cards }: DeckCompletionWidgetProps) {
               style={[styles.modalCloseBtn, { backgroundColor: theme.accent }]}
               onPress={() => setShowMissingModal(false)}
             >
-              <Text style={styles.modalCloseBtnText}>Đóng</Text>
+              <Text style={styles.modalCloseBtnText}>Close</Text>
             </Pressable>
           </View>
         </View>

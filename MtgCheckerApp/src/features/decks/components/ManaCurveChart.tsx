@@ -37,7 +37,7 @@ export function ManaCurveChart({ cards }: ManaCurveChartProps) {
   return (
     <View style={[styles.container, { backgroundColor: theme.surface, borderColor: theme.border }]}>
       <View style={styles.headerRow}>
-        <Text style={[styles.title, { color: theme.textSecondary }]}>ĐƯỜNG CONG MANA (MANA CURVE)</Text>
+        <Text style={[styles.title, { color: theme.textSecondary }]}>MANA CURVE</Text>
         <Text style={[styles.subtitle, { color: theme.textSecondary }]}>{totalNonLand} Spells</Text>
       </View>
 

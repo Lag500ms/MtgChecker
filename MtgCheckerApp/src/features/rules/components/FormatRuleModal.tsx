@@ -118,7 +118,7 @@ export function FormatRuleModal({
             >
               <Feather name="shield" size={16} color="#000" />
               <Text style={styles.openTrackerBtnText}>
-                Bắt đầu chơi với Life Tracker ({format.startingLife} HP)
+                Start Game in Life Tracker ({format.startingLife} HP)
               </Text>
             </Pressable>
           )}

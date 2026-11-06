@@ -72,10 +72,10 @@ export function SettingsScreen() {
 
       <ConfirmModal
         visible={logoutConfirmVisible}
-        title="Đăng xuất tài khoản"
-        message="Bạn có chắc chắn muốn kết thúc phiên đăng nhập hiện tại trên thiết bị này không?"
-        confirmLabel="Đăng xuất"
-        cancelLabel="Hủy"
+        title="Log Out"
+        message="Are you sure you want to log out of your account on this device?"
+        confirmLabel="Log Out"
+        cancelLabel="Cancel"
         icon="log-out"
         isDestructive={true}
         onConfirm={() => {

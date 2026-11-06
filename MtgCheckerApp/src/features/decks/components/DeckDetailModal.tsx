@@ -38,11 +38,11 @@ interface DeckDetailModalProps {
 }
 
 const COLOR_MAP: Record<string, { label: string; bg: string; text: string }> = {
-  W: { label: 'Trắng', bg: '#F9FAF4', text: '#333333' },
-  U: { label: 'Xanh lam', bg: '#0E68AB', text: '#FFFFFF' },
-  B: { label: 'Đen', bg: '#150B00', text: '#FFFFFF' },
-  R: { label: 'Đỏ', bg: '#D3202A', text: '#FFFFFF' },
-  G: { label: 'Xanh lục', bg: '#00733E', text: '#FFFFFF' },
+  W: { label: 'White', bg: '#F9FAF4', text: '#333333' },
+  U: { label: 'Blue', bg: '#0E68AB', text: '#FFFFFF' },
+  B: { label: 'Black', bg: '#150B00', text: '#FFFFFF' },
+  R: { label: 'Red', bg: '#D3202A', text: '#FFFFFF' },
+  G: { label: 'Green', bg: '#00733E', text: '#FFFFFF' },
 };
 
 export function DeckDetailModal({
@@ -118,7 +118,7 @@ export function DeckDetailModal({
       })
     );
     setHasUnsavedChanges(true);
-    toast.success(`Đã đổi sang phiên bản [${printing.set.toUpperCase()} #${printing.collectorNumber}].`);
+    toast.success(`Switched to [${printing.set.toUpperCase()} #${printing.collectorNumber}].`);
     setEditingCard(null);
   };
 
@@ -128,7 +128,7 @@ export function DeckDetailModal({
     try {
       const parsed = parseDeckText(importText);
       if (parsed.lines.length === 0) {
-        toast.info('Không nhận diện được lá bài nào từ văn bản.');
+        toast.info('No cards recognized from text.');
         return;
       }
 
@@ -186,9 +186,9 @@ export function DeckDetailModal({
       setHasUnsavedChanges(true);
       setShowImportModal(false);
       setImportText('');
-      toast.success(`Đã nhập thành công ${parsed.totalCards} lá bài vào bộ bài!`);
+      toast.success(`Successfully imported ${parsed.totalCards} cards into deck!`);
     } catch {
-      toast.error('Lỗi khi nhập danh sách bài');
+      toast.error('Error importing card list');
     } finally {
       setIsImporting(false);
     }
@@ -251,7 +251,7 @@ export function DeckDetailModal({
     if (!cardToDelete) return;
     setCards((prev) => prev.filter((c) => c.scryfallId !== cardToDelete.scryfallId));
     setHasUnsavedChanges(true);
-    toast.info(`Đã loại "${cardToDelete.name}" khỏi bộ bài.`);
+    toast.info(`Removed "${cardToDelete.name}" from deck.`);
     setCardToDelete(null);
   };
 
@@ -322,10 +322,10 @@ export function DeckDetailModal({
       const syncedDeck = await syncDeckCards(deck.id, payload);
       setHasUnsavedChanges(false);
       onDeckUpdated(syncedDeck);
-      toast.success('Đã lưu và đồng bộ bộ bài lên máy chủ.', 'Thành công');
+      toast.success('Deck saved and synced to cloud.', 'Success');
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Lỗi đồng bộ';
-      toast.error(`Không thể đồng bộ: ${msg}`, 'Lỗi');
+      const msg = err instanceof Error ? err.message : 'Sync error';
+      toast.error(`Could not sync: ${msg}`, 'Error');
     } finally {
       setIsSyncing(false);
     }
@@ -351,17 +351,17 @@ export function DeckDetailModal({
                 </Text>
               </View>
               <Text style={[styles.cardCountText, { color: theme.textSecondary }]}>
-                {totalCardCount} lá
+                {totalCardCount} cards
               </Text>
               {illegalCardsCount > 0 ? (
                 <View style={styles.illegalPill}>
                   <Feather name="alert-triangle" size={12} color="#FFF" />
-                  <Text style={styles.illegalPillText}>{illegalCardsCount} lá vi phạm</Text>
+                  <Text style={styles.illegalPillText}>{illegalCardsCount} illegal</Text>
                 </View>
               ) : (
                 <View style={styles.legalPill}>
                   <Feather name="check" size={12} color="#10B981" />
-                  <Text style={styles.legalPillText}>Hợp lệ</Text>
+                  <Text style={styles.legalPillText}>Legal</Text>
                 </View>
               )}
             </View>
@@ -481,7 +481,7 @@ export function DeckDetailModal({
                           ]}
                         >
                           {tab === 'ALL'
-                            ? `Tất cả (${cards.length})`
+                            ? `All (${cards.length})`
                             : tab === 'MAINBOARD'
                             ? 'Main'
                             : 'Side'}
@@ -497,7 +497,7 @@ export function DeckDetailModal({
                     onPress={() => setShowSampleHand(true)}
                   >
                     <Feather name="play-circle" size={13} color={theme.accent} />
-                    <Text style={[styles.toolBtnText, { color: theme.accent }]}>Thử bài</Text>
+                    <Text style={[styles.toolBtnText, { color: theme.accent }]}>Playtest</Text>
                   </Pressable>
 
                   <Pressable
@@ -505,7 +505,7 @@ export function DeckDetailModal({
                     onPress={() => setShowImportModal(true)}
                   >
                     <Feather name="file-text" size={13} color={theme.text} />
-                    <Text style={[styles.toolBtnText, { color: theme.text }]}>Nhập</Text>
+                    <Text style={[styles.toolBtnText, { color: theme.text }]}>Import</Text>
                   </Pressable>
 
                   <View style={[styles.viewModeToggle, { borderColor: theme.border }]}>
@@ -605,8 +605,8 @@ export function DeckDetailModal({
                         style={[styles.legalityBadge, { backgroundColor: item.legalityColor || '#EF4444' }]}
                         onPress={() =>
                           setInfoModalData({
-                            title: 'Luật Thể Thức',
-                            message: item.legalityReason || 'Lá bài không hợp lệ',
+                            title: 'Format Legality',
+                            message: item.legalityReason || 'Card is not legal in this format',
                           })
                         }
                       >
@@ -653,7 +653,7 @@ export function DeckDetailModal({
             <View style={styles.emptyContainer}>
               <Feather name="inbox" size={36} color={theme.textSecondary} />
               <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
-                Chưa có thẻ bài nào trong mục này.
+                No cards in this section yet.
               </Text>
             </View>
           }
@@ -666,7 +666,7 @@ export function DeckDetailModal({
                 styles.searchInput,
                 { backgroundColor: theme.background, borderColor: theme.border, color: theme.text },
               ]}
-              placeholder="Thêm nhanh: gõ tên thẻ (Lightning Bolt, Counterspell...)"
+              placeholder="Quick add: card name (Lightning Bolt, Counterspell...)"
               placeholderTextColor={theme.textSecondary}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -710,10 +710,10 @@ export function DeckDetailModal({
 
         <ConfirmModal
           visible={!!cardToDelete}
-          title="Xóa lá bài"
-          message={`Bạn có chắc muốn loại bỏ "${cardToDelete?.name}" khỏi bộ bài không?`}
-          confirmLabel="Xóa"
-          cancelLabel="Hủy"
+          title="Remove Card"
+          message={`Are you sure you want to remove "${cardToDelete?.name}" from this deck?`}
+          confirmLabel="Remove"
+          cancelLabel="Cancel"
           icon="trash-2"
           isDestructive
           onConfirm={handleConfirmRemoveCard}
@@ -724,8 +724,8 @@ export function DeckDetailModal({
           visible={!!infoModalData}
           title={infoModalData?.title || ''}
           message={infoModalData?.message || ''}
-          confirmLabel="Đã hiểu"
-          cancelLabel="Đóng"
+          confirmLabel="Understood"
+          cancelLabel="Close"
           icon="alert-circle"
           isDestructive={false}
           onConfirm={() => setInfoModalData(null)}
@@ -755,7 +755,7 @@ export function DeckDetailModal({
                     {editingCard?.name}
                   </Text>
                   <Text style={[styles.switchModalSub, { color: theme.textSecondary }]}>
-                    {editingCard?.setCode?.toUpperCase()} #{editingCard?.collectorNumber} • Chọn bản in để đổi
+                    {editingCard?.setCode?.toUpperCase()} #{editingCard?.collectorNumber} • Tap printing to switch
                   </Text>
                 </View>
                 <Pressable
@@ -796,7 +796,7 @@ export function DeckDetailModal({
                   }}
                 >
                   <Feather name="trash-2" size={14} color="#EF4444" />
-                  <Text style={styles.removeCardText}>Xóa khỏi deck</Text>
+                  <Text style={styles.removeCardText}>Remove from deck</Text>
                 </Pressable>
               </View>
 
@@ -805,7 +805,7 @@ export function DeckDetailModal({
                   <View style={styles.printingsTitleRow}>
                     <Feather name="layers" size={14} color="#E0AD62" />
                     <Text style={[styles.printingsSectionTitle, { color: theme.text }]}>
-                      Các Phiên Bản In (All Printings)
+                      All Printings
                     </Text>
                   </View>
                   {loadingPrintings && <ActivityIndicator size="small" color="#E0AD62" />}
@@ -849,7 +849,7 @@ export function DeckDetailModal({
                         <Text style={styles.printingPrice}>${price}</Text>
                         {isCurrent && (
                           <View style={[styles.currentVersionBadge, { backgroundColor: theme.accent }]}>
-                            <Text style={styles.currentVersionText}>Đang dùng</Text>
+                            <Text style={styles.currentVersionText}>Current</Text>
                           </View>
                         )}
                       </Pressable>
@@ -865,7 +865,7 @@ export function DeckDetailModal({
         <SampleHandModal
           visible={showSampleHand}
           cards={cards}
-          deckName={deck?.name || 'Bộ bài'}
+          deckName={deck?.name || 'Deck'}
           onClose={() => setShowSampleHand(false)}
         />
 
@@ -879,14 +879,14 @@ export function DeckDetailModal({
           <View style={styles.importOverlay}>
             <View style={[styles.importBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
               <View style={styles.importHeader}>
-                <Text style={[styles.importTitle, { color: theme.text }]}>Nhập Danh Sách Bài (Import Text)</Text>
+                <Text style={[styles.importTitle, { color: theme.text }]}>Import Decklist (Text)</Text>
                 <Pressable onPress={() => setShowImportModal(false)} hitSlop={10}>
                   <Feather name="x" size={18} color={theme.text} />
                 </Pressable>
               </View>
 
               <Text style={[styles.importSubtitle, { color: theme.textSecondary }]}>
-                Dán danh sách bài theo chuẩn MTG Arena, Moxfield hoặc plain text:
+                Paste decklist format from MTG Arena, Moxfield, or plain text:
               </Text>
 
               <TextInput
@@ -907,7 +907,7 @@ export function DeckDetailModal({
                   style={[styles.importCancelBtn, { borderColor: theme.border }]}
                   onPress={() => setShowImportModal(false)}
                 >
-                  <Text style={[styles.importCancelText, { color: theme.text }]}>Hủy</Text>
+                  <Text style={[styles.importCancelText, { color: theme.text }]}>Cancel</Text>
                 </Pressable>
 
                 <Pressable
@@ -918,7 +918,7 @@ export function DeckDetailModal({
                   {isImporting ? (
                     <ActivityIndicator size="small" color="#000" />
                   ) : (
-                    <Text style={styles.importConfirmText}>Nhập Vào Bộ Bài</Text>
+                    <Text style={styles.importConfirmText}>Import Cards</Text>
                   )}
                 </Pressable>
               </View>

@@ -26,7 +26,7 @@ export function checkCardLegality(
       status: 'legal',
       badgeText: 'LEGAL',
       badgeColor: '#10B981',
-      reason: 'Được phép sử dụng',
+      reason: 'Legal for play',
     };
   }
 
@@ -41,7 +41,7 @@ export function checkCardLegality(
         status: 'not_legal',
         badgeText: `MISMATCH: ${invalidColors.join('')}`,
         badgeColor: '#EF4444',
-        reason: `Thẻ bài mang màu [${invalidColors.join(', ')}] không nằm trong bản sắc màu của Commander [${commanderColorIdentity.join(', ')}] (CR 904.4)`,
+        reason: `Card color [${invalidColors.join(', ')}] outside Commander's color identity [${commanderColorIdentity.join(', ')}] (CR 904.4)`,
       };
     }
   }
@@ -55,7 +55,7 @@ export function checkCardLegality(
       status: 'banned',
       badgeText: 'BANNED',
       badgeColor: '#EF4444',
-      reason: `Bị cấm thi đấu trong thể thức ${format.name}`,
+      reason: `Banned in ${format.name}`,
     };
   }
 
@@ -65,7 +65,7 @@ export function checkCardLegality(
       status: 'restricted',
       badgeText: 'RESTRICTED',
       badgeColor: '#F59E0B',
-      reason: `Giới hạn chỉ 1 bản trong thể thức ${format.name}`,
+      reason: `Restricted to 1 copy in ${format.name}`,
     };
   }
 
@@ -77,7 +77,7 @@ export function checkCardLegality(
         status: 'not_legal',
         badgeText: 'NOT COMMON',
         badgeColor: '#F97316',
-        reason: 'Pauper chỉ cho phép các thẻ bài có độ hiếm Common',
+        reason: 'Pauper format only allows cards printed at common rarity',
       };
     }
   }
@@ -88,7 +88,7 @@ export function checkCardLegality(
       status: 'legal',
       badgeText: 'LEGAL',
       badgeColor: '#10B981',
-      reason: `Hợp lệ trong thể thức ${format.name}`,
+      reason: `Legal in ${format.name}`,
     };
   }
 
@@ -97,6 +97,6 @@ export function checkCardLegality(
     status: 'not_legal',
     badgeText: 'NOT LEGAL',
     badgeColor: '#EF4444',
-    reason: `Không thuộc thể thức ${format.name}`,
+    reason: `Not legal in ${format.name}`,
   };
 }

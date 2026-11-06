@@ -172,8 +172,8 @@ export function LifeTrackerModal({
         logHistoryChange(
           targetPlayerId,
           delta > 0
-            ? `-${delta} (Tướng P${fromPlayerId.replace('p', '')})`
-            : `+${Math.abs(delta)} (Tướng P${fromPlayerId.replace('p', '')})`,
+            ? `-${delta} (Cmdr P${fromPlayerId.replace('p', '')})`
+            : `+${Math.abs(delta)} (Cmdr P${fromPlayerId.replace('p', '')})`,
           newLife
         );
         return {
@@ -217,7 +217,7 @@ export function LifeTrackerModal({
     resetGame(startingLife, nextCount);
   };
 
-  /* Render 2 người chơi (nửa trên P2 xoay 180°, nửa dưới P1) */
+  /* Render 2 players (top half P2 rotated 180°, bottom half P1) */
   const renderTwoPlayers = () => {
     const p1 = players[0];
     const p2 = players[1];
@@ -259,7 +259,7 @@ export function LifeTrackerModal({
     );
   };
 
-  /* Render 4 người chơi (Góc trên P2, P3 xoay 180°. Góc dưới P1, P4 xoay 0°) */
+  /* Render 4 players (Top corners P2, P3 rotated 180°. Bottom corners P1, P4 at 0°) */
   const renderFourPlayers = () => {
     const p1 = players[0];
     const p2 = players[1];
@@ -269,7 +269,7 @@ export function LifeTrackerModal({
 
     return (
       <View style={styles.boardGrid}>
-        {/* Hàng trên xoay 180 độ đối diện */}
+        {/* Top row rotated 180 degrees */}
         <View style={styles.row}>
           <PlayerCard
             player={p3}
@@ -299,7 +299,7 @@ export function LifeTrackerModal({
           />
         </View>
 
-        {/* Hàng dưới bình thường 0 độ */}
+        {/* Bottom row normal orientation 0 degrees */}
         <View style={styles.row}>
           <PlayerCard
             player={p1}
@@ -353,7 +353,7 @@ export function LifeTrackerModal({
       >
         {playerCount === 2 ? renderTwoPlayers() : renderFourPlayers()}
 
-        {/* Trung tâm điều khiển nổi (Floating Center Hub) */}
+        {/* Floating Center Hub */}
         <View style={styles.centerHub}>
           <Pressable
             onPress={togglePlayerCount}
@@ -388,7 +388,7 @@ export function LifeTrackerModal({
           </Pressable>
         </View>
 
-        {/* Modal Tiện ích bàn đấu: Xúc xắc, đồng xu, chọn người đi trước */}
+        {/* Table tools modal: Dice, coin, first player picker */}
         <TableToolsModal
           visible={toolsVisible}
           onClose={() => setToolsVisible(false)}
@@ -398,10 +398,10 @@ export function LifeTrackerModal({
 
         <ConfirmModal
           visible={resetConfirmVisible}
-          title="Bắt đầu ván đấu mới?"
-          message="Toàn bộ điểm máu, sát thương tướng và bộ đếm sẽ được khôi phục về trạng thái ban đầu."
-          confirmLabel={`Làm mới (${startingLife} HP)`}
-          cancelLabel="Hủy"
+          title="Start a new game?"
+          message="All life totals, commander damage counters, and status effects will be reset."
+          confirmLabel={`Reset (${startingLife} HP)`}
+          cancelLabel="Cancel"
           icon="rotate-ccw"
           isDestructive={true}
           onConfirm={() => {

@@ -47,7 +47,7 @@ export function PlayerCard({
 
   const themeConfig = PLAYER_THEMES[player.themeColor] || PLAYER_THEMES.colorless;
 
-  /* Kiểm tra các điều kiện thua trận theo luật Comprehensive Rules */
+  /* Check defeat conditions based on Comprehensive Rules */
   const isDeadByLife = player.life <= 0;
   const isDeadByPoison = player.poison >= 10;
   const lethalCommanderDamageSource = Object.entries(player.commanderDamageReceived).find(
@@ -77,7 +77,7 @@ export function PlayerCard({
         },
       ]}
     >
-      {/* Top Header bar của từng người chơi */}
+      {/* Top Header bar for each player */}
       <View style={styles.topBar}>
         <Pressable
           onPress={() => setShowColorPicker(!showColorPicker)}
@@ -121,7 +121,7 @@ export function PlayerCard({
         </View>
       </View>
 
-      {/* Bộ chọn màu nếu người chơi nhấn vào chấm màu */}
+      {/* Color picker dropdown */}
       {showColorPicker && (
         <View style={styles.colorPaletteRow}>
           {colorOptions.map((c) => (
@@ -141,23 +141,23 @@ export function PlayerCard({
         </View>
       )}
 
-      {/* Chế độ 1: LIFE DISPLAY CHÍNH VỚI VÙNG CHẠM TÀNG HÌNH CHIA ĐÔI */}
+      {/* Mode 1: MAIN LIFE DISPLAY WITH INVISIBLE SPLIT TOUCH ZONE */}
       {viewMode === 'life' && (
         <View style={styles.mainLifeArea}>
           {isDefeated && (
             <View style={styles.defeatedBadge}>
               <Text style={styles.defeatedText}>
                 {isDeadByPoison
-                  ? '💀 THUA BỞI POISON (10+)'
+                  ? '💀 ELIMINATED BY POISON (10+)'
                   : isDeadByCommander
-                  ? '💀 THUA BỞI COMMANDER DMG (21+)'
-                  : '💀 THUA TRẬN (0 HP)'}
+                  ? '💀 ELIMINATED BY COMMANDER DMG (21+)'
+                  : '💀 ELIMINATED (0 HP)'}
               </Text>
             </View>
           )}
 
           <View style={styles.splitTouchArea}>
-            {/* Nửa bên trái: Nhấp là -1, giữ lâu là -5 */}
+            {/* Left half: Tap = -1, Long press = -5 */}
             <Pressable
               onPress={() => onUpdateLife(player.id, -1)}
               onLongPress={() => onUpdateLife(player.id, -5)}
@@ -175,7 +175,7 @@ export function PlayerCard({
               />
             </Pressable>
 
-            {/* Nửa bên phải: Nhấp là +1, giữ lâu là +5 */}
+            {/* Right half: Tap = +1, Long press = +5 */}
             <Pressable
               onPress={() => onUpdateLife(player.id, 1)}
               onLongPress={() => onUpdateLife(player.id, 5)}
@@ -193,7 +193,7 @@ export function PlayerCard({
               />
             </Pressable>
 
-            {/* Số máu to hiển thị trung tâm, pointerEvents="none" để chạm xuyên thấu */}
+            {/* Centered big life counter, pointerEvents="none" for pass-through touches */}
             <View style={styles.lifeCenterOverlay} pointerEvents="none">
               <Text
                 style={[
@@ -206,14 +206,14 @@ export function PlayerCard({
                 {player.life}
               </Text>
               <Text style={[styles.lifeTapHint, { color: themeConfig.accent }]}>
-                - Chạm Trái  |  Chạm Phải +
+                - Tap Left  |  Tap Right +
               </Text>
             </View>
           </View>
         </View>
       )}
 
-      {/* Chế độ 2: BỘ ĐẾM PHỤ (Poison, Commander Tax, Energy, Monarch) */}
+      {/* Mode 2: SECONDARY COUNTERS (Poison, Commander Tax, Energy, Monarch) */}
       {viewMode === 'counters' && (
         <View style={styles.countersArea}>
           {/* Poison */}
@@ -295,7 +295,7 @@ export function PlayerCard({
             </View>
           </View>
 
-          {/* Nút bật Monarch & Initiative */}
+          {/* Monarch & Initiative toggle buttons */}
           <View style={styles.statusToggleRow}>
             <Pressable
               onPress={() => onToggleMonarch(player.id)}
@@ -319,11 +319,11 @@ export function PlayerCard({
         </View>
       )}
 
-      {/* Chế độ 3: COMMANDER DAMAGE MATRIX (CR 903.10a) */}
+      {/* Mode 3: COMMANDER DAMAGE MATRIX (CR 903.10a) */}
       {viewMode === 'commanderDmg' && (
         <View style={styles.commanderDmgArea}>
           <Text style={[styles.cmdDmgTitle, { color: themeConfig.accent }]}>
-            Sát Thương Tướng Nhận (Ngưỡng 21)
+            Commander Damage Taken (Threshold 21)
           </Text>
           {otherPlayers.map((other) => {
             const dmg = player.commanderDamageReceived[other.id] || 0;
@@ -331,7 +331,7 @@ export function PlayerCard({
             return (
               <View key={other.id} style={styles.cmdDmgRow}>
                 <Text style={[styles.cmdDmgAttackerName, { color: other.themeColor ? PLAYER_THEMES[other.themeColor].accent : '#FFF' }]} numberOfLines={1}>
-                  Tướng của {other.name}:
+                  From {other.name}:
                 </Text>
                 <View style={styles.counterControls}>
                   <Pressable
@@ -361,14 +361,14 @@ export function PlayerCard({
         </View>
       )}
 
-      {/* Footer Mini bar: Đổi nhanh sang các view khác */}
+      {/* Footer Mini bar: Quick switch between views */}
       <View style={styles.bottomBar}>
         <Pressable
           onPress={() => setViewMode('life')}
           style={[styles.bottomTab, viewMode === 'life' && styles.bottomTabActive]}
         >
           <Text style={[styles.bottomTabText, viewMode === 'life' && { color: themeConfig.accent }]}>
-            Máu
+            Life
           </Text>
         </Pressable>
         <Pressable

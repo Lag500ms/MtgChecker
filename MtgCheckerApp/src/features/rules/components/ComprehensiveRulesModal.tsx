@@ -163,7 +163,7 @@ export function ComprehensiveRulesModal({
                 Comprehensive Rules
               </Text>
               <Text style={[styles.headerSubtitle, { color: theme.textMuted }]}>
-                Toàn thư Luật & Thuật ngữ MTG
+                MTG Rules & Glossary Compendium
               </Text>
             </View>
           </View>
@@ -194,7 +194,7 @@ export function ComprehensiveRulesModal({
                 { color: activeTab === 'rules' ? '#E0AD62' : theme.textMuted },
               ]}
             >
-              Điều Luật (3,165 CR)
+              Rules (3,165 CR)
             </Text>
           </Pressable>
 
@@ -219,7 +219,7 @@ export function ComprehensiveRulesModal({
                 { color: activeTab === 'glossary' ? '#E0AD62' : theme.textMuted },
               ]}
             >
-              Từ Điển Thuật Ngữ (727)
+              Glossary Terms (727)
             </Text>
           </Pressable>
         </View>
@@ -230,8 +230,8 @@ export function ComprehensiveRulesModal({
             style={[styles.searchInput, { color: theme.text }]}
             placeholder={
               activeTab === 'rules'
-                ? 'Tìm số điều (704.5k) hoặc từ khóa (layer, combat)...'
-                : 'Tra thuật ngữ MTG (Haste, Ward, Scry)...'
+                ? 'Search rule code (704.5k) or keyword (layer, combat)...'
+                : 'Search MTG glossary (Haste, Ward, Scry)...'
             }
             placeholderTextColor={theme.textMuted}
             value={searchQuery}
@@ -248,7 +248,7 @@ export function ComprehensiveRulesModal({
         {loading && (
           <View style={styles.loadingWrap}>
             <ActivityIndicator size="small" color="#E0AD62" />
-            <Text style={[styles.loadingText, { color: theme.textMuted }]}>Đang tải luật...</Text>
+            <Text style={[styles.loadingText, { color: theme.textMuted }]}>Loading rules...</Text>
           </View>
         )}
 
@@ -269,7 +269,7 @@ export function ComprehensiveRulesModal({
                 !loading ? (
                   <View style={styles.emptyWrap}>
                     <Text style={[styles.emptyText, { color: theme.textMuted }]}>
-                      Không tìm thấy điều luật khớp với "{searchQuery}"
+                      No rules matching "{searchQuery}"
                     </Text>
                   </View>
                 ) : undefined
@@ -280,7 +280,7 @@ export function ComprehensiveRulesModal({
               <View style={[styles.navBreadcrumb, { backgroundColor: theme.surface, borderColor: theme.border }]}>
                 <Pressable style={styles.backBtn} onPress={handleResetView}>
                   <Feather name="chevron-left" size={18} color="#E0AD62" />
-                  <Text style={styles.backText}>Chương mục</Text>
+                  <Text style={styles.backText}>Chapters</Text>
                 </Pressable>
                 <Text style={[styles.breadcrumbTitle, { color: theme.text }]} numberOfLines={1}>
                   CR {selectedChapter.chapterNumber}: {selectedChapter.chapterTitle}
@@ -304,7 +304,7 @@ export function ComprehensiveRulesModal({
           ) : (
             <ScrollView contentContainerStyle={styles.listContent}>
               <Text style={[styles.sectionHeading, { color: theme.textMuted }]}>
-                9 PHẦN LUẬT COMPREHENSIVE RULES
+                9 OFFICIAL COMPREHENSIVE RULES SECTIONS
               </Text>
               {sections.map((sec) => (
                 <View key={sec.sectionNumber} style={[styles.sectionCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
@@ -368,7 +368,7 @@ export function ComprehensiveRulesModal({
                     onPress={() => openRuleDirectly(item.seeRule!)}
                   >
                     <Feather name="external-link" size={12} color="#E0AD62" />
-                    <Text style={styles.seeRuleText}>Xem điều luật CR {item.seeRule}</Text>
+                    <Text style={styles.seeRuleText}>View CR Rule {item.seeRule}</Text>
                   </Pressable>
                 )}
               </View>
@@ -377,7 +377,7 @@ export function ComprehensiveRulesModal({
               !loading ? (
                 <View style={styles.emptyWrap}>
                   <Text style={[styles.emptyText, { color: theme.textMuted }]}>
-                    Không tìm thấy thuật ngữ khớp
+                    No glossary terms found
                   </Text>
                 </View>
               ) : undefined
@@ -427,7 +427,7 @@ function RuleCard({
         <View style={[styles.exampleBox, { backgroundColor: theme.surfaceAlt || 'rgba(0,0,0,0.2)' }]}>
           <View style={styles.exampleHeader}>
             <Feather name="info" size={11} color="#E0AD62" />
-            <Text style={styles.exampleLabel}>VÍ DỤ CHÍNH THỨC</Text>
+            <Text style={styles.exampleLabel}>OFFICIAL EXAMPLES</Text>
           </View>
           <Text style={[styles.exampleText, { color: theme.textSecondary }]}>
             {rule.examplesText}
@@ -437,7 +437,7 @@ function RuleCard({
 
       {rule.crossReferences && rule.crossReferences.length > 0 && (
         <View style={styles.crossRefRow}>
-          <Text style={[styles.crossRefLabel, { color: theme.textMuted }]}>Tham chiếu:</Text>
+          <Text style={[styles.crossRefLabel, { color: theme.textMuted }]}>References:</Text>
           {rule.crossReferences.map((ref, idx) => (
             <Pressable key={idx} style={styles.crossRefPill} onPress={() => onSelectRef(ref)}>
               <Text style={styles.crossRefText}>CR {ref}</Text>

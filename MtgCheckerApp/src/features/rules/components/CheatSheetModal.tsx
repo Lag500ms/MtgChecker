@@ -98,7 +98,7 @@ export function CheatSheetModal({ topic, visible, onClose }: CheatSheetModalProp
             <TextInput
               value={filterText}
               onChangeText={setFilterText}
-              placeholder="Lọc điều luật, từ khóa, số CR..."
+              placeholder="Filter rules, keywords, CR citation..."
               placeholderTextColor={theme.textMuted}
               style={[styles.filterInput, { color: theme.text }]}
               autoCapitalize="none"
@@ -126,10 +126,10 @@ export function CheatSheetModal({ topic, visible, onClose }: CheatSheetModalProp
             <View style={[styles.emptyFilterCard, { borderColor: theme.border }]}>
               <Feather name="search" size={24} color={theme.textMuted} />
               <Text style={[styles.emptyFilterTitle, { color: theme.text }]}>
-                Không tìm thấy điều luật phù hợp
+                No matching rules found
               </Text>
               <Text style={[styles.emptyFilterSub, { color: theme.textSecondary }]}>
-                Không có mục nào trong cẩm nang này chứa từ khóa &quot;{filterText}&quot;.
+                No entries in this cheat sheet match &quot;{filterText}&quot;.
               </Text>
             </View>
           ) : (

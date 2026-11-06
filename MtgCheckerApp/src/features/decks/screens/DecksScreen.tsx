@@ -29,12 +29,12 @@ import { DeckDetailModal } from '../components/DeckDetailModal';
 import type { Deck, DeckFormat, DeckSummary } from '../types/deck';
 
 const COLOR_MAP: Record<string, { label: string; bg: string; text: string }> = {
-  W: { label: 'Trắng', bg: '#F9FAF4', text: '#333333' },
-  U: { label: 'Xanh lam', bg: '#0E68AB', text: '#FFFFFF' },
-  B: { label: 'Đen', bg: '#150B00', text: '#FFFFFF' },
-  R: { label: 'Đỏ', bg: '#D3202A', text: '#FFFFFF' },
-  G: { label: 'Xanh lục', bg: '#00733E', text: '#FFFFFF' },
-  C: { label: 'Không màu', bg: '#666666', text: '#FFFFFF' },
+  W: { label: 'White', bg: '#F9FAF4', text: '#333333' },
+  U: { label: 'Blue', bg: '#0E68AB', text: '#FFFFFF' },
+  B: { label: 'Black', bg: '#150B00', text: '#FFFFFF' },
+  R: { label: 'Red', bg: '#D3202A', text: '#FFFFFF' },
+  G: { label: 'Green', bg: '#00733E', text: '#FFFFFF' },
+  C: { label: 'Colorless', bg: '#666666', text: '#FFFFFF' },
 };
 
 export function DecksScreen() {
@@ -111,10 +111,10 @@ export function DecksScreen() {
       await loadData();
       setSelectedDeck(created);
       setDetailModalVisible(true);
-      toast.success(`Đã tạo bộ bài "${name}" thành công.`);
+      toast.success(`Created deck "${name}" successfully.`);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Không thể tạo bộ bài';
-      toast.error(msg, 'Lỗi');
+      const msg = err instanceof Error ? err.message : 'Could not create deck';
+      toast.error(msg, 'Error');
     }
   };
 
@@ -124,7 +124,7 @@ export function DecksScreen() {
       setSelectedDeck(full);
       setDetailModalVisible(true);
     } else {
-      toast.error('Không thể tải chi tiết bộ bài.', 'Lỗi');
+      toast.error('Could not load deck details.', 'Error');
     }
   };
 
@@ -133,9 +133,9 @@ export function DecksScreen() {
     try {
       await deleteDeck(deckToDelete.id);
       setDecks((prev) => prev.filter((d) => d.id !== deckToDelete.id));
-      toast.success(`Đã xóa bộ bài "${deckToDelete.name}".`);
+      toast.success(`Deleted deck "${deckToDelete.name}".`);
     } catch {
-      toast.error('Không thể xóa bộ bài lúc này.', 'Lỗi');
+      toast.error('Could not delete deck at this time.', 'Error');
     } finally {
       setDeckToDelete(null);
     }
@@ -157,14 +157,14 @@ export function DecksScreen() {
   if (!account) {
     return (
       <View style={[styles.root, { backgroundColor: theme.background }]}>
-        <ScreenHeader title="Bộ Bài Của Tôi" />
+        <ScreenHeader title="My Decks" />
         <EmptyState
           icon="lock"
-          title="Đăng nhập để xem & quản lý bộ bài"
-          message="Danh sách bộ bài và chiến thuật được đồng bộ và bảo mật theo tài khoản của bạn."
+          title="Sign in to view & manage decks"
+          message="Your decks and strategies are synced and secured with your account."
         />
         <Pressable onPress={() => router.push('/login')} style={styles.loginLinkWrap}>
-          <Text style={[styles.loginLink, { color: theme.accent }]}>Đăng nhập ngay</Text>
+          <Text style={[styles.loginLink, { color: theme.accent }]}>Sign in now</Text>
         </Pressable>
       </View>
     );
@@ -173,7 +173,7 @@ export function DecksScreen() {
   return (
     <View style={[styles.root, { backgroundColor: theme.background }]}>
       <ScreenHeader
-        title="Bộ Bài Của Tôi"
+        title="My Decks"
         rightAction={
           <Pressable
             style={[styles.createHeaderBtn, { backgroundColor: theme.accent }]}
@@ -186,7 +186,7 @@ export function DecksScreen() {
               adjustsFontSizeToFit
               minimumFontScale={0.85}
             >
-              Tạo Deck
+              New Deck
             </Text>
           </Pressable>
         }
@@ -203,7 +203,7 @@ export function DecksScreen() {
           <TextInput
             value={searchQuery}
             onChangeText={setSearchQuery}
-            placeholder="Tìm theo tên bộ bài hoặc Tướng..."
+            placeholder="Search by deck or commander name..."
             placeholderTextColor={theme.textSecondary}
             style={[styles.searchInput, { color: theme.text }]}
             autoCapitalize="none"
@@ -222,7 +222,7 @@ export function DecksScreen() {
         <FlatList
           horizontal
           showsHorizontalScrollIndicator={false}
-          data={[{ id: 'ALL', name: 'Tất cả' }, ...formats]}
+          data={[{ id: 'ALL', name: 'All' }, ...formats]}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.filterContent}
           renderItem={({ item }) => {
@@ -371,12 +371,12 @@ export function DecksScreen() {
                   <View style={styles.progressSection}>
                     <View style={styles.progressTextRow}>
                       <Text style={[styles.progressLabel, { color: hasCover ? '#E2E8F0' : theme.textSecondary }]}>
-                        {item.totalCount} / {targetCount} lá
+                        {item.totalCount} / {targetCount} cards
                       </Text>
                       {isComplete && (
                         <View style={styles.completeBadge}>
                           <Feather name="check" size={10} color="#10B981" />
-                          <Text style={styles.completeLabel}>Đầy đủ</Text>
+                          <Text style={styles.completeLabel}>Complete</Text>
                         </View>
                       )}
                     </View>
@@ -400,12 +400,12 @@ export function DecksScreen() {
             <View style={styles.emptyContainer}>
               <Feather name="copy" size={48} color={theme.textSecondary} />
               <Text style={[styles.emptyTitle, { color: theme.text }]}>
-                {searchQuery ? 'Không tìm thấy bộ bài nào' : 'Chưa có bộ bài nào'}
+                {searchQuery ? 'No decks found' : 'No decks yet'}
               </Text>
               <Text style={[styles.emptySubtitle, { color: theme.textSecondary }]}>
                 {searchQuery
-                  ? `Không có bộ bài nào khớp với từ khóa "${searchQuery}".`
-                  : 'Tạo bộ bài đầu tiên của bạn cho thể thức Commander, Standard hoặc Pauper.'}
+                  ? `No decks match "${searchQuery}".`
+                  : 'Create your first deck for Commander, Standard, Modern, or other formats.'}
               </Text>
               {!searchQuery && (
                 <Pressable
@@ -413,7 +413,7 @@ export function DecksScreen() {
                   onPress={() => setCreateModalVisible(true)}
                 >
                   <Feather name="plus" size={16} color="#0D0E12" />
-                  <Text style={styles.emptyCreateBtnText}>Tạo Bộ Bài Mới</Text>
+                  <Text style={styles.emptyCreateBtnText}>Create New Deck</Text>
                 </Pressable>
               )}
             </View>
@@ -452,10 +452,10 @@ export function DecksScreen() {
 
       <ConfirmModal
         visible={!!deckToDelete}
-        title="Xác nhận xóa bộ bài"
-        message={`Bạn có chắc chắn muốn xóa bộ bài "${deckToDelete?.name}" không? Thao tác này sẽ xóa toàn bộ danh sách thẻ liên quan và không thể khôi phục.`}
-        confirmLabel="Xóa Bộ Bài"
-        cancelLabel="Hủy"
+        title="Confirm Delete Deck"
+        message={`Are you sure you want to delete deck "${deckToDelete?.name}"? All associated cards will be permanently removed.`}
+        confirmLabel="Delete Deck"
+        cancelLabel="Cancel"
         icon="trash-2"
         isDestructive
         onConfirm={handleConfirmDeleteDeck}

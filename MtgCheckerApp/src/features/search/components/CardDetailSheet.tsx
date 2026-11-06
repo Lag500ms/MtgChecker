@@ -214,8 +214,8 @@ export function CardDetailSheet({
                   <Feather name="zap" size={12} color="#FBBF24" />
                   <Text style={styles.foilHintText}>
                     {selectedFinish === 'etched'
-                      ? 'Nghiêng máy hoặc vuốt để xem ánh kim Etched'
-                      : 'Nghiêng máy hoặc vuốt để xem ánh nhũ Foil 3D'}
+                      ? 'Tilt or swipe to inspect Etched foil sheen'
+                      : 'Tilt or swipe to inspect 3D Foil sheen'}
                   </Text>
                 </View>
               )}
@@ -534,7 +534,7 @@ export function CardDetailSheet({
                   >
                     <Feather name="check-circle" size={16} color="#22C55E" />
                     <Text style={[styles.emptyRulingsText, { color: theme.textSecondary }]}>
-                      Không có ngoại lệ hoặc ruling đặc thù. Thẻ bài tuân theo luật cơ bản MTG Comprehensive Rules.
+                      No special exceptions or rulings. This card follows standard MTG Comprehensive Rules.
                     </Text>
                   </View>
                 ) : (

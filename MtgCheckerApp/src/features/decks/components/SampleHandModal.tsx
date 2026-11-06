@@ -137,10 +137,10 @@ function SampleHandModalComponent({
           <View style={styles.header}>
             <View style={styles.headerTitleWrap}>
               <Text style={[styles.title, { color: theme.text }]} numberOfLines={1}>
-                Rút Bài Thử: {deckName}
+                Playtest Hand: {deckName}
               </Text>
               <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
-                Trên tay: {hand.length} lá · Thư viện còn: {library.length} lá
+                Hand: {hand.length} · Library: {library.length}
               </Text>
             </View>
             <Pressable onPress={onClose} hitSlop={10} style={styles.closeBtn}>
@@ -151,7 +151,7 @@ function SampleHandModalComponent({
           {/* Status Bar */}
           <View style={[styles.statusBar, { backgroundColor: theme.background, borderColor: theme.border }]}>
             <View style={styles.statusCol}>
-              <Text style={[styles.statusLabel, { color: theme.textMuted }]}>Số Đất Mở Đầu</Text>
+              <Text style={[styles.statusLabel, { color: theme.textMuted }]}>Opening Lands</Text>
               <Text
                 style={[
                   styles.statusValue,
@@ -165,7 +165,7 @@ function SampleHandModalComponent({
                   },
                 ]}
               >
-                {landsInHand} / {hand.length} Đất
+                {landsInHand} / {hand.length} Lands
               </Text>
             </View>
 
@@ -174,7 +174,7 @@ function SampleHandModalComponent({
             <View style={styles.statusCol}>
               <Text style={[styles.statusLabel, { color: theme.textMuted }]}>Mulligan</Text>
               <Text style={[styles.statusValue, { color: mulliganCount > 0 ? '#F59E0B' : theme.text }]}>
-                {mulliganCount === 0 ? 'Lần đầu (0)' : `Lần ${mulliganCount} (Trả ${mulliganCount} lá)`}
+                {mulliganCount === 0 ? 'Initial (0)' : `Mulligan ${mulliganCount} (Bottom ${mulliganCount})`}
               </Text>
             </View>
           </View>
@@ -190,7 +190,7 @@ function SampleHandModalComponent({
               disabled={library.length === 0}
             >
               <Feather name="plus-circle" size={15} color={theme.accentContrast} />
-              <Text style={[styles.actionBtnText, { color: theme.accentContrast }]}>Rút 1 Lá</Text>
+              <Text style={[styles.actionBtnText, { color: theme.accentContrast }]}>Draw 1 Card</Text>
             </Pressable>
 
             <Pressable
@@ -212,7 +212,7 @@ function SampleHandModalComponent({
               onPress={resetGame}
             >
               <Feather name="refresh-cw" size={15} color={theme.textMuted} />
-              <Text style={[styles.actionBtnSecText, { color: theme.textMuted }]}>Xáo Lại</Text>
+              <Text style={[styles.actionBtnSecText, { color: theme.textMuted }]}>Shuffle</Text>
             </Pressable>
           </View>
 
@@ -222,7 +222,7 @@ function SampleHandModalComponent({
               <View style={styles.emptyWrap}>
                 <Feather name="inbox" size={32} color={theme.textMuted} />
                 <Text style={[styles.emptyText, { color: theme.textMuted }]}>
-                  Không có lá bài nào trên tay.
+                  No cards in hand.
                 </Text>
               </View>
             ) : (

@@ -74,7 +74,7 @@ export function HomeScreen() {
     };
 
     const tags = [
-      { id: 'ALL', label: 'Tất cả' },
+      { id: 'ALL', label: 'All' },
       ...rawCategories.map((c) => ({
         id: c,
         label: labelMap[c] || c,
@@ -83,7 +83,7 @@ export function HomeScreen() {
 
     if (tags.length <= 1) {
       return [
-        { id: 'ALL', label: 'Tất cả' },
+        { id: 'ALL', label: 'All' },
         { id: 'COMMANDER', label: '👑 Commander' },
         { id: 'COMBAT', label: '⚔️ Combat' },
         { id: 'TIMING', label: '⏱️ Upkeep/Timing' },
@@ -198,9 +198,9 @@ export function HomeScreen() {
                 verdictTitle: `${item.term} (${item.crCode || topic.badge})`,
                 summary: item.details,
                 stackSteps: [
-                  `1. Cẩm nang: ${topic.title}`,
-                  `2. Điều khoản: ${section.heading}`,
-                  `3. Tra cứu Comprehensive Rules ngoại tuyến: ${item.crCode || topic.badge}`,
+                  `1. Guide: ${topic.title}`,
+                  `2. Section: ${section.heading}`,
+                  `3. Offline Comprehensive Rules lookup: ${item.crCode || topic.badge}`,
                 ],
                 crRules: item.crCode ? [item.crCode] : [topic.badge],
                 category: topic.id.toUpperCase(),
@@ -221,8 +221,8 @@ export function HomeScreen() {
             verdictTitle: section.heading,
             summary: section.description,
             stackSteps: [
-              `1. Cẩm nang: ${topic.title}`,
-              `2. Tra cứu Comprehensive Rules ngoại tuyến: ${topic.badge}`,
+              `1. Guide: ${topic.title}`,
+              `2. Offline Comprehensive Rules lookup: ${topic.badge}`,
             ],
             crRules: [topic.badge],
             category: topic.id.toUpperCase(),
@@ -264,7 +264,7 @@ export function HomeScreen() {
       if (offlineRule) {
         setSelectedVerdict({
           ...offlineRule,
-          summary: `[Ngoại tuyến - Comprehensive Rules] ${offlineRule.summary}`,
+          summary: `[Offline - Comprehensive Rules] ${offlineRule.summary}`,
         });
       } else {
         const msg = err instanceof Error ? err.message : 'Could not contact AI Judge. Check network or server.';
@@ -315,13 +315,13 @@ export function HomeScreen() {
             </View>
             <View style={styles.heroTextWrap}>
               <View style={styles.heroTitleRow}>
-                <Text style={[styles.heroTitle, { color: '#FACC15' }]}>Bàn Đấu 4 Người</Text>
+                <Text style={[styles.heroTitle, { color: '#FACC15' }]}>4-Player Life Tracker</Text>
                 <View style={styles.heroBadge}>
                   <Text style={styles.heroBadgeText}>HOT</Text>
                 </View>
               </View>
               <Text style={[styles.heroSub, { color: theme.textSecondary }]}>
-                Commander 40 HP · Sát thương tướng · D20
+                Commander 40 HP · Commander Damage · D20
               </Text>
             </View>
             <Feather name="chevron-right" size={18} color="#FACC15" />
@@ -342,9 +342,9 @@ export function HomeScreen() {
               <Feather name="camera" size={24} color="#22C55E" />
             </View>
             <View style={styles.heroTextWrap}>
-              <Text style={[styles.heroTitle, { color: '#22C55E' }]}>Quét Thẻ Bài OCR</Text>
+              <Text style={[styles.heroTitle, { color: '#22C55E' }]}>Card Camera OCR</Text>
               <Text style={[styles.heroSub, { color: theme.textSecondary }]}>
-                Nhận diện nhanh thẻ bài vật lý qua camera
+                Fast card detection via camera scan
               </Text>
             </View>
             <Feather name="chevron-right" size={18} color="#22C55E" />
@@ -361,7 +361,7 @@ export function HomeScreen() {
                 </Text>
               </View>
               <Text style={[styles.sectionCount, { color: theme.textMuted }]}>
-                Chơi format nào?
+                Choose your format
               </Text>
             </View>
 
@@ -390,7 +390,7 @@ export function HomeScreen() {
                     </View>
                   </View>
                   <Text style={[styles.formatCardLife, { color: '#E0AD62' }]}>
-                    {fmt.startingLife} Máu · {fmt.maxDeckSize ? `${fmt.minDeckSize} Lá` : `${fmt.minDeckSize}+ Lá`}
+                    {fmt.startingLife} Life · {fmt.maxDeckSize ? `${fmt.minDeckSize} Cards` : `${fmt.minDeckSize}+ Cards`}
                   </Text>
                 </Pressable>
               ))}
@@ -411,10 +411,10 @@ export function HomeScreen() {
               </View>
               <View style={styles.aiBoxHeaderTexts}>
                 <Text style={[styles.aiBoxTitle, { color: theme.text }]}>
-                  Trọng Tài AI (Gemini Judge)
+                  AI Judge (Gemini Assistant)
                 </Text>
                 <Text style={[styles.aiBoxSub, { color: theme.textSecondary }]}>
-                  Hỏi luật thi đấu, tương tác 2 lá bài, hay độ hữu dụng thẻ...
+                  Ask tournament rules, two-card interactions, or card utility...
                 </Text>
               </View>
             </View>
@@ -459,10 +459,10 @@ export function HomeScreen() {
               <ActivityIndicator size="small" color="#E0AD62" />
               <View style={styles.loadingTextWrap}>
                 <Text style={[styles.loadingTitle, { color: theme.text }]}>
-                  Trọng tài Gemini AI đang tra cứu Oracle text & luật CR...
+                  Gemini AI Judge is checking Oracle texts & CR rules...
                 </Text>
                 <Text style={[styles.loadingSub, { color: theme.textSecondary }]}>
-                  Phân tích cơ chế thẻ, thứ tự ưu tiên Priority và các bước Stack
+                  Analyzing card interactions, Priority sequences, and Stack resolution
                 </Text>
               </View>
             </View>
@@ -490,7 +490,7 @@ export function HomeScreen() {
             </Text>
           </View>
           <Text style={[styles.sectionCount, { color: theme.textMuted }]}>
-            {filteredDisputes.length} tình huống
+            {filteredDisputes.length} scenarios
           </Text>
         </View>
 
@@ -587,14 +587,14 @@ export function HomeScreen() {
           <View style={styles.crBannerTexts}>
             <View style={styles.crBannerTitleRow}>
               <Text style={[styles.crBannerTitle, { color: theme.text }]}>
-                Tra Cứu Luật Toàn Thư (CR)
+                Comprehensive Rules (CR)
               </Text>
               <View style={styles.crBannerBadge}>
-                <Text style={styles.crBannerBadgeText}>3,165 LUẬT</Text>
+                <Text style={styles.crBannerBadgeText}>3,165 RULES</Text>
               </View>
             </View>
             <Text style={[styles.crBannerSub, { color: theme.textSecondary }]}>
-              Tra cứu 9 phần luật thi đấu chính thức & 727 thuật ngữ MTG Glossary
+              Explore 9 official tournament sections & 727 MTG Glossary terms
             </Text>
           </View>
           <Feather name="chevron-right" size={18} color="#E0AD62" />

@@ -36,7 +36,7 @@ export function ChangelogCard() {
           {item.text}
         </Text>
       ))}
-      <Text style={[styles.date, { color: theme.textMuted }]}>17 tháng 10 2026</Text>
+      <Text style={[styles.date, { color: theme.textMuted }]}>October 17, 2026</Text>
     </Card>
   );
 }

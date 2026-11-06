@@ -19,11 +19,11 @@ type CardInteractionWidgetProps = {
 };
 
 const TIMING_OPTIONS = [
-  { id: 'ETB', label: 'Vào sân (ETB)' },
-  { id: 'UPKEEP', label: 'Upkeep (Đầu lượt)' },
-  { id: 'COMBAT', label: 'Combat (Giao tranh)' },
+  { id: 'ETB', label: 'Enters (ETB)' },
+  { id: 'UPKEEP', label: 'Upkeep Step' },
+  { id: 'COMBAT', label: 'Combat Phase' },
   { id: 'STACK', label: 'Stack / SBA' },
-  { id: 'GENERAL', label: 'Bất kỳ (General)' },
+  { id: 'GENERAL', label: 'General / Any' },
 ];
 
 export function CardInteractionWidget({ onVerdictReady }: CardInteractionWidgetProps) {
@@ -49,7 +49,7 @@ export function CardInteractionWidget({ onVerdictReady }: CardInteractionWidgetP
       );
       onVerdictReady(verdict);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Không thể kết nối AI Judge';
+      const msg = err instanceof Error ? err.message : 'Could not contact AI Judge';
       setErrorMessage(msg);
     } finally {
       setIsAnalyzing(false);
@@ -65,7 +65,7 @@ export function CardInteractionWidget({ onVerdictReady }: CardInteractionWidgetP
       >
         <View style={styles.headerTitleWrap}>
           <Feather name="git-merge" size={16} color="#E0AD62" />
-          <Text style={[styles.title, { color: theme.text }]}>So Kèo Tương Tác 2 Thẻ Bài</Text>
+          <Text style={[styles.title, { color: theme.text }]}>Two-Card Interaction Matchup</Text>
         </View>
         <View style={styles.headerRightWrap}>
           <Text style={[styles.badge, { backgroundColor: 'rgba(224, 173, 98, 0.15)', color: '#E0AD62' }]}>
@@ -82,14 +82,14 @@ export function CardInteractionWidget({ onVerdictReady }: CardInteractionWidgetP
       {isExpanded ? (
         <View style={styles.expandedContent}>
           <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
-            Nhập 2 lá bài để AI Judge đối soát Oracle text và phân tích thứ tự Stack / SBA:
+            Enter 2 cards to analyze Oracle text, Stack timing, and State-Based Actions:
           </Text>
 
           <View style={styles.inputsRow}>
             <View style={[styles.inputBox, { backgroundColor: theme.surfaceElevated, borderColor: theme.border }]}>
               <Feather name="layers" size={14} color="#9CA3AF" />
               <TextInput
-                placeholder="Thẻ bài 1 (vd: Blood Moon)"
+                placeholder="Card 1 (e.g., Blood Moon)"
                 placeholderTextColor="#6B7280"
                 value={cardA}
                 onChangeText={setCardA}
@@ -111,7 +111,7 @@ export function CardInteractionWidget({ onVerdictReady }: CardInteractionWidgetP
             <View style={[styles.inputBox, { backgroundColor: theme.surfaceElevated, borderColor: theme.border }]}>
               <Feather name="layers" size={14} color="#9CA3AF" />
               <TextInput
-                placeholder="Thẻ bài 2 (vd: Urza's Saga)"
+                placeholder="Card 2 (e.g., Urza's Saga)"
                 placeholderTextColor="#6B7280"
                 value={cardB}
                 onChangeText={setCardB}
@@ -127,7 +127,7 @@ export function CardInteractionWidget({ onVerdictReady }: CardInteractionWidgetP
             </View>
           </View>
 
-          <Text style={[styles.timingLabel, { color: theme.textSecondary }]}>Giai đoạn tranh chấp:</Text>
+          <Text style={[styles.timingLabel, { color: theme.textSecondary }]}>Timing / Phase:</Text>
           <View style={styles.timingChips}>
             {TIMING_OPTIONS.map((opt) => {
               const isSelected = selectedTiming === opt.id;
@@ -185,7 +185,7 @@ export function CardInteractionWidget({ onVerdictReady }: CardInteractionWidgetP
                     { color: (!cardA.trim() || !cardB.trim()) ? '#6B7280' : '#121212' },
                   ]}
                 >
-                  Phán Quyết Tương Tác
+                  Analyze Interaction
                 </Text>
               </>
             )}

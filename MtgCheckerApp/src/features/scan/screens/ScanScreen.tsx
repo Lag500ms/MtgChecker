@@ -208,7 +208,7 @@ export function ScanScreen() {
         await handlePhotoScan(photo.base64, photo.uri, photo.width, photo.height);
       }
     } catch (e: any) {
-      toast.error(e?.message || 'Không thể chụp ảnh lúc này.', 'Lỗi Chụp Ảnh');
+      toast.error(e?.message || 'Could not capture photo at this moment.', 'Capture Error');
     }
   };
 
@@ -229,7 +229,7 @@ export function ScanScreen() {
         }
       }
     } catch (e: any) {
-      toast.error(e?.message || 'Không thể chọn ảnh từ thư viện.', 'Lỗi Thư Viện');
+      toast.error(e?.message || 'Could not pick image from library.', 'Photo Library Error');
     }
   };
 

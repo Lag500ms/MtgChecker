@@ -111,9 +111,9 @@ export function TableToolsModal({
             ]}
           >
             <View style={styles.headerTitleWrap}>
-              <Text style={[styles.title, { color: theme.text }]}>Công Cụ Bàn Đấu</Text>
+              <Text style={[styles.title, { color: theme.text }]}>Table Tools</Text>
               <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
-                Xúc xắc, đồng xu & chọn lượt chơi
+                Dice, coin flip & turn order picker
               </Text>
             </View>
             <Pressable onPress={onClose} hitSlop={12} style={styles.closeBtn}>
@@ -140,7 +140,7 @@ export function TableToolsModal({
                 { color: activeTab === 'dice' ? theme.accent : theme.textMuted },
               ]}
             >
-              Xúc xắc
+              Dice
             </Text>
           </Pressable>
 
@@ -162,7 +162,7 @@ export function TableToolsModal({
                 { color: activeTab === 'coin' ? theme.accent : theme.textMuted },
               ]}
             >
-              Đồng xu
+              Coin
             </Text>
           </Pressable>
 
@@ -184,7 +184,7 @@ export function TableToolsModal({
                 { color: activeTab === 'picker' ? theme.accent : theme.textMuted },
               ]}
             >
-              Ai đi trước?
+              Turn Order
             </Text>
           </Pressable>
 
@@ -206,7 +206,7 @@ export function TableToolsModal({
                 { color: activeTab === 'history' ? theme.accent : theme.textMuted },
               ]}
             >
-              Nhật ký
+              History
             </Text>
           </Pressable>
         </View>
@@ -221,9 +221,9 @@ export function TableToolsModal({
           {activeTab === 'dice' && (
             <View style={styles.diceSection}>
               <View style={[styles.cardBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-                <Text style={[styles.boxTitle, { color: theme.text }]}>Xúc xắc 20 mặt (D20)</Text>
+                <Text style={[styles.boxTitle, { color: theme.text }]}>20-Sided Die (D20)</Text>
                 <Text style={[styles.boxDesc, { color: theme.textSecondary }]}>
-                  Dùng để xác định thứ tự đi trước hoặc các hiệu ứng xúc xắc MTG.
+                  Roll for turn order or MTG dice-rolling mechanics.
                 </Text>
                 <View style={styles.resultCircle}>
                   <Text style={[styles.resultNumber, { color: d20Result === 20 ? '#22C55E' : d20Result === 1 ? '#EF4444' : theme.text }]}>
@@ -241,14 +241,14 @@ export function TableToolsModal({
                   ]}
                 >
                   <Feather name="refresh-cw" size={16} color="#000" />
-                  <Text style={styles.actionBtnText}>Đổ D20</Text>
+                  <Text style={styles.actionBtnText}>Roll D20</Text>
                 </Pressable>
               </View>
 
               <View style={[styles.cardBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-                <Text style={[styles.boxTitle, { color: theme.text }]}>Xúc xắc 6 mặt (D6)</Text>
+                <Text style={[styles.boxTitle, { color: theme.text }]}>6-Sided Die (D6)</Text>
                 <Text style={[styles.boxDesc, { color: theme.textSecondary }]}>
-                  Đếm counter, token hoặc các lá bài xúc xắc 6 mặt.
+                  Track counters, tokens, or roll standard D6 effects.
                 </Text>
                 <View style={styles.resultSquare}>
                   <Text style={[styles.resultNumberSmall, { color: theme.text }]}>
@@ -264,7 +264,7 @@ export function TableToolsModal({
                   ]}
                 >
                   <Feather name="refresh-cw" size={16} color={theme.accent} />
-                  <Text style={[styles.actionBtnOutlineText, { color: theme.accent }]}>Đổ D6</Text>
+                  <Text style={[styles.actionBtnOutlineText, { color: theme.accent }]}>Roll D6</Text>
                 </Pressable>
               </View>
             </View>
@@ -272,16 +272,16 @@ export function TableToolsModal({
 
           {activeTab === 'coin' && (
             <View style={[styles.cardBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-              <Text style={[styles.boxTitle, { color: theme.text }]}>Tung Đồng Xu (Coin Flip)</Text>
+              <Text style={[styles.boxTitle, { color: theme.text }]}>Coin Flip</Text>
               <Text style={[styles.boxDesc, { color: theme.textSecondary }]}>
-                Chuẩn luật MTG: Heads (Mặt ngửa) hoặc Tails (Mặt úp).
+                Official MTG ruling: Heads or Tails.
               </Text>
               <View style={styles.coinCircle}>
                 <Text style={styles.coinEmoji}>
-                  {coinResult === 'HEADS' ? '🪙 NGỬA' : coinResult === 'TAILS' ? '🪙 ÚP' : '🪙'}
+                  {coinResult === 'HEADS' ? '🪙 HEADS' : coinResult === 'TAILS' ? '🪙 TAILS' : '🪙'}
                 </Text>
                 <Text style={[styles.coinText, { color: theme.text }]}>
-                  {coinResult ? (coinResult === 'HEADS' ? 'HEADS (Ngửa)' : 'TAILS (Úp)') : 'Chưa tung'}
+                  {coinResult ? (coinResult === 'HEADS' ? 'HEADS' : 'TAILS') : 'Not flipped yet'}
                 </Text>
               </View>
               <Pressable
@@ -293,21 +293,21 @@ export function TableToolsModal({
                 ]}
               >
                 <Feather name="disc" size={16} color="#000" />
-                <Text style={styles.actionBtnText}>Tung đồng xu</Text>
+                <Text style={styles.actionBtnText}>Flip Coin</Text>
               </Pressable>
             </View>
           )}
 
           {activeTab === 'picker' && (
             <View style={[styles.cardBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-              <Text style={[styles.boxTitle, { color: theme.text }]}>Chọn Người Đi Trước Ngẫu Nhiên</Text>
+              <Text style={[styles.boxTitle, { color: theme.text }]}>Random First Player</Text>
               <Text style={[styles.boxDesc, { color: theme.textSecondary }]}>
-                Hệ thống quay ngẫu nhiên 1 trong {players.length} người chơi trên bàn.
+                Randomly pick 1 out of {players.length} players to go first.
               </Text>
               <View style={[styles.pickedPlayerBox, { borderColor: theme.accent }]}>
                 <Feather name="award" size={24} color={theme.accent} />
                 <Text style={[styles.pickedPlayerName, { color: theme.text }]}>
-                  {pickedPlayer ? pickedPlayer.name : 'Nhấn nút để chọn'}
+                  {pickedPlayer ? pickedPlayer.name : 'Tap button to roll'}
                 </Text>
               </View>
               <Pressable
@@ -319,17 +319,17 @@ export function TableToolsModal({
                 ]}
               >
                 <Feather name="shuffle" size={16} color="#000" />
-                <Text style={styles.actionBtnText}>Quay người đi trước</Text>
+                <Text style={styles.actionBtnText}>Pick First Player</Text>
               </Pressable>
             </View>
           )}
 
           {activeTab === 'history' && (
             <View style={[styles.cardBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-              <Text style={[styles.boxTitle, { color: theme.text }]}>Nhật Ký Thay Đổi Máu</Text>
+              <Text style={[styles.boxTitle, { color: theme.text }]}>Life Change Log</Text>
               {history.length === 0 ? (
                 <Text style={[styles.emptyHistoryText, { color: theme.textMuted }]}>
-                  Chưa có biến động máu nào được ghi nhận trong ván này.
+                  No life changes recorded in this game yet.
                 </Text>
               ) : (
                 history.map((item) => (

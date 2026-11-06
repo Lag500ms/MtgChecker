@@ -70,7 +70,14 @@ export function ComprehensiveRulesModal({
     try {
       setLoading(true);
       const data = await fetchCrSections();
-      setSections(data);
+      /* Deduplicate sections by sectionNumber if backend returned multiple rows */
+      const uniqueMap = new Map<number, SectionSummary>();
+      for (const item of data) {
+        if (!uniqueMap.has(item.sectionNumber)) {
+          uniqueMap.set(item.sectionNumber, item);
+        }
+      }
+      setSections(Array.from(uniqueMap.values()));
     } catch (e) {
     } finally {
       setLoading(false);
@@ -256,7 +263,7 @@ export function ComprehensiveRulesModal({
           searchQuery.trim().length > 0 ? (
             <FlatList
               data={ruleSearchResults}
-              keyExtractor={(item) => item.ruleNumber}
+              keyExtractor={(item, index) => `search-${item.ruleNumber}-${index}`}
               contentContainerStyle={styles.listContent}
               renderItem={({ item }) => (
                 <RuleCard
@@ -289,7 +296,7 @@ export function ComprehensiveRulesModal({
 
               <FlatList
                 data={chapterRules}
-                keyExtractor={(item) => item.ruleNumber}
+                keyExtractor={(item, index) => `rule-${item.ruleNumber}-${index}`}
                 contentContainerStyle={styles.listContent}
                 renderItem={({ item }) => (
                   <RuleCard
@@ -306,8 +313,8 @@ export function ComprehensiveRulesModal({
               <Text style={[styles.sectionHeading, { color: theme.textMuted }]}>
                 9 OFFICIAL COMPREHENSIVE RULES SECTIONS
               </Text>
-              {sections.map((sec) => (
-                <View key={sec.sectionNumber} style={[styles.sectionCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+              {sections.map((sec, secIdx) => (
+                <View key={`sec-${sec.sectionNumber}-${secIdx}`} style={[styles.sectionCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
                   <Pressable
                     style={styles.sectionHeaderPress}
                     onPress={() => setSelectedSection(selectedSection?.sectionNumber === sec.sectionNumber ? null : sec)}
@@ -327,9 +334,9 @@ export function ComprehensiveRulesModal({
 
                   {selectedSection?.sectionNumber === sec.sectionNumber && (
                     <View style={styles.chaptersList}>
-                      {sec.chapters.map((ch) => (
+                      {sec.chapters.map((ch, chIdx) => (
                         <Pressable
-                          key={ch.chapterNumber}
+                          key={`ch-${sec.sectionNumber}-${ch.chapterNumber}-${chIdx}`}
                           style={[styles.chapterItem, { borderTopColor: theme.border }]}
                           onPress={() => loadChapterRules(ch)}
                         >
@@ -347,7 +354,7 @@ export function ComprehensiveRulesModal({
         ) : (
           <FlatList
             data={glossaryTerms}
-            keyExtractor={(item) => item.term}
+            keyExtractor={(item, index) => `glossary-${item.term}-${index}`}
             contentContainerStyle={styles.listContent}
             renderItem={({ item }) => (
               <View style={[styles.glossaryCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
@@ -439,7 +446,7 @@ function RuleCard({
         <View style={styles.crossRefRow}>
           <Text style={[styles.crossRefLabel, { color: theme.textMuted }]}>References:</Text>
           {rule.crossReferences.map((ref, idx) => (
-            <Pressable key={idx} style={styles.crossRefPill} onPress={() => onSelectRef(ref)}>
+            <Pressable key={`ref-${rule.ruleNumber}-${ref}-${idx}`} style={styles.crossRefPill} onPress={() => onSelectRef(ref)}>
               <Text style={styles.crossRefText}>CR {ref}</Text>
             </Pressable>
           ))}

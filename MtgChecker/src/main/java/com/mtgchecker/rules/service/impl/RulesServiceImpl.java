@@ -44,8 +44,10 @@ import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -545,25 +547,32 @@ public class RulesServiceImpl implements IRulesService {
     @Cacheable(value = "cr_sections", key = "'all'", unless = "#result == null || #result.isEmpty()")
     public List<SectionSummaryResponse> getCrSections() {
         List<Object[]> rawSections = comprehensiveRuleRepository.findDistinctSections();
-        List<SectionSummaryResponse> sections = new ArrayList<>();
+        Map<Integer, SectionSummaryResponse> sectionMap = new LinkedHashMap<>();
         for (Object[] row : rawSections) {
             Integer secNum = (Integer) row[0];
             String secTitle = (String) row[1];
-            List<Object[]> rawChapters = comprehensiveRuleRepository.findDistinctChaptersBySection(secNum);
-            List<ChapterSummaryResponse> chapters = new ArrayList<>();
-            for (Object[] chRow : rawChapters) {
-                chapters.add(ChapterSummaryResponse.builder()
-                        .chapterNumber((String) chRow[0])
-                        .chapterTitle((String) chRow[1])
+            if (secNum != null && !sectionMap.containsKey(secNum)) {
+                List<Object[]> rawChapters = comprehensiveRuleRepository.findDistinctChaptersBySection(secNum);
+                List<ChapterSummaryResponse> chapters = new ArrayList<>();
+                Set<String> seenChapters = new HashSet<>();
+                for (Object[] chRow : rawChapters) {
+                    String chNum = (String) chRow[0];
+                    String chTitle = (String) chRow[1];
+                    if (chNum != null && seenChapters.add(chNum)) {
+                        chapters.add(ChapterSummaryResponse.builder()
+                                .chapterNumber(chNum)
+                                .chapterTitle(chTitle)
+                                .build());
+                    }
+                }
+                sectionMap.put(secNum, SectionSummaryResponse.builder()
+                        .sectionNumber(secNum)
+                        .sectionTitle(secTitle)
+                        .chapters(chapters)
                         .build());
             }
-            sections.add(SectionSummaryResponse.builder()
-                    .sectionNumber(secNum)
-                    .sectionTitle(secTitle)
-                    .chapters(chapters)
-                    .build());
         }
-        return sections;
+        return new ArrayList<>(sectionMap.values());
     }
 
     @Override

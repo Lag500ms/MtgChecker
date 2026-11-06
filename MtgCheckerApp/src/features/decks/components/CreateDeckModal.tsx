@@ -12,6 +12,7 @@ import {
 import { Feather } from '@expo/vector-icons';
 import { useAppTheme } from '@/lib/ThemeProvider';
 import { apiClient } from '@/lib/apiClient';
+import { parseDeckText } from '../utils/deckTextParser';
 import type { DeckFormat } from '../types/deck';
 
 interface CreateDeckModalProps {
@@ -802,9 +803,15 @@ export function CreateDeckModal({ visible, formats, onClose, onCreate }: CreateD
                         onChangeText={setPastedDeckList}
                         textAlignVertical="top"
                       />
-                      <Text style={[styles.pasteHint, { color: theme.textSecondary }]}>
-                        Chức năng import tự động sẽ phân tích cú pháp bài dạng văn bản.
-                      </Text>
+                      {pastedDeckList.trim().length > 0 ? (
+                        <Text style={[styles.pasteHint, { color: theme.accent, fontWeight: '700' }]}>
+                          ✓ Đã nhận diện: {parseDeckText(pastedDeckList).totalCards} lá bài
+                        </Text>
+                      ) : (
+                        <Text style={[styles.pasteHint, { color: theme.textSecondary }]}>
+                          Chức năng import tự động sẽ phân tích cú pháp bài dạng văn bản.
+                        </Text>
+                      )}
                     </View>
                   ) : null}
                 </View>

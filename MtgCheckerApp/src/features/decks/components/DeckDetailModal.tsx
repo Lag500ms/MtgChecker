@@ -13,11 +13,17 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { Image } from 'expo-image';
+import { SetSymbol } from '@/components/SetSymbol';
 import { useAppTheme } from '@/lib/ThemeProvider';
+import { borderRadius, spacing, typography } from '@/lib/theme';
 import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/components/Toast';
 import { ConfirmModal } from '@/components/ui';
 import { ManaCurveChart } from './ManaCurveChart';
+import { ManaBaseAnalyzer } from './ManaBaseAnalyzer';
+import { DeckCompletionWidget } from './DeckCompletionWidget';
+import { SampleHandModal } from './SampleHandModal';
+import { parseDeckText } from '../utils/deckTextParser';
 import { checkCardLegality } from '../utils/legality';
 import { syncDeckCards } from '../api/deckApi';
 import { findPrintings } from '@/features/cards/api/cardsApi';
@@ -65,6 +71,11 @@ export function DeckDetailModal({
   const [printings, setPrintings] = useState<Card[]>([]);
   const [loadingPrintings, setLoadingPrintings] = useState(false);
 
+  const [showSampleHand, setShowSampleHand] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importText, setImportText] = useState('');
+  const [isImporting, setIsImporting] = useState(false);
+
   const numColumns = viewMode === 'text' ? 1 : isLandscape ? 6 : 3;
   const gridGap = 8;
   const gridPadding = 16 * 2;
@@ -109,6 +120,78 @@ export function DeckDetailModal({
     setHasUnsavedChanges(true);
     toast.success(`Đã đổi sang phiên bản [${printing.set.toUpperCase()} #${printing.collectorNumber}].`);
     setEditingCard(null);
+  };
+
+  const handleBatchImportText = async () => {
+    if (!importText.trim()) return;
+    setIsImporting(true);
+    try {
+      const parsed = parseDeckText(importText);
+      if (parsed.lines.length === 0) {
+        toast.info('Không nhận diện được lá bài nào từ văn bản.');
+        return;
+      }
+
+      /* Search cards from backend or Scryfall */
+      const newItems: DeckCardItem[] = [];
+      for (const line of parsed.lines) {
+        try {
+          const resp = await apiClient.get<any>('/cards/named', {
+            params: { exact: line.name },
+          });
+          const cardData = resp.data;
+          const leg = checkCardLegality(cardData, deck?.format, deck?.commanderColorIdentity);
+          newItems.push({
+            scryfallId: cardData.id,
+            name: cardData.name,
+            imageUrl: cardData.imageUris?.normal || cardData.imageUris?.small,
+            manaCost: cardData.manaCost,
+            cmc: cardData.cmc,
+            typeLine: cardData.typeLine,
+            quantity: line.quantity,
+            category: line.category,
+            setCode: cardData.set,
+            collectorNumber: cardData.collectorNumber,
+            isLegal: leg.isLegal,
+            legalityStatus: leg.status,
+          });
+        } catch {
+          newItems.push({
+            scryfallId: `custom-${Date.now()}-${Math.random()}`,
+            name: line.name,
+            quantity: line.quantity,
+            category: line.category,
+            setCode: line.setCode,
+            collectorNumber: line.collectorNumber,
+          });
+        }
+      }
+
+      setCards((prev) => {
+        const merged = [...prev];
+        for (const item of newItems) {
+          const existingIdx = merged.findIndex((c) => c.name.toLowerCase() === item.name.toLowerCase());
+          if (existingIdx >= 0) {
+            merged[existingIdx] = {
+              ...merged[existingIdx],
+              quantity: merged[existingIdx].quantity + item.quantity,
+            };
+          } else {
+            merged.push(item);
+          }
+        }
+        return merged;
+      });
+
+      setHasUnsavedChanges(true);
+      setShowImportModal(false);
+      setImportText('');
+      toast.success(`Đã nhập thành công ${parsed.totalCards} lá bài vào bộ bài!`);
+    } catch {
+      toast.error('Lỗi khi nhập danh sách bài');
+    } finally {
+      setIsImporting(false);
+    }
   };
 
   useEffect(() => {
@@ -372,7 +455,9 @@ export function DeckDetailModal({
                 </View>
               ) : null}
 
+              <DeckCompletionWidget cards={cards} />
               <ManaCurveChart cards={cards} />
+              <ManaBaseAnalyzer cards={cards} />
 
               <View style={styles.controlsRow}>
                 <View style={styles.tabsRow}>
@@ -406,33 +491,51 @@ export function DeckDetailModal({
                   })}
                 </View>
 
-                <View style={[styles.viewModeToggle, { borderColor: theme.border }]}>
+                <View style={styles.rightToolsWrap}>
                   <Pressable
-                    style={[
-                      styles.viewModeBtn,
-                      viewMode === 'text' && { backgroundColor: theme.accent },
-                    ]}
-                    onPress={() => setViewMode('text')}
+                    style={[styles.toolBtn, { backgroundColor: 'rgba(224, 173, 98, 0.15)', borderColor: theme.accent }]}
+                    onPress={() => setShowSampleHand(true)}
                   >
-                    <Feather
-                      name="list"
-                      size={15}
-                      color={viewMode === 'text' ? '#000' : theme.textSecondary}
-                    />
+                    <Feather name="play-circle" size={13} color={theme.accent} />
+                    <Text style={[styles.toolBtnText, { color: theme.accent }]}>Thử bài</Text>
                   </Pressable>
+
                   <Pressable
-                    style={[
-                      styles.viewModeBtn,
-                      viewMode === 'image' && { backgroundColor: theme.accent },
-                    ]}
-                    onPress={() => setViewMode('image')}
+                    style={[styles.toolBtn, { backgroundColor: 'rgba(255,255,255,0.06)', borderColor: theme.border }]}
+                    onPress={() => setShowImportModal(true)}
                   >
-                    <Feather
-                      name="grid"
-                      size={15}
-                      color={viewMode === 'image' ? '#000' : theme.textSecondary}
-                    />
+                    <Feather name="file-text" size={13} color={theme.text} />
+                    <Text style={[styles.toolBtnText, { color: theme.text }]}>Nhập</Text>
                   </Pressable>
+
+                  <View style={[styles.viewModeToggle, { borderColor: theme.border }]}>
+                    <Pressable
+                      style={[
+                        styles.viewModeBtn,
+                        viewMode === 'text' && { backgroundColor: theme.accent },
+                      ]}
+                      onPress={() => setViewMode('text')}
+                    >
+                      <Feather
+                        name="list"
+                        size={15}
+                        color={viewMode === 'text' ? '#000' : theme.textSecondary}
+                      />
+                    </Pressable>
+                    <Pressable
+                      style={[
+                        styles.viewModeBtn,
+                        viewMode === 'image' && { backgroundColor: theme.accent },
+                      ]}
+                      onPress={() => setViewMode('image')}
+                    >
+                      <Feather
+                        name="grid"
+                        size={15}
+                        color={viewMode === 'image' ? '#000' : theme.textSecondary}
+                      />
+                    </Pressable>
+                  </View>
                 </View>
               </View>
             </View>
@@ -512,9 +615,14 @@ export function DeckDetailModal({
                       </Pressable>
                     ) : null}
                   </View>
-                  <Text style={[styles.cardType, { color: theme.textSecondary }]} numberOfLines={1}>
-                    {item.typeLine || 'Magic Card'} {item.manaCost ? `• ${item.manaCost}` : ''}
-                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                    {item.setCode ? (
+                      <SetSymbol setCode={item.setCode} size={12} />
+                    ) : null}
+                    <Text style={[styles.cardType, { color: theme.textSecondary }]} numberOfLines={1}>
+                      {item.typeLine || 'Magic Card'} {item.setCode ? `• ${item.setCode.toUpperCase()} #${item.collectorNumber}` : ''}
+                    </Text>
+                  </View>
                 </View>
 
                 <View style={styles.stepperContainer}>
@@ -729,12 +837,15 @@ export function DeckDetailModal({
                           style={styles.printingThumb}
                           contentFit="cover"
                         />
-                        <Text
-                          style={[styles.printingSetCode, { color: isCurrent ? theme.accent : theme.text }]}
-                          numberOfLines={1}
-                        >
-                          {p.set.toUpperCase()} #{p.collectorNumber}
-                        </Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                          <SetSymbol setCode={p.set} rarity={p.rarity} size={13} />
+                          <Text
+                            style={[styles.printingSetCode, { color: isCurrent ? theme.accent : theme.text }]}
+                            numberOfLines={1}
+                          >
+                            {p.set.toUpperCase()} #{p.collectorNumber}
+                          </Text>
+                        </View>
                         <Text style={styles.printingPrice}>${price}</Text>
                         {isCurrent && (
                           <View style={[styles.currentVersionBadge, { backgroundColor: theme.accent }]}>
@@ -745,6 +856,71 @@ export function DeckDetailModal({
                     );
                   })}
                 </ScrollView>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Sample Hand Simulator Modal */}
+        <SampleHandModal
+          visible={showSampleHand}
+          cards={cards}
+          deckName={deck?.name || 'Bộ bài'}
+          onClose={() => setShowSampleHand(false)}
+        />
+
+        {/* Batch Import Text Modal */}
+        <Modal
+          visible={showImportModal}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowImportModal(false)}
+        >
+          <View style={styles.importOverlay}>
+            <View style={[styles.importBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+              <View style={styles.importHeader}>
+                <Text style={[styles.importTitle, { color: theme.text }]}>Nhập Danh Sách Bài (Import Text)</Text>
+                <Pressable onPress={() => setShowImportModal(false)} hitSlop={10}>
+                  <Feather name="x" size={18} color={theme.text} />
+                </Pressable>
+              </View>
+
+              <Text style={[styles.importSubtitle, { color: theme.textSecondary }]}>
+                Dán danh sách bài theo chuẩn MTG Arena, Moxfield hoặc plain text:
+              </Text>
+
+              <TextInput
+                style={[
+                  styles.importInput,
+                  { backgroundColor: theme.background, borderColor: theme.border, color: theme.text },
+                ]}
+                multiline
+                numberOfLines={7}
+                placeholder={"1 Sol Ring\n1 Arcane Signet\n1 Command Tower\n1 Rhystic Study (WOT) 25"}
+                placeholderTextColor={theme.textSecondary}
+                value={importText}
+                onChangeText={setImportText}
+              />
+
+              <View style={styles.importActions}>
+                <Pressable
+                  style={[styles.importCancelBtn, { borderColor: theme.border }]}
+                  onPress={() => setShowImportModal(false)}
+                >
+                  <Text style={[styles.importCancelText, { color: theme.text }]}>Hủy</Text>
+                </Pressable>
+
+                <Pressable
+                  style={[styles.importConfirmBtn, { backgroundColor: theme.accent, opacity: isImporting ? 0.7 : 1 }]}
+                  onPress={handleBatchImportText}
+                  disabled={isImporting || !importText.trim()}
+                >
+                  {isImporting ? (
+                    <ActivityIndicator size="small" color="#000" />
+                  ) : (
+                    <Text style={styles.importConfirmText}>Nhập Vào Bộ Bài</Text>
+                  )}
+                </Pressable>
               </View>
             </View>
           </View>
@@ -1209,6 +1385,86 @@ const styles = StyleSheet.create({
   currentVersionText: {
     fontSize: 9,
     fontWeight: '900',
+    color: '#0D0E12',
+  },
+  rightToolsWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  toolBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: borderRadius.sm,
+    borderWidth: 1,
+  },
+  toolBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  importOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    justifyContent: 'center',
+    padding: spacing.lg,
+  },
+  importBox: {
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    padding: spacing.md,
+    gap: spacing.sm,
+  },
+  importHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  importTitle: {
+    ...typography.body,
+    fontWeight: '800',
+  },
+  importSubtitle: {
+    ...typography.caption,
+  },
+  importInput: {
+    borderWidth: 1,
+    borderRadius: borderRadius.md,
+    padding: spacing.sm,
+    textAlignVertical: 'top',
+    fontSize: 12,
+    fontFamily: 'monospace',
+    minHeight: 120,
+  },
+  importActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  importCancelBtn: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+  },
+  importCancelText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  importConfirmBtn: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minWidth: 100,
+  },
+  importConfirmText: {
+    fontSize: 12,
+    fontWeight: '800',
     color: '#0D0E12',
   },
 });

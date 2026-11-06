@@ -24,6 +24,8 @@ import { FormatRuleModal } from '@/features/rules/components/FormatRuleModal';
 import { JudgeVerdictCard } from '@/features/rules/components/JudgeVerdictCard';
 import { JudgeSearchBar } from '@/features/rules/components/JudgeSearchBar';
 import { RuleTopicCard } from '@/features/rules/components/RuleTopicCard';
+import { LifeTrackerModal } from '@/features/lifetracker/components/LifeTrackerModal';
+import type { StartingLifeMode } from '@/features/lifetracker/types';
 import {
   askJudgeAi,
   fetchCheatSheets,
@@ -43,6 +45,8 @@ export function HomeScreen() {
   const [selectedVerdict, setSelectedVerdict] = useState<JudgeVerdict | null>(null);
   const [activeSheetTopic, setActiveSheetTopic] = useState<CheatSheetTopic | null>(null);
   const [activeFormat, setActiveFormat] = useState<FormatRule | null>(null);
+  const [lifeTrackerVisible, setLifeTrackerVisible] = useState(false);
+  const [lifeTrackerLife, setLifeTrackerLife] = useState<StartingLifeMode>(40);
   const [crModalVisible, setCrModalVisible] = useState(false);
   const [crTargetRule, setCrTargetRule] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
@@ -276,9 +280,21 @@ export function HomeScreen() {
       <ScreenHeader
         title="Judge Desk"
         rightAction={
-          <Pressable onPress={() => router.push('/settings')} hitSlop={10}>
-            <Feather name="settings" size={22} color={theme.text} />
-          </Pressable>
+          <View style={styles.headerRightRow}>
+            <Pressable
+              onPress={() => {
+                setLifeTrackerLife(40);
+                setLifeTrackerVisible(true);
+              }}
+              hitSlop={10}
+              style={styles.headerIconBtn}
+            >
+              <Feather name="shield" size={20} color="#E0AD62" />
+            </Pressable>
+            <Pressable onPress={() => router.push('/settings')} hitSlop={10} style={styles.headerIconBtn}>
+              <Feather name="settings" size={20} color={theme.text} />
+            </Pressable>
+          </View>
         }
       />
 
@@ -287,6 +303,39 @@ export function HomeScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
+        <Pressable
+          onPress={() => {
+            setLifeTrackerLife(40);
+            setLifeTrackerVisible(true);
+          }}
+          style={({ pressed }) => [
+            styles.lifeTrackerBanner,
+            {
+              backgroundColor: theme.surfaceElevated,
+              borderColor: 'rgba(224, 173, 98, 0.4)',
+              opacity: pressed ? 0.85 : 1,
+            },
+          ]}
+        >
+          <View style={[styles.navIconBox, { backgroundColor: 'rgba(224, 173, 98, 0.15)' }]}>
+            <Feather name="shield" size={20} color="#E0AD62" />
+          </View>
+          <View style={styles.lifeTrackerBannerTextWrap}>
+            <View style={styles.lifeTrackerBannerTitleRow}>
+              <Text style={[styles.lifeTrackerBannerTitle, { color: theme.text }]}>
+                Bàn Đấu & Tính Máu (Life Tracker 4P)
+              </Text>
+              <View style={styles.hotBadge}>
+                <Text style={styles.hotBadgeText}>HOT</Text>
+              </View>
+            </View>
+            <Text style={[styles.lifeTrackerBannerSub, { color: theme.textSecondary }]}>
+              Commander 40 HP · Sát thương tướng · Poison · Xúc xắc & Đồng xu
+            </Text>
+          </View>
+          <Feather name="play" size={16} color="#E0AD62" />
+        </Pressable>
+
         <View style={styles.navGrid}>
           <Pressable
             onPress={() => router.push('/search')}
@@ -670,6 +719,10 @@ export function HomeScreen() {
         format={activeFormat}
         visible={activeFormat !== null}
         onClose={() => setActiveFormat(null)}
+        onOpenLifeTracker={(startingLife) => {
+          setLifeTrackerLife(startingLife as StartingLifeMode);
+          setLifeTrackerVisible(true);
+        }}
       />
 
       <ComprehensiveRulesModal
@@ -680,15 +733,66 @@ export function HomeScreen() {
           setCrTargetRule(null);
         }}
       />
+
+      <LifeTrackerModal
+        visible={lifeTrackerVisible}
+        onClose={() => setLifeTrackerVisible(false)}
+        initialLife={lifeTrackerLife}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  headerRightRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  headerIconBtn: {
+    padding: 4,
+  },
   content: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.huge,
+  },
+  lifeTrackerBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.md,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1.5,
+    marginBottom: spacing.md,
+    gap: spacing.md,
+  },
+  lifeTrackerBannerTextWrap: {
+    flex: 1,
+  },
+  lifeTrackerBannerTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginBottom: 2,
+  },
+  lifeTrackerBannerTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  lifeTrackerBannerSub: {
+    fontSize: 11,
+    lineHeight: 15,
+  },
+  hotBadge: {
+    backgroundColor: '#EF4444',
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: borderRadius.xs,
+  },
+  hotBadgeText: {
+    color: '#FFF',
+    fontSize: 9,
+    fontWeight: '900',
   },
   navGrid: {
     flexDirection: 'row',

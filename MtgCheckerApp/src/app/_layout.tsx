@@ -28,6 +28,7 @@ function RootNavigator() {
     >
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="settings" options={{ presentation: 'card' }} />
+      <Stack.Screen name="lifetracker" options={{ presentation: 'fullScreenModal' }} />
       <Stack.Screen name="login" options={{ presentation: 'modal' }} />
       <Stack.Screen name="register" options={{ presentation: 'modal' }} />
     </Stack>

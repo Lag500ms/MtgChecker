@@ -3,6 +3,8 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 
 import { CardArt } from '@/components/CardArt';
+import { ManaPips } from '@/components/ManaPips';
+import { SetSymbol } from '@/components/SetSymbol';
 import type { Card } from '@/features/cards/types/card';
 import { useAppTheme } from '@/lib/ThemeProvider';
 import { borderRadius, spacing, typography } from '@/lib/theme';
@@ -122,18 +124,7 @@ function CardResultRowComponent({ card, onPress, actionLabel, onAction }: CardRe
             {card.name}
           </Text>
 
-          {manaSymbols.length > 0 && (
-            <View style={styles.manaRow}>
-              {manaSymbols.map((sym, idx) => {
-                const sStyle = getManaSymbolStyle(sym);
-                return (
-                  <View key={`${sym}-${idx}`} style={[styles.manaCircle, { backgroundColor: sStyle.bg }]}>
-                    <Text style={[styles.manaText, { color: sStyle.text }]}>{sym}</Text>
-                  </View>
-                );
-              })}
-            </View>
-          )}
+          <ManaPips manaCost={card.manaCost} size={15} />
         </View>
 
         {card.typeLine ? (
@@ -143,11 +134,7 @@ function CardResultRowComponent({ card, onPress, actionLabel, onAction }: CardRe
         ) : null}
 
         <View style={styles.bottomMeta}>
-          <View style={[styles.rarityBadge, { backgroundColor: rarityStyle.bg }]}>
-            <Text style={[styles.rarityText, { color: rarityStyle.text }]}>
-              {card.rarity ? card.rarity.charAt(0).toUpperCase() : 'C'}
-            </Text>
-          </View>
+          <SetSymbol setCode={card.set} rarity={card.rarity} size={14} />
           <Text style={[styles.setCode, { color: theme.textMuted }]} numberOfLines={1}>
             {card.set.toUpperCase()} #{card.collectorNumber} · {card.setName}
           </Text>

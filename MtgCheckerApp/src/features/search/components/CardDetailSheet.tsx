@@ -14,6 +14,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CardArt } from '@/components/CardArt';
 import { HoloFoilCard } from '@/components/HoloFoilCard';
+import { ManaPips } from '@/components/ManaPips';
+import { SetSymbol } from '@/components/SetSymbol';
 import { useToast } from '@/components/Toast';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { findPrintings, fetchCardRulings, type CardRuling } from '@/features/cards/api/cardsApi';
@@ -301,18 +303,7 @@ export function CardDetailSheet({
             )}
 
             <View style={styles.headerBlock}>
-              {manaSymbols.length > 0 && (
-                <View style={styles.manaRow}>
-                  {manaSymbols.map((sym, idx) => {
-                    const sStyle = getManaSymbolStyle(sym);
-                    return (
-                      <View key={`${sym}-${idx}`} style={[styles.manaPip, { backgroundColor: sStyle.bg }]}>
-                        <Text style={[styles.manaPipText, { color: sStyle.text }]}>{sym}</Text>
-                      </View>
-                    );
-                  })}
-                </View>
-              )}
+              <ManaPips manaCost={current.manaCost} size={18} style={styles.manaRow} />
 
               <View style={styles.typeBadgeRow}>
                 <Text style={[styles.typeText, { color: theme.textSecondary }]}>
@@ -325,10 +316,13 @@ export function CardDetailSheet({
                 </View>
               </View>
 
-              <Text style={[styles.setDetailText, { color: theme.textMuted }]}>
-                {current.setName} · {current.set.toUpperCase()} #{current.collectorNumber}
-                {current.releasedAt ? ` · ${current.releasedAt}` : ''}
-              </Text>
+              <View style={styles.setDetailRow}>
+                <SetSymbol setCode={current.set} rarity={current.rarity} size={15} />
+                <Text style={[styles.setDetailText, { color: theme.textMuted }]}>
+                  {current.setName} · {current.set.toUpperCase()} #{current.collectorNumber}
+                  {current.releasedAt ? ` · ${current.releasedAt}` : ''}
+                </Text>
+              </View>
             </View>
 
             {current.oracleText ? (
@@ -413,6 +407,7 @@ export function CardDetailSheet({
                         },
                       ]}
                     >
+                      <SetSymbol setCode={p.set} rarity={p.rarity} size={18} />
                       <Text style={[styles.printingSetCode, { color: isSelected ? theme.accent : theme.text }]}>
                         {p.set.toUpperCase()}
                       </Text>
@@ -843,6 +838,11 @@ const styles = StyleSheet.create({
   rarityPillText: {
     fontSize: 9,
     fontWeight: '800',
+  },
+  setDetailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   setDetailText: {
     ...typography.caption,

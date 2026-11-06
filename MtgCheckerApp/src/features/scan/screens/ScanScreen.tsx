@@ -18,6 +18,7 @@ import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CardArt } from '@/components/CardArt';
+import { SetSymbol } from '@/components/SetSymbol';
 import { useToast } from '@/components/Toast';
 import {
   findCardBySetAndNumber,
@@ -411,9 +412,12 @@ export function ScanScreen() {
               <Text style={styles.miniPreviewTitle} numberOfLines={1}>
                 {lastScannedCard.name}
               </Text>
-              <Text style={styles.miniPreviewSub}>
-                {lastScannedCard.set.toUpperCase()} #{lastScannedCard.collectorNumber}
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <SetSymbol setCode={lastScannedCard.set} rarity={lastScannedCard.rarity} size={13} />
+                <Text style={styles.miniPreviewSub}>
+                  {lastScannedCard.set.toUpperCase()} #{lastScannedCard.collectorNumber}
+                </Text>
+              </View>
             </View>
             <View style={styles.miniPreviewAction}>
               <Text style={styles.miniPreviewActionText}>View</Text>

@@ -18,9 +18,15 @@ type FormatRuleModalProps = {
   format: FormatRule | null;
   visible: boolean;
   onClose: () => void;
+  onOpenLifeTracker?: (startingLife: number) => void;
 };
 
-export function FormatRuleModal({ format, visible, onClose }: FormatRuleModalProps) {
+export function FormatRuleModal({
+  format,
+  visible,
+  onClose,
+  onOpenLifeTracker,
+}: FormatRuleModalProps) {
   const { theme } = useAppTheme();
   const insets = useSafeAreaInsets();
 
@@ -93,6 +99,24 @@ export function FormatRuleModal({ format, visible, onClose }: FormatRuleModalPro
               </Text>
             </View>
           ))}
+
+          {onOpenLifeTracker && (
+            <Pressable
+              onPress={() => {
+                onClose();
+                onOpenLifeTracker(format.startingLife);
+              }}
+              style={({ pressed }) => [
+                styles.openTrackerBtn,
+                { backgroundColor: theme.accent, opacity: pressed ? 0.85 : 1 },
+              ]}
+            >
+              <Feather name="shield" size={16} color="#000" />
+              <Text style={styles.openTrackerBtnText}>
+                Bắt đầu chơi với Life Tracker ({format.startingLife} HP)
+              </Text>
+            </Pressable>
+          )}
         </ScrollView>
       </View>
     </Modal>
@@ -215,5 +239,19 @@ const styles = StyleSheet.create({
   ruleDescription: {
     fontSize: 13,
     lineHeight: 19,
+  },
+  openTrackerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.md,
+    marginTop: spacing.md,
+  },
+  openTrackerBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#000',
   },
 });

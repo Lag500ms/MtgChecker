@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { Feather } from '@expo/vector-icons';
 
+import { SetSymbol } from '@/components/SetSymbol';
 import type { OwnedCard } from '@/features/collection/types/inventory';
 import { useAppTheme } from '@/lib/ThemeProvider';
 import { borderRadius, spacing, typography } from '@/lib/theme';
@@ -53,6 +54,7 @@ function OwnedCardRowComponent({ card, onInc, onDec, onDelete, onPress }: OwnedC
 
         <View style={styles.badgeRow}>
           <View style={styles.setCodeBadge}>
+            <SetSymbol setCode={card.setCode} size={13} style={{ marginRight: 4 }} />
             <Text style={styles.setCodeText}>
               {card.setCode.toUpperCase()} #{card.collectorNumber}
             </Text>
@@ -155,6 +157,8 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   setCodeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
     paddingHorizontal: 6,
     paddingVertical: 2,

@@ -65,7 +65,7 @@ services:
       OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:3b}
       N8N_ENABLED: ${N8N_ENABLED:-true}
       N8N_WEBHOOK_URL: ${N8N_WEBHOOK_URL:-http://n8n:5678/webhook/mtg-judge}
-      N8N_API_SECRET: ${N8N_API_SECRET:-}
+      N8N_API_SECRET: ${N8N_API_SECRET:toilanguoidanongthep-}
     volumes:
       - ./tessdata:/app/tessdata:ro
     restart: unless-stopped

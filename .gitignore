@@ -34,6 +34,11 @@ replay_pid*
 Thumbs.db
 desktop.ini
 
+# Environment & Secret files
+.env
+**/.env
+*.env
+
 # AI Assistant context (local only, không commit)
 CONTEXT.md
 

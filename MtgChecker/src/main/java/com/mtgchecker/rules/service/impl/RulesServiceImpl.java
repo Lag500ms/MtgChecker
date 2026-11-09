@@ -69,7 +69,7 @@ public class RulesServiceImpl implements IRulesService {
     private final ICardService cardService;
     private final IRulingService rulingService;
     private final OllamaClient ollamaClient;
-    private final GeminiClient geminiClient;
+    private final N8nClient n8nClient;
     private final ObjectMapper objectMapper;
 
     @Value("${llm.provider:ollama}")
@@ -101,22 +101,33 @@ public class RulesServiceImpl implements IRulesService {
         String systemPrompt = buildSystemPrompt();
         String userPrompt = buildUserPrompt(rawQuery, retrievedCards, retrievedRules, retrievedGlossary);
 
-        String rawLlmJson;
-        try {
-            rawLlmJson = geminiClient.generateContent(systemPrompt, userPrompt);
-        } catch (Exception e) {
-            log.error("Gemini AI call failed: {}", e.getMessage(), e);
-            return JudgeVerdictResponse.builder()
-                    .id(UUID.randomUUID().toString())
-                    .query(rawQuery)
-                    .verdict("CONDITIONAL")
-                    .verdictTitle("Judge Review Incomplete")
-                    .summary("Trọng tài AI Gemini hiện chưa thể phản hồi do lỗi kết nối mạng hoặc máy chủ. Vui lòng thử lại sau.")
-                    .stackSteps(Collections.emptyList())
-                    .crRules(retrievedRules.stream().map(r -> "CR " + r.getRuleNumber()).toList())
-                    .cardNames(retrievedCards.stream().map(c -> c.name).toList())
-                    .isCached(false)
-                    .build();
+        String rawLlmJson = null;
+        if ("n8n".equalsIgnoreCase(llmProvider)) {
+            try {
+                rawLlmJson = n8nClient.generateContent(systemPrompt, userPrompt);
+            } catch (Exception e) {
+                log.warn("n8n AI gateway call failed, falling back to local Ollama: {}", e.getMessage());
+            }
+        }
+
+        /* Fallback or primary execution with local Ollama model */
+        if (rawLlmJson == null || rawLlmJson.isBlank()) {
+            try {
+                rawLlmJson = ollamaClient.generateContent(systemPrompt, userPrompt);
+            } catch (Exception e) {
+                log.error("Ollama AI call failed: {}", e.getMessage(), e);
+                return JudgeVerdictResponse.builder()
+                        .id(UUID.randomUUID().toString())
+                        .query(rawQuery)
+                        .verdict("CONDITIONAL")
+                        .verdictTitle("Judge Review Incomplete")
+                        .summary("Trọng tài AI hiện chưa thể phản hồi do lỗi kết nối model Ollama. Vui lòng kiểm tra lại container Ollama.")
+                        .stackSteps(Collections.emptyList())
+                        .crRules(retrievedRules.stream().map(r -> "CR " + r.getRuleNumber()).toList())
+                        .cardNames(retrievedCards.stream().map(c -> c.name).toList())
+                        .isCached(false)
+                        .build();
+            }
         }
 
         JudgeVerdictResponse response;

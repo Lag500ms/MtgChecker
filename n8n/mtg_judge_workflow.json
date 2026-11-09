@@ -1,0 +1,303 @@
+{
+  "name": "MTG Judge & Card Discovery Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "mtg-judge",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-webhook-in",
+      "name": "Webhook In",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        200,
+        300
+      ],
+      "webhookId": "mtg-judge"
+    },
+    {
+      "parameters": {
+        "jsCode": "const rawBody = $input.first().json.body || $input.first().json;\nconst question = (rawBody.question || '').trim();\nconst systemPrompt = (rawBody.systemPrompt || '').trim();\nconst cardA = rawBody.interaction?.cardA || null;\nconst cardB = rawBody.interaction?.cardB || null;\n\n/* Normalize text removing accents for guardrail checks */\nconst cleanText = question.toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');\n\nconst nonMtgKeywords = ['nau an', 'thoi tiet', 'bong da', 'lap trinh', 'crypto', 'bitcoin', 'thoi tiet ha noi'];\nconst isOutOfScope = nonMtgKeywords.some(kw => cleanText.includes(kw));\n\nlet intent = 'RULES_DISPUTE';\nlet searchQuery = '';\n\nif (isOutOfScope) {\n  intent = 'OUT_OF_SCOPE';\n} else if (!cardA && !cardB && /^(tim|tra cuu|search|show me|find)/i.test(question)) {\n  intent = 'CARD_SEARCH';\n  searchQuery = question.replace(/^(tim|tra cuu|search|show me|find)\\s*(la bai|card)?/i, '').trim();\n}\n\nreturn [{\n  json: {\n    id: rawBody.requestId || 'req_' + Date.now(),\n    question,\n    systemPrompt,\n    searchQuery,\n    cardA,\n    cardB,\n    intent\n  }\n}];"
+      },
+      "id": "node-classifier",
+      "name": "Intent Classifier & Guardrail",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        420,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "OUT_OF_SCOPE",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "CARD_SEARCH",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "id": "node-router",
+      "name": "Router",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        660,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"id\": \"{{ $json.id }}\",\n  \"query\": \"{{ $json.question }}\",\n  \"verdict\": \"CONDITIONAL\",\n  \"verdictTitle\": \"Câu hỏi ngoài phạm vi MTG (Out of Scope)\",\n  \"summary\": \"Tôi là Trọng tài AI chuyên trách về luật thi đấu, tương tác thẻ bài và cơ chế Comprehensive Rules của Magic: The Gathering. Câu hỏi này không thuộc phạm vi luật hoặc thẻ bài MTG. Vui lòng đặt câu hỏi liên quan đến thẻ bài hoặc luật chơi MTG!\",\n  \"stackSteps\": [],\n  \"crRules\": [],\n  \"cardNames\": [],\n  \"isCached\": false\n}",
+        "options": {}
+      },
+      "id": "node-out-of-scope",
+      "name": "Out of Scope Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        940,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.scryfall.com/cards/search?q={{ encodeURIComponent($json.searchQuery || $json.question) }}",
+        "options": {}
+      },
+      "id": "node-scryfall-search",
+      "name": "Search Scryfall Cards",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        940,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputData = $input.first().json;\nconst cards = (inputData.data || []).slice(0, 5).map(c => ({\n  name: c.name,\n  manaCost: c.mana_cost || '',\n  typeLine: c.type_line || '',\n  oracleText: c.oracle_text || '',\n  imageUri: c.image_uris?.normal || c.card_faces?.[0]?.image_uris?.normal || ''\n}));\n\nconst query = $('Intent Classifier & Guardrail').first().json.question;\nconst reqId = $('Intent Classifier & Guardrail').first().json.id;\n\nreturn [{\n  json: {\n    id: reqId,\n    query: query,\n    verdict: cards.length > 0 ? 'YES' : 'NO',\n    verdictTitle: cards.length > 0 ? `Tìm thấy ${cards.length} thẻ bài MTG phù hợp` : 'Không tìm thấy thẻ bài phù hợp',\n    summary: cards.length > 0 ? `Các lá bài phù hợp nhất với mô tả: ${cards.map(c => c.name).join(', ')}.` : `Không tìm thấy thẻ bài nào khớp với từ khóa \"${query}\".`,\n    stackSteps: [],\n    crRules: [],\n    cardNames: cards.map(c => c.name),\n    isCached: false\n  }\n}];"
+      },
+      "id": "node-format-cards",
+      "name": "Format Cards Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1160,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "node-card-search-response",
+      "name": "Card Search Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1380,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://ollama:11434/api/chat",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"qwen2.5:3b\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": {{ JSON.stringify($json.systemPrompt || \"Bạn là một Trọng tài MTG Level 2 chuyên nghiệp và chuyên gia luật thi đấu bài Magic: The Gathering.\\nNhiệm vụ của bạn là giải thích chính xác tranh chấp luật, tương tác lá bài, State-Based Actions, Priority, Layers và Timing theo luật MTG Comprehensive Rules.\\n\\nQUY TẮC NGÔN NGỮ QUAN TRỌNG NHẤT:\\n- BẮT BUỘC TOÀN BỘ PHẦN GIẢI THÍCH (verdictTitle, summary, stackSteps) PHẢI ĐƯỢC VIẾT BẰNG TIẾNG VIỆT tự nhiên, chuẩn xác, mạch lạc.\\n- Giữ nguyên tên tiếng Anh của các lá bài MTG (vd: Urza's Saga, Blood Moon).\\n- Giữ nguyên các thuật ngữ luật chuẩn (vd: Layer, The Stack, State-Based Actions, Priority).\\n\\nĐỊNH DẠNG JSON ĐẦU RA BẮT BUỘC:\\n{\\n  \\\"verdict\\\": \\\"YES\\\" | \\\"NO\\\" | \\\"CONDITIONAL\\\",\\n  \\\"verdictTitle\\\": \\\"Tiêu đề phán quyết tóm tắt trong 1 câu bằng tiếng Việt\\\",\\n  \\\"summary\\\": \\\"Giải thích chi tiết lý do và cơ chế bằng tiếng Việt, trích dẫn luật CR rõ ràng\\\",\\n  \\\"stackSteps\\\": [\\\"Bước 1: Mô tả hành động\\\", \\\"Bước 2: Mô tả giải quyết\\\"],\\n  \\\"crRules\\\": [\\\"CR 704.5\\\", \\\"CR 613.1d\\\"],\\n  \\\"cardNames\\\": [\\\"Card A\\\", \\\"Card B\\\"]\\n}\") }}\n    },\n    {\n      \"role\": \"user\",\n      \"content\": {{ JSON.stringify($json.question + ($json.cardA && $json.cardB ? ' (Các lá bài: ' + $json.cardA + ' vs ' + $json.cardB + ')' : '') + '\\n(Lưu ý: Bắt buộc giải thích toàn bộ bằng tiếng Việt!)') }}\n    }\n  ],\n  \"format\": \"json\",\n  \"stream\": false,\n  \"options\": {\n    \"temperature\": 0.1\n  }\n}",
+        "options": {}
+      },
+      "id": "node-call-ollama",
+      "name": "Call Ollama AI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        940,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const responseBody = $input.first().json;\nconst reqInfo = $('Intent Classifier & Guardrail').first().json;\n\nlet parsed = null;\ntry {\n  const rawContent = responseBody.message?.content || '{}';\n  parsed = JSON.parse(rawContent);\n} catch (e) {\n  parsed = {\n    verdict: 'CONDITIONAL',\n    verdictTitle: 'Phán quyết trọng tài MTG',\n    summary: 'Đã phân tích tình huống theo luật MTG Comprehensive Rules.',\n    stackSteps: [],\n    crRules: [],\n    cardNames: []\n  };\n}\n\nreturn [{\n  json: {\n    id: reqInfo.id,\n    query: reqInfo.question,\n    verdict: parsed.verdict || 'CONDITIONAL',\n    verdictTitle: parsed.verdictTitle || 'Phán quyết trọng tài MTG',\n    summary: parsed.summary || 'Đã phân tích tương tác theo luật MTG.',\n    stackSteps: parsed.stackSteps || [],\n    crRules: parsed.crRules || [],\n    cardNames: parsed.cardNames || parsed.relatedCards || [],\n    isCached: false\n  }\n}];"
+      },
+      "id": "node-parse-ollama",
+      "name": "Parse Ollama Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1160,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "node-judge-response",
+      "name": "Judge Dispute Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1380,
+        500
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook In": {
+      "main": [
+        [
+          {
+            "node": "Intent Classifier & Guardrail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Intent Classifier & Guardrail": {
+      "main": [
+        [
+          {
+            "node": "Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Router": {
+      "main": [
+        [
+          {
+            "node": "Out of Scope Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Search Scryfall Cards",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call Ollama AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Scryfall Cards": {
+      "main": [
+        [
+          {
+            "node": "Format Cards Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Cards Result": {
+      "main": [
+        [
+          {
+            "node": "Card Search Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Ollama AI": {
+      "main": [
+        [
+          {
+            "node": "Parse Ollama Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Ollama Output": {
+      "main": [
+        [
+          {
+            "node": "Judge Dispute Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

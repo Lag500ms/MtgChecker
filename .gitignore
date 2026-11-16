@@ -41,6 +41,7 @@ desktop.ini
 
 # AI Assistant context (local only, không commit)
 CONTEXT.md
+.md
 
 # Sensitive Seed Data (Local credentials)
 **/DataInitializer.java

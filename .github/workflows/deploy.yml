@@ -14,33 +14,89 @@ jobs:
       - name: 1. Checkout repository
         uses: actions/checkout@v4
 
-      - name: 1.1 Setup .env file
+      - name: 1.1 Setup .env file (Windows)
+        if: runner.os == 'Windows'
         shell: powershell
         run: |
-          if (Test-Path "E:\BE\MtgChecker\MtgChecker\.env") {
-            Copy-Item "E:\BE\MtgChecker\MtgChecker\.env" -Destination "MtgChecker\.env" -Force
-            Write-Host "Da copy file .env goc vao actions-runner thanh cong!"
+          $src = "E:\BE\MtgChecker\MtgChecker\.env"
+          $dest = Join-Path $env:GITHUB_WORKSPACE "MtgChecker\.env"
+          $example = Join-Path $env:GITHUB_WORKSPACE "MtgChecker\.env.example"
+
+          if (Test-Path -LiteralPath $src) {
+            Copy-Item -LiteralPath $src -Destination $dest -Force
+            Write-Host "Copied the Windows runner .env file."
+          } elseif (Test-Path -LiteralPath $example) {
+            Copy-Item -LiteralPath $example -Destination $dest -Force
+            Write-Warning "Using .env.example; configure real deployment secrets on the runner."
           } else {
-            Copy-Item "MtgChecker\.env.example" "MtgChecker\.env" -Force
-            Write-Host "Tao .env tu .env.example!"
+            throw "Neither the runner .env file nor MtgChecker/.env.example exists."
           }
 
+      - name: 1.1 Setup .env file (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          src="/opt/mtgchecker/.env"
+          dest="$GITHUB_WORKSPACE/MtgChecker/.env"
+          example="$GITHUB_WORKSPACE/MtgChecker/.env.example"
+
+          if [[ -f "$src" ]]; then
+            install -m 600 "$src" "$dest"
+            echo "Copied the Linux runner .env file."
+          elif [[ -f "$example" ]]; then
+            install -m 600 "$example" "$dest"
+            echo "Warning: using .env.example; configure real deployment secrets on the runner."
+          else
+            echo "Neither /opt/mtgchecker/.env nor MtgChecker/.env.example exists." >&2
+            exit 1
+          fi
+
       - name: 2. Build Backend JAR with Maven
+        if: runner.os == 'Windows'
         shell: powershell
         run: |
-          Set-Location -Path "MtgChecker"
+          Set-Location -Path (Join-Path $env:GITHUB_WORKSPACE "MtgChecker")
           Write-Host "Building MtgChecker JAR with Maven..."
           .\mvnw.cmd package -DskipTests
 
+      - name: 2. Build Backend JAR with Maven
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE/MtgChecker"
+          echo "Building MtgChecker JAR with Maven..."
+          bash ./mvnw package -DskipTests
+
       - name: 3. Deploy Containers with Docker Compose
+        if: runner.os == 'Windows'
         shell: powershell
         run: |
-          Set-Location -Path "MtgChecker"
+          Set-Location -Path (Join-Path $env:GITHUB_WORKSPACE "MtgChecker")
           Write-Host "Starting Docker containers..."
           docker compose up --build -d
 
+      - name: 3. Deploy Containers with Docker Compose
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE/MtgChecker"
+          echo "Starting Docker containers..."
+          docker compose up --build -d
+
       - name: 4. Verify Running Services
+        if: runner.os == 'Windows'
         shell: powershell
         run: |
           Write-Host "Checking active Docker containers..."
           docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+
+      - name: 4. Verify Running Services
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Checking active Docker containers..."
+          docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'

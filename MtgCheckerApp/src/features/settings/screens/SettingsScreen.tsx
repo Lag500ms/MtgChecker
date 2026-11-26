@@ -8,12 +8,14 @@ import { Card, ConfirmModal, ListRow, SectionPill } from '@/components/ui';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { APP_NAME, API_BASE_URL } from '@/lib/apiConfig';
 import { useAppTheme } from '@/lib/ThemeProvider';
+import { useLanguage } from '@/lib/LanguageProvider';
 import { borderRadius, spacing, typography } from '@/lib/theme';
 
 import { ThemePicker } from '../components/ThemePicker';
 
 export function SettingsScreen() {
   const { theme } = useAppTheme();
+  const { language, setLanguage, t } = useLanguage();
   const { account, logout } = useAuth();
   const router = useRouter();
   const [logoutConfirmVisible, setLogoutConfirmVisible] = useState(false);
@@ -57,6 +59,22 @@ export function SettingsScreen() {
         </Text>
         <ThemePicker />
 
+        <SectionPill label={t('language')} icon="globe" />
+        <View style={styles.languageRow}>
+          {(['en', 'vi'] as const).map((lang) => (
+            <Pressable key={lang} accessibilityRole="button"
+              accessibilityState={{ selected: language === lang }}
+              onPress={() => setLanguage(lang)}
+              style={[styles.languageButton, {
+                backgroundColor: language === lang ? theme.accent : theme.surface,
+                borderColor: language === lang ? theme.accent : theme.border,
+              }]}>
+              <Text style={{ fontWeight: '800', color: language === lang ? theme.accentContrast : theme.text }}>
+                {lang === 'en' ? t('english') : t('vietnamese')}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
         <SectionPill label="General" icon="sliders" />
         <ListRow icon="cloud" title="API endpoint" subtitle={API_BASE_URL} />
         <ListRow icon="info" title="App" subtitle={`${APP_NAME} · 1.0.0`} />
@@ -109,6 +127,8 @@ const styles = StyleSheet.create({
   accountText: { flex: 1, gap: 2 },
   accountName: { ...typography.body, fontWeight: '700' },
   accountSub: { ...typography.bodySmall },
+  languageRow: { flexDirection: 'row', gap: 9, marginBottom: spacing.lg },
+  languageButton: { flex: 1, borderWidth: 1, borderRadius: borderRadius.md, padding: 13, alignItems: 'center' },
   hint: {
     ...typography.caption,
     marginBottom: spacing.md,

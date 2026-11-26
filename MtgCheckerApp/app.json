@@ -3,12 +3,13 @@
     "name": "MtgCheckerApp",
     "slug": "MtgCheckerApp",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "mtgcheckerapp",
     "userInterfaceStyle": "dark",
     "ios": {
       "supportsTablet": true,
+      "requireFullScreen": true,
       "infoPlist": {
         "NSAppTransportSecurity": {
           "NSAllowsLocalNetworking": true

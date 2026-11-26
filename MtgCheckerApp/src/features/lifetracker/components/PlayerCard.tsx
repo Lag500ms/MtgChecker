@@ -1,15 +1,12 @@
 import React, { useState } from 'react';
 import {
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
+  Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-
-import { borderRadius, spacing } from '@/lib/theme';
+import { useLanguage } from '@/lib/LanguageProvider';
 import { PLAYER_THEMES } from '../types';
 import type { PlayerState, PlayerThemeColor } from '../types';
+import type { CommanderSlot } from '../gameState';
 
 interface PlayerCardProps {
   player: PlayerState;
@@ -18,625 +15,335 @@ interface PlayerCardProps {
   onUpdateLife: (playerId: string, delta: number) => void;
   onUpdatePoison: (playerId: string, delta: number) => void;
   onUpdateCommanderTax: (playerId: string, delta: number) => void;
+  onUpdatePartnerCommanderTax: (playerId: string, delta: number) => void;
   onUpdateEnergy: (playerId: string, delta: number) => void;
+  onUpdateExperience: (playerId: string, delta: number) => void;
   onUpdateCommanderDamage: (
-    targetPlayerId: string,
-    fromPlayerId: string,
-    delta: number
+    targetPlayerId: string, fromPlayerId: string, slot: CommanderSlot, delta: number
   ) => void;
   onToggleMonarch: (playerId: string) => void;
   onToggleInitiative: (playerId: string) => void;
+  onTogglePartner: (playerId: string) => void;
   onChangeTheme: (playerId: string, color: PlayerThemeColor) => void;
+  onRename: (playerId: string, name: string) => void;
 }
 
-export function PlayerCard({
-  player,
-  otherPlayers,
-  rotate180 = false,
-  onUpdateLife,
-  onUpdatePoison,
-  onUpdateCommanderTax,
-  onUpdateEnergy,
-  onUpdateCommanderDamage,
-  onToggleMonarch,
-  onToggleInitiative,
-  onChangeTheme,
-}: PlayerCardProps) {
-  const [viewMode, setViewMode] = useState<'life' | 'counters' | 'commanderDmg'>('life');
-  const [showColorPicker, setShowColorPicker] = useState(false);
+const COLORS: PlayerThemeColor[] = ['white', 'blue', 'black', 'red', 'green', 'gold', 'colorless'];
 
-  const themeConfig = PLAYER_THEMES[player.themeColor] || PLAYER_THEMES.colorless;
-
-  /* Check defeat conditions based on Comprehensive Rules */
-  const isDeadByLife = player.life <= 0;
-  const isDeadByPoison = player.poison >= 10;
-  const lethalCommanderDamageSource = Object.entries(player.commanderDamageReceived).find(
-    ([, dmg]) => dmg >= 21
-  );
-  const isDeadByCommander = Boolean(lethalCommanderDamageSource);
-  const isDefeated = isDeadByLife || isDeadByPoison || isDeadByCommander;
-
-  const colorOptions: PlayerThemeColor[] = [
-    'white',
-    'blue',
-    'black',
-    'red',
-    'green',
-    'gold',
-    'colorless',
-  ];
-
+function Stepper({
+  label, value, onChange, color,
+}: {
+  label: string;
+  value: number;
+  onChange: (delta: number) => void;
+  color?: string;
+}) {
   return (
-    <View
-      style={[
-        styles.container,
-        {
-          backgroundColor: themeConfig.bg,
-          borderColor: isDefeated ? '#EF4444' : themeConfig.border,
-          transform: rotate180 ? [{ rotate: '180deg' }] : [],
-        },
-      ]}
-    >
-      {/* Top Header bar for each player */}
-      <View style={styles.topBar}>
-        <Pressable
-          onPress={() => setShowColorPicker(!showColorPicker)}
-          style={[styles.colorIndicator, { backgroundColor: themeConfig.accent }]}
-        />
-        <Text style={[styles.playerName, { color: themeConfig.accent }]} numberOfLines={1}>
-          {player.name}
-        </Text>
-        <View style={styles.topBadgesRow}>
-          {player.isMonarch && (
-            <View style={styles.monarchBadge}>
-              <Text style={styles.monarchText}>👑 MONARCH</Text>
-            </View>
-          )}
-          {player.hasInitiative && (
-            <View style={styles.initiativeBadge}>
-              <Text style={styles.initiativeText}>⚔️ INITIATIVE</Text>
-            </View>
-          )}
-          <Pressable
-            onPress={() => {
-              if (viewMode === 'life') setViewMode('counters');
-              else if (viewMode === 'counters') setViewMode('commanderDmg');
-              else setViewMode('life');
-            }}
-            hitSlop={8}
-            style={styles.modeSwitchBtn}
-          >
-            <Feather
-              name={
-                viewMode === 'life'
-                  ? 'sliders'
-                  : viewMode === 'counters'
-                  ? 'shield'
-                  : 'heart'
-              }
-              size={18}
-              color={themeConfig.accent}
-            />
-          </Pressable>
-        </View>
-      </View>
-
-      {/* Color picker dropdown */}
-      {showColorPicker && (
-        <View style={styles.colorPaletteRow}>
-          {colorOptions.map((c) => (
-            <Pressable
-              key={c}
-              onPress={() => {
-                onChangeTheme(player.id, c);
-                setShowColorPicker(false);
-              }}
-              style={[
-                styles.colorDot,
-                { backgroundColor: PLAYER_THEMES[c].accent },
-                player.themeColor === c && styles.colorDotActive,
-              ]}
-            />
-          ))}
-        </View>
-      )}
-
-      {/* Mode 1: MAIN LIFE DISPLAY WITH INVISIBLE SPLIT TOUCH ZONE */}
-      {viewMode === 'life' && (
-        <View style={styles.mainLifeArea}>
-          {isDefeated && (
-            <View style={styles.defeatedBadge}>
-              <Text style={styles.defeatedText}>
-                {isDeadByPoison
-                  ? '💀 ELIMINATED BY POISON (10+)'
-                  : isDeadByCommander
-                  ? '💀 ELIMINATED BY COMMANDER DMG (21+)'
-                  : '💀 ELIMINATED (0 HP)'}
-              </Text>
-            </View>
-          )}
-
-          <View style={styles.splitTouchArea}>
-            {/* Left half: Tap = -1, Long press = -5 */}
-            <Pressable
-              onPress={() => onUpdateLife(player.id, -1)}
-              onLongPress={() => onUpdateLife(player.id, -5)}
-              style={({ pressed }) => [
-                styles.splitHalf,
-                styles.splitHalfLeft,
-                pressed && { backgroundColor: 'rgba(239, 68, 68, 0.16)' },
-              ]}
-            >
-              <Feather
-                name="minus"
-                size={28}
-                color={themeConfig.accent}
-                style={styles.splitIconHint}
-              />
-            </Pressable>
-
-            {/* Right half: Tap = +1, Long press = +5 */}
-            <Pressable
-              onPress={() => onUpdateLife(player.id, 1)}
-              onLongPress={() => onUpdateLife(player.id, 5)}
-              style={({ pressed }) => [
-                styles.splitHalf,
-                styles.splitHalfRight,
-                pressed && { backgroundColor: 'rgba(34, 197, 94, 0.16)' },
-              ]}
-            >
-              <Feather
-                name="plus"
-                size={28}
-                color={themeConfig.accent}
-                style={styles.splitIconHint}
-              />
-            </Pressable>
-
-            {/* Centered big life counter, pointerEvents="none" for pass-through touches */}
-            <View style={styles.lifeCenterOverlay} pointerEvents="none">
-              <Text
-                style={[
-                  styles.lifeNumber,
-                  { color: isDefeated ? '#EF4444' : themeConfig.accent },
-                ]}
-                numberOfLines={1}
-                adjustsFontSizeToFit
-              >
-                {player.life}
-              </Text>
-              <Text style={[styles.lifeTapHint, { color: themeConfig.accent }]}>
-                - Tap Left  |  Tap Right +
-              </Text>
-            </View>
-          </View>
-        </View>
-      )}
-
-      {/* Mode 2: SECONDARY COUNTERS (Poison, Commander Tax, Energy, Monarch) */}
-      {viewMode === 'counters' && (
-        <View style={styles.countersArea}>
-          {/* Poison */}
-          <View style={styles.counterRow}>
-            <View style={styles.counterLabelWrap}>
-              <Text style={styles.counterIcon}>🧪</Text>
-              <Text style={[styles.counterLabel, { color: themeConfig.accent }]}>
-                Poison ({player.poison}/10)
-              </Text>
-            </View>
-            <View style={styles.counterControls}>
-              <Pressable
-                onPress={() => onUpdatePoison(player.id, -1)}
-                style={styles.counterMiniBtn}
-              >
-                <Feather name="minus" size={14} color="#FFF" />
-              </Pressable>
-              <Text style={[styles.counterValue, { color: player.poison >= 10 ? '#EF4444' : '#FFF' }]}>
-                {player.poison}
-              </Text>
-              <Pressable
-                onPress={() => onUpdatePoison(player.id, 1)}
-                style={styles.counterMiniBtn}
-              >
-                <Feather name="plus" size={14} color="#FFF" />
-              </Pressable>
-            </View>
-          </View>
-
-          {/* Commander Tax */}
-          <View style={styles.counterRow}>
-            <View style={styles.counterLabelWrap}>
-              <Text style={styles.counterIcon}>🪙</Text>
-              <Text style={[styles.counterLabel, { color: themeConfig.accent }]}>
-                Tax (+{player.commanderTax * 2})
-              </Text>
-            </View>
-            <View style={styles.counterControls}>
-              <Pressable
-                onPress={() => onUpdateCommanderTax(player.id, -1)}
-                style={styles.counterMiniBtn}
-              >
-                <Feather name="minus" size={14} color="#FFF" />
-              </Pressable>
-              <Text style={[styles.counterValue, { color: '#FFF' }]}>
-                {player.commanderTax}
-              </Text>
-              <Pressable
-                onPress={() => onUpdateCommanderTax(player.id, 1)}
-                style={styles.counterMiniBtn}
-              >
-                <Feather name="plus" size={14} color="#FFF" />
-              </Pressable>
-            </View>
-          </View>
-
-          {/* Energy */}
-          <View style={styles.counterRow}>
-            <View style={styles.counterLabelWrap}>
-              <Text style={styles.counterIcon}>⚡</Text>
-              <Text style={[styles.counterLabel, { color: themeConfig.accent }]}>Energy</Text>
-            </View>
-            <View style={styles.counterControls}>
-              <Pressable
-                onPress={() => onUpdateEnergy(player.id, -1)}
-                style={styles.counterMiniBtn}
-              >
-                <Feather name="minus" size={14} color="#FFF" />
-              </Pressable>
-              <Text style={[styles.counterValue, { color: '#FFF' }]}>
-                {player.energy}
-              </Text>
-              <Pressable
-                onPress={() => onUpdateEnergy(player.id, 1)}
-                style={styles.counterMiniBtn}
-              >
-                <Feather name="plus" size={14} color="#FFF" />
-              </Pressable>
-            </View>
-          </View>
-
-          {/* Monarch & Initiative toggle buttons */}
-          <View style={styles.statusToggleRow}>
-            <Pressable
-              onPress={() => onToggleMonarch(player.id)}
-              style={[
-                styles.statusBtn,
-                player.isMonarch && styles.statusBtnActiveMonarch,
-              ]}
-            >
-              <Text style={styles.statusBtnText}>👑 Monarch</Text>
-            </Pressable>
-            <Pressable
-              onPress={() => onToggleInitiative(player.id)}
-              style={[
-                styles.statusBtn,
-                player.hasInitiative && styles.statusBtnActiveInitiative,
-              ]}
-            >
-              <Text style={styles.statusBtnText}>⚔️ Initiative</Text>
-            </Pressable>
-          </View>
-        </View>
-      )}
-
-      {/* Mode 3: COMMANDER DAMAGE MATRIX (CR 903.10a) */}
-      {viewMode === 'commanderDmg' && (
-        <View style={styles.commanderDmgArea}>
-          <Text style={[styles.cmdDmgTitle, { color: themeConfig.accent }]}>
-            Commander Damage Taken (Threshold 21)
-          </Text>
-          {otherPlayers.map((other) => {
-            const dmg = player.commanderDamageReceived[other.id] || 0;
-            const isLethal = dmg >= 21;
-            return (
-              <View key={other.id} style={styles.cmdDmgRow}>
-                <Text style={[styles.cmdDmgAttackerName, { color: other.themeColor ? PLAYER_THEMES[other.themeColor].accent : '#FFF' }]} numberOfLines={1}>
-                  From {other.name}:
-                </Text>
-                <View style={styles.counterControls}>
-                  <Pressable
-                    onPress={() => onUpdateCommanderDamage(player.id, other.id, -1)}
-                    style={styles.counterMiniBtn}
-                  >
-                    <Feather name="minus" size={14} color="#FFF" />
-                  </Pressable>
-                  <Text
-                    style={[
-                      styles.counterValue,
-                      { color: isLethal ? '#EF4444' : '#FFF', fontWeight: isLethal ? '900' : '700' },
-                    ]}
-                  >
-                    {dmg}
-                  </Text>
-                  <Pressable
-                    onPress={() => onUpdateCommanderDamage(player.id, other.id, 1)}
-                    style={styles.counterMiniBtn}
-                  >
-                    <Feather name="plus" size={14} color="#FFF" />
-                  </Pressable>
-                </View>
-              </View>
-            );
-          })}
-        </View>
-      )}
-
-      {/* Footer Mini bar: Quick switch between views */}
-      <View style={styles.bottomBar}>
-        <Pressable
-          onPress={() => setViewMode('life')}
-          style={[styles.bottomTab, viewMode === 'life' && styles.bottomTabActive]}
-        >
-          <Text style={[styles.bottomTabText, viewMode === 'life' && { color: themeConfig.accent }]}>
-            Life
-          </Text>
+    <View style={styles.counterRow}>
+      <Text numberOfLines={1} style={[styles.counterLabel, color ? { color } : null]}>
+        {label}
+      </Text>
+      <View style={styles.counterControls}>
+        <Pressable accessibilityRole="button"
+          accessibilityLabel={'Decrease ' + label} hitSlop={5}
+          onPress={() => onChange(-1)}
+          onLongPress={() => onChange(-5)}
+          delayLongPress={450} style={styles.counterBtn}>
+          <Feather name="minus" size={18} color="#F5F5F5" />
         </Pressable>
-        <Pressable
-          onPress={() => setViewMode('counters')}
-          style={[styles.bottomTab, viewMode === 'counters' && styles.bottomTabActive]}
-        >
-          <Text style={[styles.bottomTabText, viewMode === 'counters' && { color: themeConfig.accent }]}>
-            Counters
-          </Text>
+        <Text style={styles.counterValue}>{value}</Text>
+        <Pressable accessibilityRole="button"
+          accessibilityLabel={'Increase ' + label} hitSlop={5}
+          onPress={() => onChange(1)}
+          onLongPress={() => onChange(5)}
+          delayLongPress={450} style={styles.counterBtn}>
+          <Feather name="plus" size={18} color="#F5F5F5" />
         </Pressable>
-        {otherPlayers.length > 0 && (
-          <Pressable
-            onPress={() => setViewMode('commanderDmg')}
-            style={[styles.bottomTab, viewMode === 'commanderDmg' && styles.bottomTabActive]}
-          >
-            <Text style={[styles.bottomTabText, viewMode === 'commanderDmg' && { color: themeConfig.accent }]}>
-              Cmd Dmg
-            </Text>
-          </Pressable>
-        )}
       </View>
     </View>
   );
 }
 
+export function PlayerCard({
+  player, otherPlayers, rotate180 = false,
+  onUpdateLife, onUpdatePoison, onUpdateCommanderTax,
+  onUpdatePartnerCommanderTax, onUpdateEnergy, onUpdateExperience,
+  onUpdateCommanderDamage, onToggleMonarch, onToggleInitiative,
+  onTogglePartner, onChangeTheme, onRename,
+}: PlayerCardProps) {
+  const { t } = useLanguage();
+  const { width, height } = useWindowDimensions();
+  const landscape = width > height;
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [draftName, setDraftName] = useState(player.name);
+  const [section, setSection] = useState<'main' | 'damage' | 'settings'>('main');
+
+  const palette = PLAYER_THEMES[player.themeColor] || PLAYER_THEMES.colorless;
+  const maxDamage = Math.max(0, ...Object.values(player.commanderDamageReceived));
+  const poisonLoss = player.poison >= 10;
+  const commanderLoss = maxDamage >= 21;
+  const lost = player.life <= 0 || poisonLoss || commanderLoss;
+  const lossReason = player.life <= 0 ? t('lifeLoss') :
+    poisonLoss ? t('poisonLoss') : commanderLoss ? t('commanderLoss') : '';
+  const openMenu = () => {
+    setDraftName(player.name);
+    setSection('main');
+    setMenuVisible(true);
+  };
+  const damageSources = otherPlayers.flatMap((opponent) => {
+    const main = [{ id: opponent.id, attacker: opponent, slot: 'main' as CommanderSlot,
+      label: opponent.name + ' · ' + t('mainCommander') }];
+    if (opponent.hasPartner) main.push({
+      id: opponent.id + ':partner', attacker: opponent, slot: 'partner',
+      label: opponent.name + ' · ' + t('partner'),
+    });
+    return main;
+  });
+
+  return (
+    <View style={[styles.root, {
+      backgroundColor: palette.bg,
+      borderColor: lost ? '#F87171' : palette.border,
+      transform: rotate180 ? [{ rotate: '180deg' }] : [],
+    }]}>
+      <View pointerEvents="none" style={[styles.glow, { backgroundColor: palette.accent }]} />
+      <View style={styles.header}>
+        <View style={styles.headerTitle}>
+          <View style={[styles.colorMark, { backgroundColor: palette.accent }]} />
+          <Text style={styles.playerName} numberOfLines={1}>{player.name}</Text>
+          {lost && <Text style={styles.eliminated}>{t('defeated')}</Text>}
+        </View>
+        <Pressable accessibilityRole="button"
+          accessibilityLabel={player.name + ' ' + t('more')}
+          onPress={openMenu} hitSlop={8} style={styles.menuTrigger}>
+          <Feather name="more-vertical" size={22} color="#F2F4F8" />
+        </Pressable>
+      </View>
+
+      <View style={styles.lifeArea}>
+        <Pressable
+          style={({ pressed }) => [styles.lifeTap, pressed && styles.tapMinus]}
+          accessibilityLabel={player.name + ' -1 ' + t('life')}
+          onPress={() => onUpdateLife(player.id, -1)}
+          onLongPress={() => onUpdateLife(player.id, -5)}
+          delayLongPress={450}
+        >
+          <Feather name="minus" color={palette.accent} size={landscape ? 26 : 22} />
+        </Pressable>
+        <View style={styles.lifeTextBox} pointerEvents="none">
+          <Text style={[styles.lifeText, {
+            color: lost ? '#FF9D9D' : '#FDFDFE',
+            fontSize: landscape ? 67 : 65,
+          }]} adjustsFontSizeToFit numberOfLines={1}>{player.life}</Text>
+          {lost && <Text style={styles.lossText} numberOfLines={1}>{lossReason}</Text>}
+        </View>
+        <Pressable
+          style={({ pressed }) => [styles.lifeTap, pressed && styles.tapPlus]}
+          accessibilityLabel={player.name + ' +1 ' + t('life')}
+          onPress={() => onUpdateLife(player.id, 1)}
+          onLongPress={() => onUpdateLife(player.id, 5)}
+          delayLongPress={450}
+        >
+          <Feather name="plus" color={palette.accent} size={landscape ? 26 : 22} />
+        </Pressable>
+      </View>
+
+      <View style={styles.badges}>
+        <View style={[styles.statBadge, player.poison >= 8 && styles.dangerBadge]}>
+          <Feather name="alert-triangle" size={11} color={player.poison >= 8 ? '#FCA5A5' : '#D2D7DF'} />
+          <Text style={styles.statText}>{player.poison}/10</Text>
+        </View>
+        <View style={[styles.statBadge, maxDamage >= 18 && styles.dangerBadge]}>
+          <Feather name="shield" size={11} color={maxDamage >= 18 ? '#FCA5A5' : '#D2D7DF'} />
+          <Text style={styles.statText}>{maxDamage}/21</Text>
+        </View>
+        {player.isMonarch && <View style={styles.goldBadge}><Text style={styles.goldText}>♛ {t('monarch')}</Text></View>}
+        {player.hasInitiative && <View style={styles.goldBadge}><Text style={styles.goldText}>⚔ {t('initiative')}</Text></View>}
+      </View>
+
+      <Modal visible={menuVisible} animationType="fade" transparent
+        onRequestClose={() => setMenuVisible(false)} supportedOrientations={['portrait', 'landscape']}>
+        <View style={styles.backdrop}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => setMenuVisible(false)} />
+          <View style={[styles.sheet,
+            { maxWidth: landscape ? 620 : 420, maxHeight: landscape ? '96%' : '85%' },
+            rotate180 ? styles.flip : null]}>
+            <View style={styles.sheetHeader}>
+              <View style={styles.sheetTitleWrap}>
+                <Text style={[styles.sheetTitle, { color: palette.accent }]}>{player.name}</Text>
+                <Text style={styles.sheetSubtitle}>{player.life} {t('life')}</Text>
+              </View>
+              <Pressable onPress={() => setMenuVisible(false)} hitSlop={10}>
+                <Feather name="x" size={23} color="#F5F5F5" />
+              </Pressable>
+            </View>
+            <View style={styles.tabs}>
+              {([
+                ['main', t('counters')],
+                ['damage', t('commanderDamage')],
+                ['settings', t('settings')],
+              ] as const).map(([id, label]) => (
+                <Pressable key={id}
+                  accessibilityRole="tab" accessibilityState={{ selected: section === id }}
+                  onPress={() => setSection(id)}
+                  style={[styles.tab, section === id && styles.activeTab]}>
+                  <Text numberOfLines={1} style={[styles.tabText, section === id && styles.activeTabText]}>
+                    {label}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+            <ScrollView contentContainerStyle={styles.sheetScroll}
+              showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+              {section === 'main' && (
+                <View style={styles.section}>
+                  <Stepper label={'☠ ' + t('poison')} value={player.poison}
+                    onChange={(n) => onUpdatePoison(player.id, n)} />
+                  <Stepper label={'⚡ ' + t('energy')} value={player.energy}
+                    onChange={(n) => onUpdateEnergy(player.id, n)} />
+                  <Stepper label={'✦ ' + t('experience')} value={player.experience}
+                    onChange={(n) => onUpdateExperience(player.id, n)} />
+                  <Stepper label={'◆ ' + t('commanderTax') + ' (+' + (player.commanderTax * 2) + ')'}
+                    value={player.commanderTax}
+                    onChange={(n) => onUpdateCommanderTax(player.id, n)} />
+                  {player.hasPartner && (
+                    <Stepper label={'◆ ' + t('partnerTax') + ' (+' + (player.partnerCommanderTax * 2) + ')'}
+                      value={player.partnerCommanderTax}
+                      onChange={(n) => onUpdatePartnerCommanderTax(player.id, n)} />
+                  )}
+                  <Pressable style={styles.toggleRow} onPress={() => onToggleMonarch(player.id)}>
+                    <Text style={styles.toggleText}>♛ {t('monarch')}</Text>
+                    <Feather name={player.isMonarch ? 'check-circle' : 'circle'}
+                      size={23} color={player.isMonarch ? '#EABF70' : '#8893A3'} />
+                  </Pressable>
+                  <Pressable style={styles.toggleRow} onPress={() => onToggleInitiative(player.id)}>
+                    <Text style={styles.toggleText}>⚔ {t('initiative')}</Text>
+                    <Feather name={player.hasInitiative ? 'check-circle' : 'circle'}
+                      size={23} color={player.hasInitiative ? '#EABF70' : '#8893A3'} />
+                  </Pressable>
+                </View>
+              )}
+              {section === 'damage' && (
+                <View style={styles.section}>
+                  <Text style={styles.helpText}>{t('commanderDamage')} · 21</Text>
+                  {damageSources.map((source) => (
+                    <Stepper key={source.id} label={source.label}
+                      value={player.commanderDamageReceived[source.id] || 0}
+                      color={PLAYER_THEMES[source.attacker.themeColor].accent}
+                      onChange={(n) => onUpdateCommanderDamage(
+                        player.id, source.attacker.id, source.slot, n)} />
+                  ))}
+                </View>
+              )}
+              {section === 'settings' && (
+                <View style={styles.section}>
+                  <Text style={styles.fieldLabel}>{t('name')}</Text>
+                  <TextInput value={draftName} onChangeText={setDraftName}
+                    maxLength={20} selectTextOnFocus
+                    style={styles.nameInput}
+                    placeholder={t('name')} placeholderTextColor="#8993A3" />
+                  <Text style={styles.fieldLabel}>{t('color')}</Text>
+                  <View style={styles.colors}>
+                    {COLORS.map((color) => (
+                      <Pressable key={color}
+                        onPress={() => onChangeTheme(player.id, color)}
+                        accessibilityLabel={color}
+                        style={[styles.colorOption, {
+                          backgroundColor: PLAYER_THEMES[color].accent,
+                          borderColor: player.themeColor === color ? '#FFF' : 'transparent',
+                        }]} />
+                    ))}
+                  </View>
+                  <Pressable style={styles.toggleRow} onPress={() => onTogglePartner(player.id)}>
+                    <Text style={styles.toggleText}>{t('twoCommanders')}</Text>
+                    <Feather name={player.hasPartner ? 'check-circle' : 'circle'}
+                      size={23} color={player.hasPartner ? '#EABF70' : '#8893A3'} />
+                  </Pressable>
+                  <Pressable style={styles.saveButton} onPress={() => {
+                    onRename(player.id, draftName);
+                    setMenuVisible(false);
+                  }}>
+                    <Text style={styles.saveText}>{t('save')}</Text>
+                  </Pressable>
+                </View>
+              )}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    borderWidth: 1.5,
-    borderRadius: borderRadius.md,
-    margin: 4,
-    padding: spacing.xs,
-    justifyContent: 'space-between',
-    overflow: 'hidden',
+  root: {
+    flex: 1, overflow: 'hidden', position: 'relative', minWidth: 0, minHeight: 0,
+    borderWidth: 1.2, borderRadius: 11, margin: 3, paddingHorizontal: 9, paddingVertical: 5,
   },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.xs,
-    paddingTop: 2,
+  glow: { position: 'absolute', left: 0, top: 0, right: 0, height: 4, opacity: 0.35 },
+  header: { height: 30, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  headerTitle: { flexDirection: 'row', alignItems: 'center', flex: 1, gap: 6, minWidth: 0 },
+  colorMark: { width: 7, height: 7, borderRadius: 4 },
+  playerName: { color: '#F5F6F8', fontSize: 13, fontWeight: '800', flexShrink: 1 },
+  eliminated: { color: '#FCA5A5', fontSize: 9, fontWeight: '900' },
+  menuTrigger: { width: 37, height: 30, alignItems: 'flex-end', justifyContent: 'center' },
+  lifeArea: { flex: 1, minHeight: 46, flexDirection: 'row', alignItems: 'center' },
+  lifeTap: {
+    flex: 1, height: '100%', borderRadius: 6,
+    justifyContent: 'center', alignItems: 'center', minWidth: 35,
   },
-  colorIndicator: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 6,
+  tapMinus: { backgroundColor: 'rgba(239,68,68,0.20)' },
+  tapPlus: { backgroundColor: 'rgba(34,197,94,0.20)' },
+  lifeTextBox: { flex: 1.6, alignItems: 'center', justifyContent: 'center', minWidth: 0 },
+  lifeText: { fontWeight: '900', textAlign: 'center', letterSpacing: -3, includeFontPadding: false },
+  lossText: { color: '#FDA4AF', fontSize: 9, fontWeight: '900' },
+  badges: {
+    minHeight: 28, flexDirection: 'row', gap: 6,
+    alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap',
   },
-  playerName: {
-    fontSize: 13,
-    fontWeight: '700',
-    flex: 1,
+  statBadge: {
+    minWidth: 56, paddingHorizontal: 7, paddingVertical: 5,
+    borderRadius: 8, backgroundColor: 'rgba(0,0,0,0.28)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.09)',
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4,
   },
-  topBadgesRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  monarchBadge: {
-    backgroundColor: '#F59E0B',
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-    borderRadius: borderRadius.xs,
-  },
-  monarchText: {
-    fontSize: 9,
-    fontWeight: '900',
-    color: '#000',
-  },
-  initiativeBadge: {
-    backgroundColor: '#3B82F6',
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-    borderRadius: borderRadius.xs,
-  },
-  initiativeText: {
-    fontSize: 9,
-    fontWeight: '900',
-    color: '#FFF',
-  },
-  modeSwitchBtn: {
-    padding: 4,
-    marginLeft: 4,
-  },
-  colorPaletteRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 4,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    borderRadius: borderRadius.xs,
-  },
-  colorDot: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-  },
-  colorDotActive: {
-    borderWidth: 2,
-    borderColor: '#FFF',
-  },
-  mainLifeArea: {
-    flex: 1,
-    position: 'relative',
-    justifyContent: 'center',
-  },
-  defeatedBadge: {
-    position: 'absolute',
-    top: 2,
-    alignSelf: 'center',
-    backgroundColor: '#EF4444',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: borderRadius.xs,
-    zIndex: 10,
-  },
-  defeatedText: {
-    color: '#FFF',
-    fontSize: 10,
-    fontWeight: '900',
-  },
-  splitTouchArea: {
-    flex: 1,
-    flexDirection: 'row',
-    position: 'relative',
-  },
-  splitHalf: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  splitHalfLeft: {
-    alignItems: 'flex-start',
-    paddingLeft: spacing.md,
-  },
-  splitHalfRight: {
-    alignItems: 'flex-end',
-    paddingRight: spacing.md,
-  },
-  splitIconHint: {
-    opacity: 0.3,
-  },
-  lifeCenterOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  lifeNumber: {
-    fontSize: 58,
-    fontWeight: '900',
-    textAlign: 'center',
-  },
-  lifeTapHint: {
-    fontSize: 9,
-    fontWeight: '700',
-    opacity: 0.45,
-    marginTop: -2,
-    letterSpacing: 0.5,
-  },
-  countersArea: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: spacing.xs,
-    gap: 6,
-  },
-  counterRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  counterLabelWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    flex: 1,
-  },
-  counterIcon: {
-    fontSize: 13,
-  },
-  counterLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  counterControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  counterMiniBtn: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  counterValue: {
-    fontSize: 15,
-    fontWeight: '700',
-    minWidth: 22,
-    textAlign: 'center',
-  },
-  statusToggleRow: {
-    flexDirection: 'row',
-    gap: 6,
-    marginTop: 4,
-  },
-  statusBtn: {
-    flex: 1,
-    paddingVertical: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderRadius: borderRadius.xs,
-    alignItems: 'center',
-  },
-  statusBtnActiveMonarch: {
-    backgroundColor: '#F59E0B',
-  },
-  statusBtnActiveInitiative: {
-    backgroundColor: '#3B82F6',
-  },
-  statusBtnText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#FFF',
-  },
-  commanderDmgArea: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: spacing.xs,
-    gap: 6,
-  },
-  cmdDmgTitle: {
-    fontSize: 11,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: 2,
-  },
-  cmdDmgRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  cmdDmgAttackerName: {
-    fontSize: 11,
-    fontWeight: '600',
-    flex: 1,
-  },
-  bottomBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(255, 255, 255, 0.1)',
-    paddingTop: 3,
-  },
-  bottomTab: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-  },
-  bottomTabActive: {
-    borderBottomWidth: 1.5,
-    borderBottomColor: '#FFF',
-  },
-  bottomTabText: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: 'rgba(255, 255, 255, 0.5)',
-  },
+  dangerBadge: { borderColor: '#F87171' },
+  statText: { color: '#EEF0F3', fontSize: 11, fontWeight: '800' },
+  goldBadge: { paddingHorizontal: 6, paddingVertical: 5, borderRadius: 7,
+    backgroundColor: 'rgba(238,179,72,0.18)', borderColor: '#8C6B31', borderWidth: 1 },
+  goldText: { color: '#F9D483', fontSize: 10, fontWeight: '800' },
+  backdrop: { flex: 1, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.76)', padding: 12 },
+  sheet: { width: '100%', backgroundColor: '#161D2A', borderRadius: 16,
+    borderWidth: 1, borderColor: '#394557', padding: 13, gap: 9 },
+  flip: { transform: [{ rotate: '180deg' }] },
+  sheetHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  sheetTitleWrap: { flex: 1 },
+  sheetTitle: { fontSize: 19, fontWeight: '900' },
+  sheetSubtitle: { color: '#CDD5DF', fontSize: 12 },
+  tabs: { flexDirection: 'row', borderRadius: 9, backgroundColor: '#0A101A', padding: 3, gap: 3 },
+  tab: { flex: 1, paddingVertical: 9, alignItems: 'center', borderRadius: 7 },
+  activeTab: { backgroundColor: '#394052' },
+  tabText: { color: '#A4ADBB', fontSize: 10, fontWeight: '800' },
+  activeTabText: { color: '#F5D08C' },
+  sheetScroll: { paddingBottom: 5 },
+  section: { gap: 7 },
+  counterRow: { flexDirection: 'row', alignItems: 'center', minHeight: 43, gap: 5 },
+  counterLabel: { flex: 1, fontSize: 12, fontWeight: '800', color: '#E6EAF0' },
+  counterControls: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+  counterBtn: { height: 38, width: 38, backgroundColor: '#313B4D',
+    borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
+  counterValue: { color: '#FFFFFF', minWidth: 29, fontSize: 18,
+    fontVariant: ['tabular-nums'], fontWeight: '900', textAlign: 'center' },
+  toggleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    borderRadius: 9, backgroundColor: '#242E40', paddingHorizontal: 12, paddingVertical: 12 },
+  toggleText: { color: '#F5F5F5', fontWeight: '800', fontSize: 12, flexShrink: 1 },
+  helpText: { fontSize: 12, color: '#C5CED9', marginBottom: 5 },
+  fieldLabel: { color: '#D1D8E1', fontSize: 11, fontWeight: '800', paddingTop: 4 },
+  nameInput: { backgroundColor: '#0B101A', borderRadius: 9, color: '#FFFFFF',
+    padding: 10, fontSize: 16 },
+  colors: { flexDirection: 'row', justifyContent: 'space-around', gap: 5, paddingVertical: 5 },
+  colorOption: { width: 30, height: 30, borderRadius: 15, borderWidth: 3 },
+  saveButton: { backgroundColor: '#E4C078', borderRadius: 9, padding: 11, alignItems: 'center' },
+  saveText: { color: '#10141B', fontSize: 14, fontWeight: '900' },
 });

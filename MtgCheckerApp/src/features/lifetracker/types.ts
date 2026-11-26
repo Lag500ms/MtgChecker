@@ -66,6 +66,8 @@ export interface PlayerState {
   life: number;
   poison: number;
   commanderTax: number;
+  partnerCommanderTax: number;
+  hasPartner: boolean;
   energy: number;
   experience: number;
   commanderDamageReceived: Record<string, number>;
@@ -74,7 +76,7 @@ export interface PlayerState {
   hasInitiative: boolean;
 }
 
-export type PlayerCount = 2 | 4;
+export type PlayerCount = 2 | 3 | 4;
 
 export type StartingLifeMode = 40 | 20 | 30;
 

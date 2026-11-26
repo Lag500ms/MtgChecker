@@ -50,6 +50,9 @@ export function HomeScreen() {
   const [crModalVisible, setCrModalVisible] = useState(false);
   const [crTargetRule, setCrTargetRule] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
+  const [showFormats, setShowFormats] = useState(false);
+  const [showAllDisputes, setShowAllDisputes] = useState(false);
+  const [showRuleTopics, setShowRuleTopics] = useState(false);
   const [isLoadingAi, setIsLoadingAi] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const [cheatSheets, setCheatSheets] = useState<CheatSheetTopic[]>([]);
@@ -295,77 +298,118 @@ export function HomeScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
+        <View
+          style={[
+            styles.aiConsultationBox,
+            { backgroundColor: theme.surface, borderColor: theme.border },
+          ]}
+        >
+          <View style={styles.aiBoxHeader}>
+            <View style={styles.aiBoxHeaderLeft}>
+              <View style={styles.aiIconBadge}>
+                <Feather name="cpu" size={16} color={theme.accent} />
+              </View>
+              <View style={styles.aiBoxHeaderTexts}>
+                <Text style={[styles.aiBoxTitle, { color: theme.text }]}>Ask the Judge</Text>
+                <Text style={[styles.aiBoxSub, { color: theme.textSecondary }]}>Rules, card interactions, and quick rulings</Text>
+              </View>
+            </View>
+          </View>
+          <JudgeSearchBar
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            onClear={() => {
+              setSearchQuery('');
+              setAiError(null);
+            }}
+            onSubmit={handleAskAi}
+            isLoading={isLoadingAi}
+          />
+          {aiError && (
+            <View style={[styles.errorCard, { backgroundColor: 'rgba(239, 68, 68, 0.12)', borderColor: 'rgba(239, 68, 68, 0.35)' }]}>
+              <Feather name="alert-circle" size={16} color="#EF4444" />
+              <Text style={[styles.errorText, { color: '#EF4444' }]}>{aiError}</Text>
+              <Pressable onPress={() => setAiError(null)} hitSlop={8}>
+                <Feather name="x" size={14} color="#EF4444" />
+              </Pressable>
+            </View>
+          )}
+          {isLoadingAi && (
+            <View style={[styles.loadingCard, { backgroundColor: theme.background, borderColor: theme.border }]}>
+              <ActivityIndicator size="small" color={theme.accent} />
+              <View style={styles.loadingTextWrap}>
+                <Text style={[styles.loadingTitle, { color: theme.text }]}>Checking card text and rules…</Text>
+                <Text style={[styles.loadingSub, { color: theme.textSecondary }]}>This may take a few seconds.</Text>
+              </View>
+            </View>
+          )}
+          {selectedVerdict && (
+            <View style={styles.verdictResultContainer}>
+              <JudgeVerdictCard
+                verdict={selectedVerdict}
+                onClear={() => setSelectedVerdict(null)}
+                onSelectRule={(ruleNum) => {
+                  setCrTargetRule(ruleNum);
+                  setCrModalVisible(true);
+                }}
+              />
+            </View>
+          )}
+        </View>
+
         <View style={styles.heroSection}>
           <Pressable
             onPress={() => {
               setLifeTrackerLife(40);
               setLifeTrackerVisible(true);
             }}
-            style={({ pressed }) => [
-              styles.heroCard,
-              {
-                backgroundColor: '#1C1914',
-                borderColor: 'rgba(234, 179, 8, 0.45)',
-                opacity: pressed ? 0.9 : 1,
-              },
-            ]}
+            style={({ pressed }) => [styles.heroCard, { backgroundColor: theme.surface, borderColor: theme.border, opacity: pressed ? 0.8 : 1 }]}
           >
-            <View style={[styles.heroIconBox, { backgroundColor: 'rgba(234, 179, 8, 0.18)' }]}>
-              <Feather name="shield" size={24} color="#FACC15" />
+            <View style={[styles.heroIconBox, { backgroundColor: 'rgba(224, 173, 98, 0.14)' }]}>
+              <Feather name="activity" size={20} color={theme.accent} />
             </View>
             <View style={styles.heroTextWrap}>
-              <View style={styles.heroTitleRow}>
-                <Text style={[styles.heroTitle, { color: '#FACC15' }]}>4-Player Life Tracker</Text>
-                <View style={styles.heroBadge}>
-                  <Text style={styles.heroBadgeText}>HOT</Text>
-                </View>
-              </View>
-              <Text style={[styles.heroSub, { color: theme.textSecondary }]}>
-                Commander 40 HP · Commander Damage · D20
-              </Text>
+              <Text style={[styles.heroTitle, { color: theme.text }]}>Life tracker</Text>
+              <Text style={[styles.heroSub, { color: theme.textSecondary }]}>Start a game</Text>
             </View>
-            <Feather name="chevron-right" size={18} color="#FACC15" />
+            <Feather name="arrow-up-right" size={16} color={theme.textMuted} />
           </Pressable>
 
           <Pressable
             onPress={() => router.push('/scan')}
-            style={({ pressed }) => [
-              styles.heroCard,
-              {
-                backgroundColor: '#0E1F17',
-                borderColor: 'rgba(34, 197, 94, 0.4)',
-                opacity: pressed ? 0.9 : 1,
-              },
-            ]}
+            style={({ pressed }) => [styles.heroCard, { backgroundColor: theme.surface, borderColor: theme.border, opacity: pressed ? 0.8 : 1 }]}
           >
-            <View style={[styles.heroIconBox, { backgroundColor: 'rgba(34, 197, 94, 0.18)' }]}>
-              <Feather name="camera" size={24} color="#22C55E" />
+            <View style={[styles.heroIconBox, { backgroundColor: 'rgba(122, 155, 132, 0.16)' }]}>
+              <Feather name="camera" size={20} color={theme.success} />
             </View>
             <View style={styles.heroTextWrap}>
-              <Text style={[styles.heroTitle, { color: '#22C55E' }]}>Card Camera OCR</Text>
-              <Text style={[styles.heroSub, { color: theme.textSecondary }]}>
-                Fast card detection via camera scan
-              </Text>
+              <Text style={[styles.heroTitle, { color: theme.text }]}>Scan a card</Text>
+              <Text style={[styles.heroSub, { color: theme.textSecondary }]}>Look up a card</Text>
             </View>
-            <Feather name="chevron-right" size={18} color="#22C55E" />
+            <Feather name="arrow-up-right" size={16} color={theme.textMuted} />
           </Pressable>
         </View>
 
         {formatRules.length > 0 && (
           <View style={styles.formatSection}>
-            <View style={styles.sectionHeader}>
+            <Pressable
+              onPress={() => setShowFormats((visible) => !visible)}
+              style={[styles.collapsibleRow, { borderColor: theme.border, backgroundColor: theme.surface }]}
+            >
               <View style={styles.sectionTitleRow}>
-                <Feather name="award" size={15} color="#E0AD62" />
-                <Text style={[styles.sectionTitle, { color: theme.text }]}>
-                  Format Essentials
-                </Text>
+                <Feather name="award" size={17} color={theme.accent} />
+                <View>
+                  <Text style={[styles.collapsibleTitle, { color: theme.text }]}>Format rules</Text>
+                  <Text style={[styles.collapsibleSub, { color: theme.textSecondary }]}>Starting life and deck size</Text>
+                </View>
               </View>
-              <Text style={[styles.sectionCount, { color: theme.textMuted }]}>
-                Choose your format
-              </Text>
-            </View>
+              <View style={styles.collapsibleRight}>
+                <Text style={[styles.sectionCount, { color: theme.textMuted }]}>{formatRules.length}</Text>
+                <Feather name={showFormats ? 'chevron-up' : 'chevron-down'} size={16} color={theme.textMuted} />
+              </View>
+            </Pressable>
 
-            <ScrollView
+            {showFormats && <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.formatsScroll}
@@ -394,107 +438,25 @@ export function HomeScreen() {
                   </Text>
                 </Pressable>
               ))}
-            </ScrollView>
+            </ScrollView>}
           </View>
         )}
-
-        <View
-          style={[
-            styles.aiConsultationBox,
-            { backgroundColor: theme.surface, borderColor: theme.border },
-          ]}
-        >
-          <View style={styles.aiBoxHeader}>
-            <View style={styles.aiBoxHeaderLeft}>
-              <View style={styles.aiIconBadge}>
-                <Feather name="cpu" size={16} color="#E0AD62" />
-              </View>
-              <View style={styles.aiBoxHeaderTexts}>
-                <Text style={[styles.aiBoxTitle, { color: theme.text }]}>
-                  AI Judge (Gemini Assistant)
-                </Text>
-                <Text style={[styles.aiBoxSub, { color: theme.textSecondary }]}>
-                  Ask tournament rules, two-card interactions, or card utility...
-                </Text>
-              </View>
-            </View>
-          </View>
-
-          <JudgeSearchBar
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            onClear={() => {
-              setSearchQuery('');
-              setAiError(null);
-            }}
-            onSubmit={handleAskAi}
-            isLoading={isLoadingAi}
-          />
-
-          {aiError && (
-            <View
-              style={[
-                styles.errorCard,
-                {
-                  backgroundColor: 'rgba(239, 68, 68, 0.12)',
-                  borderColor: 'rgba(239, 68, 68, 0.35)',
-                },
-              ]}
-            >
-              <Feather name="alert-circle" size={16} color="#EF4444" />
-              <Text style={[styles.errorText, { color: '#EF4444' }]}>{aiError}</Text>
-              <Pressable onPress={() => setAiError(null)} hitSlop={8}>
-                <Feather name="x" size={14} color="#EF4444" />
-              </Pressable>
-            </View>
-          )}
-
-          {isLoadingAi && (
-            <View
-              style={[
-                styles.loadingCard,
-                { backgroundColor: theme.background, borderColor: theme.border },
-              ]}
-            >
-              <ActivityIndicator size="small" color="#E0AD62" />
-              <View style={styles.loadingTextWrap}>
-                <Text style={[styles.loadingTitle, { color: theme.text }]}>
-                  Gemini AI Judge is checking Oracle texts & CR rules...
-                </Text>
-                <Text style={[styles.loadingSub, { color: theme.textSecondary }]}>
-                  Analyzing card interactions, Priority sequences, and Stack resolution
-                </Text>
-              </View>
-            </View>
-          )}
-
-          {selectedVerdict && (
-            <View style={styles.verdictResultContainer}>
-              <JudgeVerdictCard
-                verdict={selectedVerdict}
-                onClear={() => setSelectedVerdict(null)}
-                onSelectRule={(ruleNum) => {
-                  setCrTargetRule(ruleNum);
-                  setCrModalVisible(true);
-                }}
-              />
-            </View>
-          )}
-        </View>
 
         <View style={styles.sectionHeader}>
           <View style={styles.sectionTitleRow}>
             <Feather name="zap" size={15} color="#E0AD62" />
             <Text style={[styles.sectionTitle, { color: theme.text }]}>
-              Instant Table Verdicts
+              Popular rulings
             </Text>
           </View>
-          <Text style={[styles.sectionCount, { color: theme.textMuted }]}>
-            {filteredDisputes.length} scenarios
-          </Text>
+          <Pressable onPress={() => setShowAllDisputes((visible) => !visible)} hitSlop={8}>
+            <Text style={[styles.sectionCount, { color: theme.accent }]}>
+              {showAllDisputes ? 'Show less' : `See all ${filteredDisputes.length}`}
+            </Text>
+          </Pressable>
         </View>
 
-        <ScrollView
+        {showAllDisputes && <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.scenarioFilterScroll}
@@ -527,14 +489,14 @@ export function HomeScreen() {
               </Pressable>
             );
           })}
-        </ScrollView>
+        </ScrollView>}
 
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.chipsScroll}
         >
-          {filteredDisputes.map((dispute) => {
+          {(showAllDisputes ? filteredDisputes : filteredDisputes.slice(0, 3)).map((dispute) => {
             const isSelected = selectedVerdict?.id === dispute.id;
             return (
               <Pressable
@@ -586,40 +548,40 @@ export function HomeScreen() {
           </View>
           <View style={styles.crBannerTexts}>
             <View style={styles.crBannerTitleRow}>
-              <Text style={[styles.crBannerTitle, { color: theme.text }]}>
-                Comprehensive Rules (CR)
-              </Text>
-              <View style={styles.crBannerBadge}>
-                <Text style={styles.crBannerBadgeText}>3,165 RULES</Text>
-              </View>
+              <Text style={[styles.crBannerTitle, { color: theme.text }]}>Rules library</Text>
             </View>
             <Text style={[styles.crBannerSub, { color: theme.textSecondary }]}>
-              Explore 9 official tournament sections & 727 MTG Glossary terms
+              Comprehensive rules and topic guides
             </Text>
           </View>
           <Feather name="chevron-right" size={18} color="#E0AD62" />
         </Pressable>
 
-        <View style={styles.sectionHeader}>
+        <Pressable
+          onPress={() => setShowRuleTopics((visible) => !visible)}
+          style={[styles.collapsibleRow, { borderColor: theme.border, backgroundColor: theme.surface }]}
+        >
           <View style={styles.sectionTitleRow}>
-            <Feather name="book-open" size={15} color="#E0AD62" />
-            <Text style={[styles.sectionTitle, { color: theme.text }]}>
-              Official Rules Compendium
-            </Text>
+            <Feather name="book-open" size={17} color={theme.accent} />
+            <View>
+              <Text style={[styles.collapsibleTitle, { color: theme.text }]}>Topic guides</Text>
+              <Text style={[styles.collapsibleSub, { color: theme.textSecondary }]}>Priority, layers, keywords, and more</Text>
+            </View>
           </View>
-          <Text style={[styles.sectionCount, { color: theme.textMuted }]}>
-            CR References
-          </Text>
-        </View>
+          <View style={styles.collapsibleRight}>
+            <Text style={[styles.sectionCount, { color: theme.textMuted }]}>{filteredTopics.length}</Text>
+            <Feather name={showRuleTopics ? 'chevron-up' : 'chevron-down'} size={16} color={theme.textMuted} />
+          </View>
+        </Pressable>
 
-        {filteredTopics.length === 0 ? (
+        {showRuleTopics && filteredTopics.length === 0 ? (
           <View style={[styles.emptyBox, { borderColor: theme.border }]}>
             <Feather name="info" size={24} color={theme.textMuted} />
             <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
               No rules found matching &quot;{searchQuery}&quot;
             </Text>
           </View>
-        ) : (
+        ) : showRuleTopics ? (
           filteredTopics.map((topic) => (
             <RuleTopicCard
               key={topic.id}
@@ -627,7 +589,7 @@ export function HomeScreen() {
               onPress={() => setActiveSheetTopic(topic)}
             />
           ))
-        )}
+        ) : null}
 
         <Pressable
           onPress={() => router.push(account ? '/settings' : '/login')}
@@ -701,18 +663,24 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.huge,
+    width: '100%',
+    maxWidth: 760,
+    alignSelf: 'center',
   },
   heroSection: {
+    flexDirection: 'row',
     gap: spacing.sm,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.sm,
   },
   heroCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: spacing.md,
+    flex: 1,
+    minHeight: 80,
+    padding: spacing.sm,
     borderRadius: borderRadius.lg,
-    borderWidth: 1.5,
-    gap: spacing.md,
+    borderWidth: 1,
+    gap: spacing.sm,
   },
   heroIconBox: {
     width: 46,
@@ -750,7 +718,32 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   formatSection: {
-    marginBottom: spacing.xs,
+    marginBottom: spacing.md,
+  },
+  collapsibleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    minHeight: 62,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    marginTop: spacing.sm,
+  },
+  collapsibleTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  collapsibleSub: {
+    ...typography.caption,
+    fontSize: 11,
+    marginTop: 1,
+  },
+  collapsibleRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
   },
   formatsScroll: {
     gap: spacing.sm,
@@ -807,7 +800,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: spacing.md,
+    marginTop: spacing.lg,
     marginBottom: spacing.sm,
   },
   sectionTitleRow: {

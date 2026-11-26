@@ -6,7 +6,9 @@ import {
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
 } from 'react-native';
+import { useLanguage } from '@/lib/LanguageProvider';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -28,6 +30,8 @@ export function TableToolsModal({
   history,
 }: TableToolsModalProps) {
   const { theme } = useAppTheme();
+  const { t } = useLanguage();
+  const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
 
   const [activeTab, setActiveTab] = useState<'dice' | 'coin' | 'picker' | 'history'>('dice');
@@ -94,13 +98,16 @@ export function TableToolsModal({
   return (
     <Modal
       visible={visible}
-      animationType="slide"
+      animationType="fade"
+      supportedOrientations={['portrait', 'landscape']}
       transparent
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
         <Pressable style={styles.backdrop} onPress={onClose} />
-        <View style={[styles.sheet, { backgroundColor: theme.surface }]}>
+        <View style={[styles.sheet, { backgroundColor: theme.surface,
+          width: Math.min(width - 20, 580), height: width > height ? '93%' : '84%',
+          borderRadius: borderRadius.xl }]}>
           <View style={styles.dragHandleBar}>
             <View style={[styles.dragHandle, { backgroundColor: theme.border }]} />
           </View>
@@ -111,9 +118,9 @@ export function TableToolsModal({
             ]}
           >
             <View style={styles.headerTitleWrap}>
-              <Text style={[styles.title, { color: theme.text }]}>Table Tools</Text>
+              <Text style={[styles.title, { color: theme.text }]}>{t('miscTools')}</Text>
               <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
-                Dice, coin flip & turn order picker
+                D20 · D6 · {t('flipCoin')}
               </Text>
             </View>
             <Pressable onPress={onClose} hitSlop={12} style={styles.closeBtn}>
@@ -140,7 +147,7 @@ export function TableToolsModal({
                 { color: activeTab === 'dice' ? theme.accent : theme.textMuted },
               ]}
             >
-              Dice
+              {t('diceCoin')}
             </Text>
           </Pressable>
 
@@ -162,29 +169,7 @@ export function TableToolsModal({
                 { color: activeTab === 'coin' ? theme.accent : theme.textMuted },
               ]}
             >
-              Coin
-            </Text>
-          </Pressable>
-
-          <Pressable
-            onPress={() => setActiveTab('picker')}
-            style={[
-              styles.tabBtn,
-              activeTab === 'picker' && { borderBottomColor: theme.accent, borderBottomWidth: 2 },
-            ]}
-          >
-            <Feather
-              name="user-check"
-              size={15}
-              color={activeTab === 'picker' ? theme.accent : theme.textMuted}
-            />
-            <Text
-              style={[
-                styles.tabText,
-                { color: activeTab === 'picker' ? theme.accent : theme.textMuted },
-              ]}
-            >
-              Turn Order
+              {t('flipCoin')}
             </Text>
           </Pressable>
 
@@ -206,7 +191,7 @@ export function TableToolsModal({
                 { color: activeTab === 'history' ? theme.accent : theme.textMuted },
               ]}
             >
-              History
+              {t('matchHistory')}
             </Text>
           </Pressable>
         </View>
@@ -221,7 +206,7 @@ export function TableToolsModal({
           {activeTab === 'dice' && (
             <View style={styles.diceSection}>
               <View style={[styles.cardBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-                <Text style={[styles.boxTitle, { color: theme.text }]}>20-Sided Die (D20)</Text>
+                <Text style={[styles.boxTitle, { color: theme.text }]}>D20</Text>
                 <Text style={[styles.boxDesc, { color: theme.textSecondary }]}>
                   Roll for turn order or MTG dice-rolling mechanics.
                 </Text>
@@ -241,7 +226,7 @@ export function TableToolsModal({
                   ]}
                 >
                   <Feather name="refresh-cw" size={16} color="#000" />
-                  <Text style={styles.actionBtnText}>Roll D20</Text>
+                  <Text style={styles.actionBtnText}>{t('rollD20')}</Text>
                 </Pressable>
               </View>
 
@@ -264,7 +249,7 @@ export function TableToolsModal({
                   ]}
                 >
                   <Feather name="refresh-cw" size={16} color={theme.accent} />
-                  <Text style={[styles.actionBtnOutlineText, { color: theme.accent }]}>Roll D6</Text>
+                  <Text style={[styles.actionBtnOutlineText, { color: theme.accent }]}>{t('rollD6')}</Text>
                 </Pressable>
               </View>
             </View>
@@ -272,16 +257,16 @@ export function TableToolsModal({
 
           {activeTab === 'coin' && (
             <View style={[styles.cardBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-              <Text style={[styles.boxTitle, { color: theme.text }]}>Coin Flip</Text>
+              <Text style={[styles.boxTitle, { color: theme.text }]}>{t('flipCoin')}</Text>
               <Text style={[styles.boxDesc, { color: theme.textSecondary }]}>
                 Official MTG ruling: Heads or Tails.
               </Text>
               <View style={styles.coinCircle}>
                 <Text style={styles.coinEmoji}>
-                  {coinResult === 'HEADS' ? '🪙 HEADS' : coinResult === 'TAILS' ? '🪙 TAILS' : '🪙'}
+                  {coinResult === 'HEADS' ? '🪙 ' + t('heads') : coinResult === 'TAILS' ? '🪙 ' + t('tails') : '🪙'}
                 </Text>
                 <Text style={[styles.coinText, { color: theme.text }]}>
-                  {coinResult ? (coinResult === 'HEADS' ? 'HEADS' : 'TAILS') : 'Not flipped yet'}
+                  {coinResult ? (coinResult === 'HEADS' ? t('heads') : t('tails')) : t('tapToRoll')}
                 </Text>
               </View>
               <Pressable
@@ -293,7 +278,7 @@ export function TableToolsModal({
                 ]}
               >
                 <Feather name="disc" size={16} color="#000" />
-                <Text style={styles.actionBtnText}>Flip Coin</Text>
+                <Text style={styles.actionBtnText}>{t('flipCoin')}</Text>
               </Pressable>
             </View>
           )}
@@ -326,10 +311,10 @@ export function TableToolsModal({
 
           {activeTab === 'history' && (
             <View style={[styles.cardBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-              <Text style={[styles.boxTitle, { color: theme.text }]}>Life Change Log</Text>
+              <Text style={[styles.boxTitle, { color: theme.text }]}>{t('matchHistory')}</Text>
               {history.length === 0 ? (
                 <Text style={[styles.emptyHistoryText, { color: theme.textMuted }]}>
-                  No life changes recorded in this game yet.
+                  {t('noHistory')}
                 </Text>
               ) : (
                 history.map((item) => (
@@ -377,8 +362,9 @@ export function TableToolsModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.72)',
   },
   backdrop: {
     position: 'absolute',
@@ -388,9 +374,9 @@ const styles = StyleSheet.create({
     bottom: 0,
   },
   sheet: {
-    height: '84%',
-    borderTopLeftRadius: borderRadius.xl,
-    borderTopRightRadius: borderRadius.xl,
+    borderRadius: borderRadius.xl,
+    borderWidth: 1,
+    borderColor: '#394250',
     overflow: 'hidden',
   },
   dragHandleBar: {

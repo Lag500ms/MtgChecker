@@ -6,6 +6,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ToastProvider } from '@/components/Toast';
 import { AuthProvider } from '@/features/auth/AuthProvider';
 import { ThemeProvider, useAppTheme } from '@/lib/ThemeProvider';
+import { LanguageProvider } from '@/lib/LanguageProvider';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -39,11 +40,13 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider>
+        <LanguageProvider>
         <ToastProvider>
           <AuthProvider>
             <RootNavigator />
           </AuthProvider>
         </ToastProvider>
+        </LanguageProvider>
       </ThemeProvider>
     </GestureHandlerRootView>
   );

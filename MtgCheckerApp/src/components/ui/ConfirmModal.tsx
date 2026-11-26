@@ -30,7 +30,8 @@ export function ConfirmModal({
   const { theme } = useAppTheme();
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}
+      supportedOrientations={['portrait', 'landscape']}>
       <View style={styles.overlay}>
         <View style={[styles.dialog, { backgroundColor: theme.surface, borderColor: theme.border }]}>
           <View

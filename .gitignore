@@ -71,3 +71,27 @@ tailieu_thamkhao/
 # Ignore All Markdown Files
 *.md
 **/*.md
+
+local.properties
+**/local.properties
+*.keystore
+*.jks
+*.p12
+*.key
+*.dpapi
+temp_export/
+**/temp_export/
+.expo-test-export/
+**/.expo-test-export/
+mtg-cxx/
+**/mtg-cxx/
+*.mv.db
+*.trace.db
+docker-compose.override.yml
+.vscode/
+**/.vscode/
+.claude/
+**/.claude/
+.kilo/
+**/.kilo/
+

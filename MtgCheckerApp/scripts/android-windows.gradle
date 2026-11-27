@@ -1,0 +1,12 @@
+// Ninja on Windows can fail to create deep React Native object paths.
+allprojects {
+    plugins.withId('com.android.library') {
+        if (project.name == 'react-native-reanimated') {
+            androidComponents.finalizeDsl { dsl ->
+                dsl.externalNativeBuild.cmake.buildStagingDirectory =
+                    new File(rootProject.projectDir.toPath().root.toFile(), 'mtg-cxx/reanimated')
+                dsl.defaultConfig.externalNativeBuild.cmake.arguments.add('-DCMAKE_OBJECT_PATH_MAX=180')
+            }
+        }
+    }
+}

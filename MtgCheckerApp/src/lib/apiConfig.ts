@@ -46,7 +46,7 @@ function resolveApiBaseUrl(): string {
   const apiPort = process.env.EXPO_PUBLIC_API_PORT?.trim() || DEFAULT_API_PORT;
 
   if (Platform.OS === 'web') {
-    return buildApiUrl('localhost', apiPort);
+    return fromEnv ? stripTrailingSlash(fromEnv) : buildApiUrl('localhost', apiPort);
   }
 
   if (fromEnv && !isLoopbackHost(fromEnv)) {

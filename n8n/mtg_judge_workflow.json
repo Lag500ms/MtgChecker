@@ -21,7 +21,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const rawBody = $input.first().json.body || $input.first().json;\nconst question = (rawBody.question || '').trim();\nconst systemPrompt = (rawBody.systemPrompt || '').trim();\nconst cardA = rawBody.interaction?.cardA || null;\nconst cardB = rawBody.interaction?.cardB || null;\n\n/* Normalize text removing accents for guardrail checks */\nconst cleanText = question.toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');\n\nconst nonMtgKeywords = ['nau an', 'thoi tiet', 'bong da', 'lap trinh', 'crypto', 'bitcoin', 'thoi tiet ha noi'];\nconst isOutOfScope = nonMtgKeywords.some(kw => cleanText.includes(kw));\n\nlet intent = 'RULES_DISPUTE';\nlet searchQuery = '';\n\nif (isOutOfScope) {\n  intent = 'OUT_OF_SCOPE';\n} else if (!cardA && !cardB && /^(tim|tra cuu|search|show me|find)/i.test(question)) {\n  intent = 'CARD_SEARCH';\n  searchQuery = question.replace(/^(tim|tra cuu|search|show me|find)\\s*(la bai|card)?/i, '').trim();\n}\n\nreturn [{\n  json: {\n    id: rawBody.requestId || 'req_' + Date.now(),\n    question,\n    systemPrompt,\n    searchQuery,\n    cardA,\n    cardB,\n    intent\n  }\n}];"
+        "jsCode": "const rawBody = $input.first().json.body || $input.first().json;\nconst question = (rawBody.question || '').trim();\nconst systemPrompt = (rawBody.systemPrompt || '').trim();\nconst cardA = rawBody.interaction?.cardA || null;\nconst cardB = rawBody.interaction?.cardB || null;\n\n/* Normalize text removing accents for guardrail checks */\nconst cleanText = question.toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');\n\nconst nonMtgKeywords = ['nau an', 'thoi tiet', 'bong da', 'lap trinh', 'crypto', 'bitcoin', 'thoi tiet ha noi'];\nconst isOutOfScope = nonMtgKeywords.some(kw => cleanText.includes(kw));\n\nlet intent = 'RULES_DISPUTE';\nlet searchQuery = '';\n\nif (isOutOfScope) {\n  intent = 'OUT_OF_SCOPE';\n} else if (!cardA && !cardB && /^(tim|tra cuu|search|show me|find)/i.test(question)) {\n  intent = 'CARD_SEARCH';\n  searchQuery = question.replace(/^(tim|tra cuu|search|show me|find)\\s*(la bai|card)?/i, '').trim();\n}\n\nreturn [{\n  json: {\n    id: rawBody.requestId || 'req_' + Date.now(),\n    question,\n    systemPrompt,\n    context: rawBody.context,\n    searchQuery,\n    cardA,\n    cardB,\n    intent\n  }\n}];"
       },
       "id": "node-classifier",
       "name": "Intent Classifier & Guardrail",
@@ -94,7 +94,7 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={\n  \"id\": \"{{ $json.id }}\",\n  \"query\": \"{{ $json.question }}\",\n  \"verdict\": \"CONDITIONAL\",\n  \"verdictTitle\": \"Câu hỏi ngoài phạm vi MTG (Out of Scope)\",\n  \"summary\": \"Tôi là Trọng tài AI chuyên trách về luật thi đấu, tương tác thẻ bài và cơ chế Comprehensive Rules của Magic: The Gathering. Câu hỏi này không thuộc phạm vi luật hoặc thẻ bài MTG. Vui lòng đặt câu hỏi liên quan đến thẻ bài hoặc luật chơi MTG!\",\n  \"stackSteps\": [],\n  \"crRules\": [],\n  \"cardNames\": [],\n  \"isCached\": false\n}",
+        "responseBody": "={{ { id: $json.id, query: $json.question, ...{\"verdict\":\"CONDITIONAL\",\"verdictTitle\":\"Câu hỏi ngoài phạm vi MTG (Out of Scope)\",\"summary\":\"Tôi là Trọng tài AI chuyên trách về luật thi đấu, tương tác thẻ bài và cơ chế Comprehensive Rules của Magic: The Gathering. Câu hỏi này không thuộc phạm vi luật hoặc thẻ bài MTG. Vui lòng đặt câu hỏi liên quan đến thẻ bài hoặc luật chơi MTG!\",\"stackSteps\":[],\"crRules\":[],\"cardNames\":[],\"isCached\":false} } }}",
         "options": {}
       },
       "id": "node-out-of-scope",
@@ -151,7 +151,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://ollama:11434/api/chat",
+        "url": "https://api.deepseek.com/chat/completions",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -163,11 +163,15 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"model\": \"qwen2.5:3b\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": {{ JSON.stringify($json.systemPrompt || \"Bạn là một Trọng tài MTG Level 2 chuyên nghiệp và chuyên gia luật thi đấu bài Magic: The Gathering.\\nNhiệm vụ của bạn là giải thích chính xác tranh chấp luật, tương tác lá bài, State-Based Actions, Priority, Layers và Timing theo luật MTG Comprehensive Rules.\\n\\nQUY TẮC NGÔN NGỮ QUAN TRỌNG NHẤT:\\n- BẮT BUỘC TOÀN BỘ PHẦN GIẢI THÍCH (verdictTitle, summary, stackSteps) PHẢI ĐƯỢC VIẾT BẰNG TIẾNG VIỆT tự nhiên, chuẩn xác, mạch lạc.\\n- Giữ nguyên tên tiếng Anh của các lá bài MTG (vd: Urza's Saga, Blood Moon).\\n- Giữ nguyên các thuật ngữ luật chuẩn (vd: Layer, The Stack, State-Based Actions, Priority).\\n\\nĐỊNH DẠNG JSON ĐẦU RA BẮT BUỘC:\\n{\\n  \\\"verdict\\\": \\\"YES\\\" | \\\"NO\\\" | \\\"CONDITIONAL\\\",\\n  \\\"verdictTitle\\\": \\\"Tiêu đề phán quyết tóm tắt trong 1 câu bằng tiếng Việt\\\",\\n  \\\"summary\\\": \\\"Giải thích chi tiết lý do và cơ chế bằng tiếng Việt, trích dẫn luật CR rõ ràng\\\",\\n  \\\"stackSteps\\\": [\\\"Bước 1: Mô tả hành động\\\", \\\"Bước 2: Mô tả giải quyết\\\"],\\n  \\\"crRules\\\": [\\\"CR 704.5\\\", \\\"CR 613.1d\\\"],\\n  \\\"cardNames\\\": [\\\"Card A\\\", \\\"Card B\\\"]\\n}\") }}\n    },\n    {\n      \"role\": \"user\",\n      \"content\": {{ JSON.stringify($json.question + ($json.cardA && $json.cardB ? ' (Các lá bài: ' + $json.cardA + ' vs ' + $json.cardB + ')' : '') + '\\n(Lưu ý: Bắt buộc giải thích toàn bộ bằng tiếng Việt!)') }}\n    }\n  ],\n  \"format\": \"json\",\n  \"stream\": false,\n  \"options\": {\n    \"temperature\": 0.1\n  }\n}",
-        "options": {}
+        "jsonBody": "={\n  \"model\": \"deepseek-flash\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": {{ JSON.stringify($json.systemPrompt || \"Bạn là một Trọng tài MTG Level 2 chuyên nghiệp và chuyên gia luật thi đấu bài Magic: The Gathering.\\nNhiệm vụ của bạn là giải thích chính xác tranh chấp luật, tương tác lá bài, State-Based Actions, Priority, Layers và Timing theo luật MTG Comprehensive Rules.\\n\\nQUY TẮC NGÔN NGỮ QUAN TRỌNG NHẤT:\\n- BẮT BUỘC TOÀN BỘ PHẦN GIẢI THÍCH (verdictTitle, summary, stackSteps) PHẢI ĐƯỢC VIẾT BẰNG TIẾNG VIỆT tự nhiên, chuẩn xác, mạch lạc.\\n- Giữ nguyên tên tiếng Anh của các lá bài MTG (vd: Urza's Saga, Blood Moon).\\n- Giữ nguyên các thuật ngữ luật chuẩn (vd: Layer, The Stack, State-Based Actions, Priority).\\n\\nĐỊNH DẠNG JSON ĐẦU RA BẮT BUỘC:\\n{\\n  \\\"verdict\\\": \\\"YES\\\" | \\\"NO\\\" | \\\"CONDITIONAL\\\",\\n  \\\"verdictTitle\\\": \\\"Tiêu đề phán quyết tóm tắt trong 1 câu bằng tiếng Việt\\\",\\n  \\\"summary\\\": \\\"Giải thích chi tiết lý do và cơ chế bằng tiếng Việt, trích dẫn luật CR rõ ràng\\\",\\n  \\\"stackSteps\\\": [\\\"Bước 1: Mô tả hành động\\\", \\\"Bước 2: Mô tả giải quyết\\\"],\\n  \\\"crRules\\\": [\\\"CR 704.5\\\", \\\"CR 613.1d\\\"],\\n  \\\"cardNames\\\": [\\\"Card A\\\", \\\"Card B\\\"]\\n}\") }}\n    },\n    {\n      \"role\": \"user\",\n      \"content\": {{ JSON.stringify(($json.context || $json.question) + ($json.cardA && $json.cardB ? ' (Các lá bài: ' + $json.cardA + ' vs ' + $json.cardB + ')' : '') + '\\n(Lưu ý: Bắt buộc giải thích toàn bộ bằng tiếng Việt!)') }}\n    }\n  ],\n  \"response_format\": {\"type\":\"json_object\"},\n  \"max_tokens\": 2048,\n  \"thinking\": {\"type\":\"disabled\"},\n  \"stream\": false,\n  \"temperature\": 0.1\n}",
+        "options": {
+          "timeout": 45000
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
       },
-      "id": "node-call-ollama",
-      "name": "Call Ollama AI",
+      "id": "node-call-deepseek",
+      "name": "Call DeepSeek",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
@@ -177,10 +181,10 @@
     },
     {
       "parameters": {
-        "jsCode": "const responseBody = $input.first().json;\nconst reqInfo = $('Intent Classifier & Guardrail').first().json;\n\nlet parsed = null;\ntry {\n  const rawContent = responseBody.message?.content || '{}';\n  parsed = JSON.parse(rawContent);\n} catch (e) {\n  parsed = {\n    verdict: 'CONDITIONAL',\n    verdictTitle: 'Phán quyết trọng tài MTG',\n    summary: 'Đã phân tích tình huống theo luật MTG Comprehensive Rules.',\n    stackSteps: [],\n    crRules: [],\n    cardNames: []\n  };\n}\n\nreturn [{\n  json: {\n    id: reqInfo.id,\n    query: reqInfo.question,\n    verdict: parsed.verdict || 'CONDITIONAL',\n    verdictTitle: parsed.verdictTitle || 'Phán quyết trọng tài MTG',\n    summary: parsed.summary || 'Đã phân tích tương tác theo luật MTG.',\n    stackSteps: parsed.stackSteps || [],\n    crRules: parsed.crRules || [],\n    cardNames: parsed.cardNames || parsed.relatedCards || [],\n    isCached: false\n  }\n}];"
+        "jsCode": "const responseBody = $input.first().json;\nconst reqInfo = $('Intent Classifier & Guardrail').first().json;\n\nconst choice = responseBody.choices?.[0];\nif (choice?.finish_reason !== 'stop' || !choice.message?.content?.trim()) throw new Error('Incomplete DeepSeek response');\nconst parsed = JSON.parse(choice.message.content);\nif (!['YES', 'NO', 'CONDITIONAL'].includes(parsed.verdict) ||\n    ![parsed.summary, parsed.verdictTitle].every(v => typeof v === 'string' && v.trim()) ||\n    ![parsed.crRules, parsed.stackSteps].every(a => Array.isArray(a) && a.every(v => typeof v === 'string'))) {\n  throw new Error('Invalid DeepSeek verdict');\n}\n\nreturn [{\n  json: {\n    id: reqInfo.id,\n    query: reqInfo.question,\n    verdict: parsed.verdict || 'CONDITIONAL',\n    verdictTitle: parsed.verdictTitle || 'Phán quyết trọng tài MTG',\n    summary: parsed.summary || 'Đã phân tích tương tác theo luật MTG.',\n    stackSteps: parsed.stackSteps || [],\n    crRules: parsed.crRules || [],\n    cardNames: parsed.cardNames || parsed.relatedCards || [],\n    isCached: false\n  }\n}];"
       },
-      "id": "node-parse-ollama",
-      "name": "Parse Ollama Output",
+      "id": "node-parse-deepseek",
+      "name": "Parse DeepSeek Verdict",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
@@ -245,7 +249,7 @@
         ],
         [
           {
-            "node": "Call Ollama AI",
+            "node": "Call DeepSeek",
             "type": "main",
             "index": 0
           }
@@ -274,18 +278,18 @@
         ]
       ]
     },
-    "Call Ollama AI": {
+    "Call DeepSeek": {
       "main": [
         [
           {
-            "node": "Parse Ollama Output",
+            "node": "Parse DeepSeek Verdict",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Parse Ollama Output": {
+    "Parse DeepSeek Verdict": {
       "main": [
         [
           {

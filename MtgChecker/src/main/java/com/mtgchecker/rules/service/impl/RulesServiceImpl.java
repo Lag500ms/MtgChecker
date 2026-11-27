@@ -33,7 +33,7 @@ import com.mtgchecker.rules.repository.RuleQueryCacheRepository;
 import com.mtgchecker.rules.service.IRulesService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import com.mtgchecker.exceptions.ExternalServiceException;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -68,19 +68,16 @@ public class RulesServiceImpl implements IRulesService {
     private final CachedCardRepository cachedCardRepository;
     private final ICardService cardService;
     private final IRulingService rulingService;
-    private final OllamaClient ollamaClient;
     private final N8nClient n8nClient;
     private final ObjectMapper objectMapper;
 
-    @Value("${llm.provider:ollama}")
-    private String llmProvider;
 
     @Override
-    @Cacheable(value = "judge_verdict", key = "#request.question.trim().toLowerCase()", unless = "#result == null")
+    @Cacheable(value = "judge_verdict", key = "'deepseek-v1:' + #request.question.trim().toLowerCase()", unless = "#result == null")
     public JudgeVerdictResponse askJudge(AskJudgeRequest request) {
         String rawQuery = request.getQuestion().trim();
         String normalizedQuery = rawQuery.toLowerCase().replaceAll("\\s+", " ");
-        String queryHash = computeHash(normalizedQuery);
+        String queryHash = computeHash("deepseek-v1:" + normalizedQuery);
 
         Optional<RuleQueryCache> cachedOpt = cacheRepository.findByQueryHash(queryHash);
         if (cachedOpt.isPresent()) {
@@ -101,51 +98,16 @@ public class RulesServiceImpl implements IRulesService {
         String systemPrompt = buildSystemPrompt();
         String userPrompt = buildUserPrompt(rawQuery, retrievedCards, retrievedRules, retrievedGlossary);
 
-        String rawLlmJson = null;
-        if ("n8n".equalsIgnoreCase(llmProvider)) {
-            try {
-                rawLlmJson = n8nClient.generateContent(systemPrompt, userPrompt);
-            } catch (Exception e) {
-                log.warn("n8n AI gateway call failed, falling back to local Ollama: {}", e.getMessage());
-            }
-        }
-
-        /* Fallback or primary execution with local Ollama model */
-        if (rawLlmJson == null || rawLlmJson.isBlank()) {
-            try {
-                rawLlmJson = ollamaClient.generateContent(systemPrompt, userPrompt);
-            } catch (Exception e) {
-                log.error("Ollama AI call failed: {}", e.getMessage(), e);
-                return JudgeVerdictResponse.builder()
-                        .id(UUID.randomUUID().toString())
-                        .query(rawQuery)
-                        .verdict("CONDITIONAL")
-                        .verdictTitle("Judge Review Incomplete")
-                        .summary("Trọng tài AI hiện chưa thể phản hồi do lỗi kết nối model Ollama. Vui lòng kiểm tra lại container Ollama.")
-                        .stackSteps(Collections.emptyList())
-                        .crRules(retrievedRules.stream().map(r -> "CR " + r.getRuleNumber()).toList())
-                        .cardNames(retrievedCards.stream().map(c -> c.name).toList())
-                        .isCached(false)
-                        .build();
-            }
-        }
-
         JudgeVerdictResponse response;
         try {
-            response = objectMapper.readValue(rawLlmJson, JudgeVerdictResponse.class);
+            String json = n8nClient.askJudge(rawQuery, systemPrompt, userPrompt);
+            response = objectMapper.readValue(json, JudgeVerdictResponse.class);
+            if (response == null || response.getSummary() == null || response.getSummary().isBlank()
+                    || !List.of("YES", "NO", "CONDITIONAL").contains(response.getVerdict())) {
+                throw new IllegalArgumentException("Invalid judge verdict");
+            }
         } catch (Exception e) {
-            log.error("Failed to parse LLM verdict JSON: {}", rawLlmJson, e);
-            response = JudgeVerdictResponse.builder()
-                    .id(UUID.randomUUID().toString())
-                    .query(rawQuery)
-                    .verdict("CONDITIONAL")
-                    .verdictTitle("Judge Review")
-                    .summary(rawLlmJson)
-                    .stackSteps(Collections.emptyList())
-                    .crRules(retrievedRules.stream().map(r -> "CR " + r.getRuleNumber()).toList())
-                    .cardNames(retrievedCards.stream().map(c -> c.name).toList())
-                    .isCached(false)
-                    .build();
+            throw new ExternalServiceException("Trọng tài AI tạm thời chưa thể trả lời. Vui lòng thử lại.", e);
         }
 
         if (response.getId() == null || response.getId().isBlank()) {
@@ -155,9 +117,10 @@ public class RulesServiceImpl implements IRulesService {
         if (response.getCardNames() == null || response.getCardNames().isEmpty()) {
             response.setCardNames(retrievedCards.stream().map(c -> c.name).toList());
         }
-        if ((response.getCrRules() == null || response.getCrRules().isEmpty()) && !retrievedRules.isEmpty()) {
-            response.setCrRules(retrievedRules.stream().map(r -> "CR " + r.getRuleNumber()).toList());
-        }
+        Set<String> sources = retrievedRules.stream().map(r -> "CR " + r.getRuleNumber())
+                .collect(java.util.stream.Collectors.toSet());
+        response.setCrRules(response.getCrRules() == null ? List.of()
+                : response.getCrRules().stream().filter(sources::contains).distinct().toList());
         response.setIsCached(false);
 
         try {
@@ -253,9 +216,13 @@ public class RulesServiceImpl implements IRulesService {
                 - Always respond in the same language as the user's question (e.g. fluent Vietnamese if asked in Vietnamese).
                 - Be insightful, accurate, and direct.
 
+                Use only relevant supplied Oracle text, rulings, glossary and CR entries as evidence.
+                Cite only supplied CR numbers as "CR <number>". If evidence is insufficient, return CONDITIONAL
+                and explain what is missing. Example citations in the schema are not evidence.
+
                 FOR UTILITY / CARD EVALUATION QUESTIONS:
                 - If the user asks whether a card is useful or good (e.g. "is Spore Frog useful?"):
-                  - verdict: "YES" (hoặc "Hữu dụng") or "CONDITIONAL" or "NO"
+                  - verdict: "YES" or "CONDITIONAL" or "NO"
                   - verdictTitle: Concise punchy assessment of the card in formats like Commander (EDH) or Modern.
                   - summary: Explain why the card is valuable, key synergies/combos (e.g. Spore Frog fog lock with Muldrotha, Meren, Karador), and format viability.
                   - stackSteps: Sequential steps of how its ability resolves or interacts on the stack.
@@ -292,37 +259,6 @@ public class RulesServiceImpl implements IRulesService {
 
     private String buildUserPrompt(String query, List<RetrievedCardContext> cards, List<ComprehensiveRule> rules, List<RuleGlossary> glossary) {
         StringBuilder sb = new StringBuilder();
-
-        List<RuleQueryCache> pastExamples = cacheRepository.findTop3ByOrderByIdDesc();
-        if (!pastExamples.isEmpty()) {
-            sb.append("FEW-SHOT EXAMPLES OF HIGH-QUALITY MTG JUDGE ANSWERS (Learn from these):\n");
-            int count = 0;
-            for (RuleQueryCache example : pastExamples) {
-                if (count >= 2) break;
-                if (!example.getUserQuery().equalsIgnoreCase(query)) {
-                    sb.append("Example Question: \"").append(example.getUserQuery()).append("\"\n");
-                    sb.append("Example Response:\n").append(example.getResponseJson()).append("\n\n");
-                    count++;
-                }
-            }
-        } else {
-            sb.append("FEW-SHOT EXAMPLE OF A HIGH-QUALITY MTG JUDGE ANSWER:\n");
-            sb.append("Example Question: \"cho tôi hỏi the spore frog có thực sự hữu dụng không?\"\n");
-            sb.append("""
-            Example Response:
-            {
-              "verdict": "Hữu dụng cao",
-              "verdictTitle": "Lá bài phòng thủ thiết yếu trong các chiến thuật tái chế nghĩa địa",
-              "summary": "Spore Frog (thường gọi là 'Fog Frog') là một lá bài cực kỳ hữu dụng trong MTG, đặc biệt là trong định dạng Commander (EDH) khi kết hợp với các tướng như Muldrotha hay Meren.",
-              "stackSteps": [
-                "1. Người chơi kích hoạt kỹ năng hy sinh Spore Frog đưa vào Stack.",
-                "2. Kỹ năng giải quyết và ngăn toàn bộ sát thương chiến đấu trong lượt."
-              ],
-              "crRules": ["CR 602.1", "CR 615.1"]
-            }
-            """);
-            sb.append("\n\n");
-        }
 
         sb.append("PLAYER QUESTION:\n").append(query).append("\n\n");
 

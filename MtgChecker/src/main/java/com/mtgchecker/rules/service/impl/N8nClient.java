@@ -31,8 +31,13 @@ public class N8nClient implements ILlmClient {
 
     @Override
     public String generateContent(String systemPrompt, String userPrompt) {
+        return askJudge(userPrompt, systemPrompt, userPrompt);
+    }
+
+    public String askJudge(String question, String systemPrompt, String userPrompt) {
         Map<String, Object> payload = Map.of(
-                "question", userPrompt,
+                "question", question,
+                "context", userPrompt,
                 "systemPrompt", systemPrompt,
                 "requestId", "req_" + System.currentTimeMillis()
         );

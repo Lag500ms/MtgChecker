@@ -18,13 +18,19 @@ public class CorsConfig {
             @Value("${cors.allowed-origins:*}") String allowedOrigins
     ) {
         CorsConfiguration configuration = new CorsConfiguration();
-        if ("*".equals(allowedOrigins.trim())) {
+        /* Allow all origins including mobile apps, Expo Go, and web clients */
+        if (allowedOrigins == null || allowedOrigins.isBlank() || "*".equals(allowedOrigins.trim())) {
             configuration.setAllowedOriginPatterns(List.of("*"));
         } else {
-            configuration.setAllowedOriginPatterns(Arrays.stream(allowedOrigins.split(","))
+            List<String> origins = Arrays.stream(allowedOrigins.split(","))
                     .map(String::trim)
                     .filter(origin -> !origin.isBlank())
-                    .toList());
+                    .toList();
+            if (origins.contains("*")) {
+                configuration.setAllowedOriginPatterns(List.of("*"));
+            } else {
+                configuration.setAllowedOriginPatterns(origins);
+            }
         }
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));

@@ -1,3 +1,5 @@
+import { useUiText } from '@/lib/useUiText';
+import { getApiErrorMessage } from '@/lib/apiError';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -118,6 +120,7 @@ function isLegalCommander(card: any): boolean {
 }
 
 export function CreateDeckModal({ visible, formats, onClose, onCreate }: CreateDeckModalProps) {
+  const ui = useUiText();
   const { theme } = useAppTheme();
   const [name, setName] = useState('');
   const [selectedFormatId, setSelectedFormatId] = useState(formats[0]?.id || 'commander');
@@ -281,12 +284,12 @@ export function CreateDeckModal({ visible, formats, onClose, onCreate }: CreateD
 
   const handleCreate = async () => {
     if (!name.trim()) {
-      setErrorMessage('Please enter a deck name');
+      setErrorMessage(ui("Please enter a deck name"));
       return;
     }
 
     if (isCommanderFormat && !selectedCommander) {
-      setErrorMessage('Commander format requires selecting a Commander card');
+      setErrorMessage(ui("Commander format requires selecting a Commander card"));
       return;
     }
 
@@ -333,7 +336,7 @@ export function CreateDeckModal({ visible, formats, onClose, onCreate }: CreateD
       setPastedDeckList('');
       onClose();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Unknown error';
+      const msg = ui(getApiErrorMessage(err));
       setErrorMessage(msg);
     } finally {
       setIsSubmitting(false);
@@ -345,7 +348,7 @@ export function CreateDeckModal({ visible, formats, onClose, onCreate }: CreateD
       <View style={styles.backdrop}>
         <View style={[styles.dialogCard, { backgroundColor: '#16161A', borderColor: '#2E3039' }]}>
           <View style={styles.dialogHeader}>
-            <Text style={[styles.dialogTitle, { color: theme.text }]}>Create New Deck</Text>
+            <Text style={[styles.dialogTitle, { color: theme.text }]}>{ui("Create New Deck")}</Text>
             <Pressable hitSlop={12} onPress={onClose} style={styles.closeBtn}>
               <Feather name="x" size={20} color={theme.textSecondary} />
             </Pressable>
@@ -359,13 +362,13 @@ export function CreateDeckModal({ visible, formats, onClose, onCreate }: CreateD
             ) : null}
 
             <View style={styles.fieldBlock}>
-              <Text style={[styles.fieldLabel, { color: theme.text }]}>Name</Text>
+              <Text style={[styles.fieldLabel, { color: theme.text }]}>{ui("Name")}</Text>
               <TextInput
                 style={[
                   styles.textInput,
                   { backgroundColor: '#0F1014', borderColor: '#2A2B34', color: theme.text },
                 ]}
-                placeholder="Enter deck name..."
+                placeholder={ui("Enter deck name...")}
                 placeholderTextColor={theme.textSecondary}
                 value={name}
                 onChangeText={(val) => {
@@ -375,15 +378,13 @@ export function CreateDeckModal({ visible, formats, onClose, onCreate }: CreateD
               />
               <View style={styles.helperRow}>
                 <Feather name="shield" size={13} color={theme.accent} style={{ marginTop: 2 }} />
-                <Text style={[styles.helperText, { color: theme.textSecondary }]}>
-                  MtgChecker secures your decks and automatically syncs when online.
-                </Text>
+                <Text style={[styles.helperText, { color: theme.textSecondary }]}>{ui("MtgChecker secures your decks and automatically syncs when online.")}</Text>
               </View>
             </View>
 
             <View style={styles.rowTwoCols}>
               <View style={styles.colFormat}>
-                <Text style={[styles.fieldLabel, { color: theme.text }]}>Format</Text>
+                <Text style={[styles.fieldLabel, { color: theme.text }]}>{ui("Format")}</Text>
                 <Pressable
                   style={[
                     styles.dropdownTrigger,
@@ -474,7 +475,7 @@ export function CreateDeckModal({ visible, formats, onClose, onCreate }: CreateD
                           styles.searchFieldInput,
                           { backgroundColor: '#0F1014', borderColor: '#2A2B34', color: theme.text },
                         ]}
-                        placeholder="Who is your commander?"
+                        placeholder={ui("Who is your commander?")}
                         placeholderTextColor={theme.textSecondary}
                         value={commanderSearchQuery}
                         onChangeText={(txt) => {
@@ -545,9 +546,7 @@ export function CreateDeckModal({ visible, formats, onClose, onCreate }: CreateD
                       >
                         {hasPartnerEnabled ? <Feather name="check" size={12} color="#000" /> : null}
                       </View>
-                      <Text style={[styles.checkboxLabel, { color: theme.text }]}>
-                        Has a partner or background?
-                      </Text>
+                      <Text style={[styles.checkboxLabel, { color: theme.text }]}>{ui("Has a partner or background?")}</Text>
                     </Pressable>
 
                     {commanderPartnerCap ? (
@@ -647,9 +646,7 @@ export function CreateDeckModal({ visible, formats, onClose, onCreate }: CreateD
 
                   {combinedColorIdentity.length > 0 ? (
                     <View style={styles.identityRow}>
-                      <Text style={[styles.identityLabel, { color: theme.textSecondary }]}>
-                        Color Identity:
-                      </Text>
+                      <Text style={[styles.identityLabel, { color: theme.textSecondary }]}>{ui("Color Identity:")}</Text>
                       <View style={styles.colorPillsGroup}>
                         {combinedColorIdentity.map((c) => {
                           const info = COLOR_MAP[c] || { label: c, bg: '#555', text: '#FFF' };
@@ -677,9 +674,7 @@ export function CreateDeckModal({ visible, formats, onClose, onCreate }: CreateD
                   size={15}
                   color={theme.accent}
                 />
-                <Text style={[styles.advancedHeaderText, { color: theme.accent }]}>
-                  Advanced options
-                </Text>
+                <Text style={[styles.advancedHeaderText, { color: theme.accent }]}>{ui("Advanced options")}</Text>
               </View>
               <View style={styles.advancedDivider} />
             </Pressable>
@@ -687,7 +682,7 @@ export function CreateDeckModal({ visible, formats, onClose, onCreate }: CreateD
             {showAdvanced ? (
               <View style={styles.advancedSection}>
                 <View style={styles.advancedField}>
-                  <Text style={[styles.fieldLabel, { color: theme.text }]}>Folder</Text>
+                  <Text style={[styles.fieldLabel, { color: theme.text }]}>{ui("Folder")}</Text>
                   <View
                     style={[
                       styles.folderSelector,
@@ -700,7 +695,7 @@ export function CreateDeckModal({ visible, formats, onClose, onCreate }: CreateD
                 </View>
 
                 <View style={styles.advancedField}>
-                  <Text style={[styles.fieldLabel, { color: theme.text }]}>Visibility</Text>
+                  <Text style={[styles.fieldLabel, { color: theme.text }]}>{ui("Visibility")}</Text>
                   <View style={styles.segmentedRow}>
                     {(['PUBLIC', 'UNLISTED', 'PRIVATE'] as const).map((v) => {
                       const isSel = visibility === v;
@@ -741,8 +736,7 @@ export function CreateDeckModal({ visible, formats, onClose, onCreate }: CreateD
                 </View>
 
                 <View style={styles.advancedField}>
-                  <Text style={[styles.fieldLabel, { color: theme.text }]}>
-                    Existing Deck List <Text style={styles.italicOpt}>(optional)</Text>
+                  <Text style={[styles.fieldLabel, { color: theme.text }]}>{ui("Existing Deck List")}<Text style={styles.italicOpt}>{ui("(optional)")}</Text>
                   </Text>
                   <View style={styles.segmentedRowWrap}>
                     {(
@@ -804,13 +798,9 @@ export function CreateDeckModal({ visible, formats, onClose, onCreate }: CreateD
                         textAlignVertical="top"
                       />
                       {pastedDeckList.trim().length > 0 ? (
-                        <Text style={[styles.pasteHint, { color: theme.accent, fontWeight: '700' }]}>
-                          ✓ Detected: {parseDeckText(pastedDeckList).totalCards} cards
-                        </Text>
+                        <Text style={[styles.pasteHint, { color: theme.accent, fontWeight: '700' }]}>{ui("✓ Detected:")}{parseDeckText(pastedDeckList).totalCards}{ui("cards")}</Text>
                       ) : (
-                        <Text style={[styles.pasteHint, { color: theme.textSecondary }]}>
-                          Automatic import parses your plain text card list format.
-                        </Text>
+                        <Text style={[styles.pasteHint, { color: theme.textSecondary }]}>{ui("Automatic import parses your plain text card list format.")}</Text>
                       )}
                     </View>
                   ) : null}
@@ -836,9 +826,7 @@ export function CreateDeckModal({ visible, formats, onClose, onCreate }: CreateD
                   numberOfLines={1}
                   adjustsFontSizeToFit
                   minimumFontScale={0.85}
-                >
-                  Create
-                </Text>
+                >{ui("Create")}</Text>
               )}
             </Pressable>
           </View>

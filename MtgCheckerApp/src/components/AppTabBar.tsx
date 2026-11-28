@@ -4,6 +4,7 @@ import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAppTheme } from '@/lib/ThemeProvider';
+import { useUiText } from '@/lib/useUiText';
 import { spacing, typography } from '@/lib/theme';
 
 const TAB_META: Record<string, { label: string; icon: keyof typeof Feather.glyphMap }> = {
@@ -15,6 +16,7 @@ const TAB_META: Record<string, { label: string; icon: keyof typeof Feather.glyph
 };
 
 export function AppTabBar(props: any) {
+  const ui = useUiText();
   const { state, descriptors, navigation, emitter, navigateToTab } = props;
   const { theme } = useAppTheme();
   const insets = useSafeAreaInsets();
@@ -71,7 +73,7 @@ export function AppTabBar(props: any) {
             style={styles.item}
           >
             <Feather name={meta.icon} size={22} color={color} />
-            <Text style={[styles.label, { color }]}>{meta.label}</Text>
+            <Text style={[styles.label, { color }]}>{ui(meta.label)}</Text>
           </Pressable>
         );
       })}

@@ -1,3 +1,5 @@
+import { useUiText } from '@/lib/useUiText';
+import { getApiErrorMessage } from '@/lib/apiError';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -12,6 +14,7 @@ import {
   View,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { useLocalSearchParams } from 'expo-router';
 
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { useToast } from '@/components/Toast';
@@ -104,6 +107,14 @@ function CardSkeleton({ theme }: { theme: any }) {
 }
 
 export function SearchScreen() {
+  const ui = useUiText();
+  const { focusSearch } = useLocalSearchParams<{ focusSearch?: string }>();
+  const inputRef = useRef<React.ComponentRef<typeof TextInput>>(null);
+  useEffect(() => {
+    if (!focusSearch) return;
+    const frame = requestAnimationFrame(() => inputRef.current?.focus());
+    return () => cancelAnimationFrame(frame);
+  }, [focusSearch]);
   const { theme } = useAppTheme();
   const { account } = useAuth();
   const toast = useToast();
@@ -197,7 +208,9 @@ export function SearchScreen() {
     setSelectedSortId('name_asc');
   };
 
-  const openCardDetail = (card: Card) => {
+  const [promptOnOpen, setPromptOnOpen] = useState(false);
+  const openCardDetail = (card: Card, prompt = false) => {
+    setPromptOnOpen(prompt);
     setSelectedCardForDetail(card);
     setShowDetailSheet(true);
   };
@@ -230,7 +243,7 @@ export function SearchScreen() {
         setActiveQueryString(null);
       } catch {
         setResults([]);
-        setError(e?.response?.data?.message || e?.message || 'Card not found');
+        setError(ui(getApiErrorMessage(e)));
       }
     } finally {
       setLoading(false);
@@ -284,12 +297,12 @@ export function SearchScreen() {
       setResults(cardList);
       setHasMore(Boolean(response.hasMore));
       if (cardList.length === 0) {
-        setError('No cards matched your search and filters.');
+        setError(ui("No cards matched your search and filters."));
       }
     } catch (e: any) {
       setResults([]);
       setHasMore(false);
-      setError(e?.response?.data?.message || e?.message || 'No cards found.');
+      setError(ui(getApiErrorMessage(e)));
     } finally {
       setLoading(false);
     }
@@ -330,7 +343,7 @@ export function SearchScreen() {
 
   const addToCollection = async (card: Card) => {
     if (!account) {
-      toast.info('Log in to save cards to your collection.', 'Sign in required');
+      openCardDetail(card, true);
       return;
     }
     const finish = card.finishes?.[0] || 'nonfoil';
@@ -343,13 +356,13 @@ export function SearchScreen() {
       });
       toast.success(`${card.name} (${card.set.toUpperCase()}) saved.`);
     } catch (e: any) {
-      toast.error(e?.response?.data?.message || e?.message || 'Request failed');
+      toast.error(ui(getApiErrorMessage(e)));
     }
   };
 
   return (
     <View style={[styles.root, { backgroundColor: theme.background }]}>
-      <ScreenHeader title="Search Cards" />
+      <ScreenHeader title={ui("Search Cards")} />
 
       <View style={styles.body}>
         <View style={styles.searchBarContainer}>
@@ -361,6 +374,7 @@ export function SearchScreen() {
           >
             <Feather name="search" size={18} color={theme.textMuted} />
             <TextInput
+              ref={inputRef}
               value={query}
               onChangeText={(text) => {
                 setQuery(text);
@@ -368,7 +382,7 @@ export function SearchScreen() {
                   setSpecificCardMode(null);
                 }
               }}
-              placeholder="Search card name, type, rules text…"
+              placeholder={ui("Search card name, type, rules text…")}
               placeholderTextColor={theme.textMuted}
               style={[styles.input, { color: theme.text }]}
               returnKeyType="search"
@@ -453,9 +467,7 @@ export function SearchScreen() {
                   >
                     {item}
                   </Text>
-                  <Text style={[styles.suggestionHint, { color: theme.accent }]}>
-                    Open details
-                  </Text>
+                  <Text style={[styles.suggestionHint, { color: theme.accent }]}>{ui("Open details")}</Text>
                 </Pressable>
               ))}
             </View>
@@ -471,8 +483,7 @@ export function SearchScreen() {
           >
             <View style={styles.specificBannerLeft}>
               <Feather name="check-circle" size={14} color={theme.accent} />
-              <Text style={[styles.specificBannerText, { color: theme.text }]}>
-                Showing printings for: <Text style={{ fontWeight: '700' }}>{specificCardMode}</Text>
+              <Text style={[styles.specificBannerText, { color: theme.text }]}>{ui("Showing printings for:")}<Text style={{ fontWeight: '700' }}>{specificCardMode}</Text>
               </Text>
             </View>
             <Pressable
@@ -481,9 +492,7 @@ export function SearchScreen() {
                 executeSearch();
               }}
             >
-              <Text style={[styles.specificBannerClose, { color: theme.accent }]}>
-                Search all
-              </Text>
+              <Text style={[styles.specificBannerClose, { color: theme.accent }]}>{ui("Search all")}</Text>
             </Pressable>
           </View>
         ) : null}
@@ -520,8 +529,8 @@ export function SearchScreen() {
             ListEmptyComponent={
               <EmptyState
                 icon="search"
-                title="Find a card"
-                message="Type a card name for quick suggestions, or apply filters and tap search."
+                title={ui("Find a card")}
+                message={ui("Type a card name for quick suggestions, or apply filters and tap search.")}
               />
             }
             renderItem={({ item }) => (
@@ -556,12 +565,13 @@ export function SearchScreen() {
         </Pressable>
       )}
 
-      <CardDetailSheet
+      {showDetailSheet && <CardDetailSheet
+        promptOnOpen={promptOnOpen}
         card={selectedCardForDetail}
         visible={showDetailSheet}
         onClose={() => setShowDetailSheet(false)}
         onSelectPrinting={(p) => setSelectedCardForDetail(p)}
-      />
+      />}
 
       <Modal
         visible={showFilterModal}
@@ -572,14 +582,14 @@ export function SearchScreen() {
         <View style={styles.modalOverlay}>
           <View style={[styles.modalCard, { backgroundColor: theme.surface }]}>
             <View style={styles.modalHeader}>
-              <Text style={[styles.modalTitle, { color: theme.text }]}>Filter & Sort</Text>
+              <Text style={[styles.modalTitle, { color: theme.text }]}>{ui("Filter & Sort")}</Text>
               <Pressable onPress={() => setShowFilterModal(false)} hitSlop={8}>
                 <Feather name="x" size={20} color={theme.textMuted} />
               </Pressable>
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false} style={styles.modalScroll}>
-              <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>Sort Order</Text>
+              <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>{ui("Sort Order")}</Text>
               <View style={styles.sortList}>
                 {SORT_OPTIONS.map((s) => {
                   const isSelected = selectedSortId === s.id;
@@ -600,7 +610,7 @@ export function SearchScreen() {
                           isSelected && { color: theme.accent, fontWeight: '700' },
                         ]}
                       >
-                        {s.label}
+                        {ui(s.label)}
                       </Text>
                       {isSelected ? (
                         <Feather name="check" size={16} color={theme.accent} />
@@ -610,7 +620,7 @@ export function SearchScreen() {
                 })}
               </View>
 
-              <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>Format Legality</Text>
+              <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>{ui("Format Legality")}</Text>
               <View style={styles.chipRow}>
                 {FORMAT_OPTIONS.map((fmt) => {
                   const isSelected = selectedFormat === fmt;
@@ -641,7 +651,7 @@ export function SearchScreen() {
                 })}
               </View>
 
-              <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>Colors</Text>
+              <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>{ui("Colors")}</Text>
               <View style={styles.chipRow}>
                 {COLOR_OPTIONS.map((c) => {
                   const isSelected = selectedColors.includes(c.code);
@@ -672,7 +682,7 @@ export function SearchScreen() {
                 })}
               </View>
 
-              <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>Mana Value (CMC)</Text>
+              <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>{ui("Mana Value (CMC)")}</Text>
               <View style={styles.chipRow}>
                 {CMC_OPTIONS.map((val) => {
                   const isSelected = selectedCmc === val;
@@ -703,7 +713,7 @@ export function SearchScreen() {
                 })}
               </View>
 
-              <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>Type Line</Text>
+              <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>{ui("Type Line")}</Text>
               <View style={styles.chipRow}>
                 {TYPE_OPTIONS.map((t) => {
                   const isSelected = selectedType === t;
@@ -734,7 +744,7 @@ export function SearchScreen() {
                 })}
               </View>
 
-              <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>Rarity</Text>
+              <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>{ui("Rarity")}</Text>
               <View style={styles.chipRow}>
                 {RARITY_OPTIONS.map((r) => {
                   const isSelected = selectedRarity === r;
@@ -771,7 +781,7 @@ export function SearchScreen() {
                 onPress={resetFilters}
                 style={[styles.footerBtn, { borderColor: theme.border, borderWidth: 1 }]}
               >
-                <Text style={[styles.footerBtnText, { color: theme.textSecondary }]}>Reset</Text>
+                <Text style={[styles.footerBtnText, { color: theme.textSecondary }]}>{ui("Reset")}</Text>
               </Pressable>
               <Pressable
                 onPress={() => {
@@ -780,9 +790,7 @@ export function SearchScreen() {
                 }}
                 style={[styles.footerBtn, { backgroundColor: theme.accent, flex: 2 }]}
               >
-                <Text style={[styles.footerBtnText, { color: theme.accentContrast, fontWeight: '700' }]}>
-                  Apply Filters
-                </Text>
+                <Text style={[styles.footerBtnText, { color: theme.accentContrast, fontWeight: '700' }]}>{ui("Apply Filters")}</Text>
               </Pressable>
             </View>
           </View>

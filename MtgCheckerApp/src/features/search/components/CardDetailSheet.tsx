@@ -1,3 +1,5 @@
+import { useUiText } from '@/lib/useUiText';
+import { getApiErrorMessage } from '@/lib/apiError';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -17,6 +19,8 @@ import { HoloFoilCard } from '@/components/HoloFoilCard';
 import { ManaPips } from '@/components/ManaPips';
 import { SetSymbol } from '@/components/SetSymbol';
 import { useToast } from '@/components/Toast';
+import { useIsFocused, useRouter } from 'expo-router';
+import { SignInPrompt } from '@/features/auth/SignInPrompt';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { findPrintings, fetchCardRulings, type CardRuling } from '@/features/cards/api/cardsApi';
 import type { Card } from '@/features/cards/types/card';
@@ -27,6 +31,7 @@ import { borderRadius, spacing, typography } from '@/lib/theme';
 type CardDetailSheetProps = {
   card: Card | null;
   visible: boolean;
+  promptOnOpen?: boolean;
   onClose: () => void;
   onSelectPrinting?: (newCard: Card) => void;
   confidence?: 'HIGH' | 'MEDIUM' | 'LOW';
@@ -73,12 +78,17 @@ export function CardDetailSheet({
   visible,
   onClose,
   onSelectPrinting,
+  promptOnOpen = false,
   confidence,
   recognizedText,
   onOpenManualCorrection,
 }: CardDetailSheetProps) {
+  const ui = useUiText();
   const { theme } = useAppTheme();
-  const { account } = useAuth();
+  const { account, ready } = useAuth();
+  const focused = useIsFocused();
+  const router = useRouter();
+  const [showSignIn, setShowSignIn] = useState(promptOnOpen);
   const toast = useToast();
   const insets = useSafeAreaInsets();
 
@@ -141,7 +151,7 @@ export function CardDetailSheet({
 
   const handleAdd = async () => {
     if (!account) {
-      toast.info('Please sign in to add cards to your collection.', 'Sign in required');
+      setShowSignIn(true);
       return;
     }
 
@@ -155,7 +165,7 @@ export function CardDetailSheet({
       });
       toast.success(`Added ${quantity}x ${current.name} (${current.set.toUpperCase()}) to collection.`);
     } catch (e: any) {
-      toast.error(e?.response?.data?.message || e?.message || 'Could not add card');
+      toast.error(ui(getApiErrorMessage(e)));
     } finally {
       setAdding(false);
     }
@@ -166,10 +176,10 @@ export function CardDetailSheet({
 
   return (
     <Modal
-      visible={visible}
+      visible={visible && focused}
       animationType="slide"
       transparent
-      onRequestClose={onClose}
+      onRequestClose={showSignIn ? () => setShowSignIn(false) : onClose}
     >
       <View style={styles.overlay}>
         <Pressable style={styles.backdrop} onPress={onClose} />
@@ -294,9 +304,7 @@ export function CardDetailSheet({
                     style={[styles.confidenceFixBtn, { backgroundColor: theme.accent }]}
                     hitSlop={8}
                   >
-                    <Text style={[styles.confidenceFixBtnText, { color: theme.accentContrast }]}>
-                      Edit
-                    </Text>
+                    <Text style={[styles.confidenceFixBtnText, { color: theme.accentContrast }]}>{ui("Edit")}</Text>
                   </Pressable>
                 )}
               </View>
@@ -327,7 +335,7 @@ export function CardDetailSheet({
 
             {current.oracleText ? (
               <View style={[styles.oracleBox, { backgroundColor: theme.background, borderColor: theme.border }]}>
-                <Text style={[styles.oracleLabel, { color: theme.textSecondary }]}>Oracle Text</Text>
+                <Text style={[styles.oracleLabel, { color: theme.textSecondary }]}>{ui("Oracle Text")}</Text>
                 <Text style={[styles.oracleText, { color: theme.text }]}>{current.oracleText}</Text>
               </View>
             ) : null}
@@ -348,26 +356,25 @@ export function CardDetailSheet({
               </View>
             ) : current.loyalty ? (
               <View style={[styles.ptBox, { borderColor: theme.border, backgroundColor: theme.surface }]}>
-                <Text style={[styles.ptText, { color: theme.text }]}>
-                  Loyalty: {current.loyalty}
+                <Text style={[styles.ptText, { color: theme.text }]}>{ui("Loyalty:")}{current.loyalty}
                 </Text>
               </View>
             ) : null}
 
             <View style={styles.sectionHeaderRow}>
-              <Text style={[styles.sectionTitle, { color: theme.text }]}>Market Prices</Text>
+              <Text style={[styles.sectionTitle, { color: theme.text }]}>{ui("Market Prices")}</Text>
             </View>
 
             <View style={styles.priceGrid}>
               <View style={[styles.priceCell, { backgroundColor: theme.background, borderColor: theme.border }]}>
-                <Text style={[styles.priceCellLabel, { color: theme.textMuted }]}>USD Non-foil</Text>
+                <Text style={[styles.priceCellLabel, { color: theme.textMuted }]}>{ui("USD Non-foil")}</Text>
                 <Text style={[styles.priceCellValue, { color: theme.accent }]}>
                   ${current.prices?.usd || '—'}
                 </Text>
               </View>
 
               <View style={[styles.priceCell, { backgroundColor: theme.background, borderColor: theme.border }]}>
-                <Text style={[styles.priceCellLabel, { color: theme.textMuted }]}>USD Foil</Text>
+                <Text style={[styles.priceCellLabel, { color: theme.textMuted }]}>{ui("USD Foil")}</Text>
                 <Text style={[styles.priceCellValue, { color: theme.accent }]}>
                   ${current.prices?.usdFoil || '—'}
                 </Text>
@@ -382,7 +389,7 @@ export function CardDetailSheet({
             </View>
 
             <View style={styles.sectionHeaderRow}>
-              <Text style={[styles.sectionTitle, { color: theme.text }]}>All Printings</Text>
+              <Text style={[styles.sectionTitle, { color: theme.text }]}>{ui("All Printings")}</Text>
               {loadingPrintings && <ActivityIndicator size="small" color={theme.accent} />}
             </View>
 
@@ -422,13 +429,11 @@ export function CardDetailSheet({
                 })}
               </ScrollView>
             ) : (
-              <Text style={[styles.noPrintingsText, { color: theme.textMuted }]}>
-                No other printings found.
-              </Text>
+              <Text style={[styles.noPrintingsText, { color: theme.textMuted }]}>{ui("No other printings found.")}</Text>
             )}
 
             <View style={styles.sectionHeaderRow}>
-              <Text style={[styles.sectionTitle, { color: theme.text }]}>Format Legalities</Text>
+              <Text style={[styles.sectionTitle, { color: theme.text }]}>{ui("Format Legalities")}</Text>
             </View>
 
             <View style={styles.legalitiesGrid}>
@@ -501,9 +506,7 @@ export function CardDetailSheet({
             >
               <View style={styles.rulingsHeaderLeft}>
                 <Feather name="shield" size={16} color="#E0AD62" />
-                <Text style={[styles.sectionTitle, { color: theme.text, marginLeft: spacing.sm }]}>
-                  Official WotC Rulings
-                </Text>
+                <Text style={[styles.sectionTitle, { color: theme.text, marginLeft: spacing.sm }]}>{ui("Official WotC Rulings")}</Text>
                 {rulings.length > 0 && (
                   <View style={styles.rulingsBadge}>
                     <Text style={styles.rulingsBadgeText}>{rulings.length}</Text>
@@ -533,9 +536,7 @@ export function CardDetailSheet({
                     ]}
                   >
                     <Feather name="check-circle" size={16} color="#22C55E" />
-                    <Text style={[styles.emptyRulingsText, { color: theme.textSecondary }]}>
-                      No special exceptions or rulings. This card follows standard MTG Comprehensive Rules.
-                    </Text>
+                    <Text style={[styles.emptyRulingsText, { color: theme.textSecondary }]}>{ui("No special exceptions or rulings. This card follows standard MTG Comprehensive Rules.")}</Text>
                   </View>
                 ) : (
                   rulings.map((item, idx) => (
@@ -596,9 +597,7 @@ export function CardDetailSheet({
                     { color: theme.text },
                     selectedFinish === 'nonfoil' && { color: theme.accentContrast, fontWeight: '700' },
                   ]}
-                >
-                  Regular
-                </Text>
+                >{ui("Regular")}</Text>
               </Pressable>
 
               <Pressable
@@ -666,9 +665,12 @@ export function CardDetailSheet({
               </View>
             </View>
 
-            <Pressable
+            {showSignIn && !account ? (
+              <SignInPrompt purpose="card" cardName={current.name} onLater={() => setShowSignIn(false)}
+                onLogin={() => { setShowSignIn(false); router.push('/login'); }} />
+            ) : <Pressable
               onPress={handleAdd}
-              disabled={adding}
+              disabled={adding || !ready}
               style={[styles.addBtn, { backgroundColor: theme.accent }]}
             >
               {adding ? (
@@ -680,11 +682,11 @@ export function CardDetailSheet({
                     style={[styles.addBtnText, { color: theme.accentContrast }]}
                     numberOfLines={1}
                   >
-                    {quantity > 1 ? `Add ${quantity} to collection` : 'Add to collection'}
+                    {quantity > 1 ? `Add ${quantity} to collection` : ui("Add to collection")}
                   </Text>
                 </>
               )}
-            </Pressable>
+            </Pressable>}
           </View>
         </View>
       </View>

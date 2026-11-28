@@ -1,3 +1,4 @@
+import { useUiText } from '@/lib/useUiText';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
@@ -13,6 +14,7 @@ type JudgeVerdictCardProps = {
 };
 
 export function JudgeVerdictCard({ verdict, onClear, onSelectRule }: JudgeVerdictCardProps) {
+  const ui = useUiText();
   const { theme } = useAppTheme();
 
   const isYes = verdict.verdict === 'YES';
@@ -69,7 +71,7 @@ export function JudgeVerdictCard({ verdict, onClear, onSelectRule }: JudgeVerdic
         <View style={styles.stackBox}>
           <View style={styles.stackHeader}>
             <Feather name="layers" size={12} color="#E0AD62" />
-            <Text style={styles.stackHeaderText}>RESOLUTION ORDER ON THE STACK</Text>
+            <Text style={styles.stackHeaderText}>{ui("RESOLUTION ORDER ON THE STACK")}</Text>
           </View>
           {verdict.stackSteps.map((step, idx) => (
             <Text key={idx} style={[styles.stepLine, { color: theme.text }]}>
@@ -81,7 +83,7 @@ export function JudgeVerdictCard({ verdict, onClear, onSelectRule }: JudgeVerdic
 
       {verdict.crRules && verdict.crRules.length > 0 && (
         <View style={styles.rulesRow}>
-          <Text style={styles.rulesLabel}>RULES CITATIONS:</Text>
+          <Text style={styles.rulesLabel}>{ui("RULES CITATIONS:")}</Text>
           {verdict.crRules.map((rule, idx) => (
             <Pressable
               key={idx}

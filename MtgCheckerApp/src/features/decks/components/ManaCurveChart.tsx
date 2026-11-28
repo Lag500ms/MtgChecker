@@ -1,3 +1,4 @@
+import { useUiText } from '@/lib/useUiText';
 import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useAppTheme } from '@/lib/ThemeProvider';
@@ -8,6 +9,7 @@ interface ManaCurveChartProps {
 }
 
 export function ManaCurveChart({ cards }: ManaCurveChartProps) {
+  const ui = useUiText();
   const { theme } = useAppTheme();
 
   const cmcData = useMemo(() => {
@@ -37,8 +39,8 @@ export function ManaCurveChart({ cards }: ManaCurveChartProps) {
   return (
     <View style={[styles.container, { backgroundColor: theme.surface, borderColor: theme.border }]}>
       <View style={styles.headerRow}>
-        <Text style={[styles.title, { color: theme.textSecondary }]}>MANA CURVE</Text>
-        <Text style={[styles.subtitle, { color: theme.textSecondary }]}>{totalNonLand} Spells</Text>
+        <Text style={[styles.title, { color: theme.textSecondary }]}>{ui("MANA CURVE")}</Text>
+        <Text style={[styles.subtitle, { color: theme.textSecondary }]}>{totalNonLand}{ui("Spells")}</Text>
       </View>
 
       <View style={styles.chartArea}>

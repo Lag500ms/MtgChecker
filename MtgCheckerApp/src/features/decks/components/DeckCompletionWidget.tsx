@@ -1,3 +1,4 @@
+import { useUiText } from '@/lib/useUiText';
 import React, { memo, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -30,6 +31,7 @@ interface MissingCardItem {
 }
 
 function DeckCompletionWidgetComponent({ cards }: DeckCompletionWidgetProps) {
+  const ui = useUiText();
   const { theme } = useAppTheme();
   const [ownedCards, setOwnedCards] = useState<OwnedCard[]>([]);
   const [loading, setLoading] = useState(true);
@@ -116,9 +118,7 @@ function DeckCompletionWidgetComponent({ cards }: DeckCompletionWidgetProps) {
     return (
       <View style={[styles.loadingBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
         <ActivityIndicator size="small" color={theme.accent} />
-        <Text style={[styles.loadingText, { color: theme.textSecondary }]}>
-          Comparing with collection inventory...
-        </Text>
+        <Text style={[styles.loadingText, { color: theme.textSecondary }]}>{ui("Comparing with collection inventory...")}</Text>
       </View>
     );
   }
@@ -137,14 +137,12 @@ function DeckCompletionWidgetComponent({ cards }: DeckCompletionWidgetProps) {
       {/* Header */}
       <View style={styles.headerRow}>
         <View style={styles.titleWrap}>
-          <Text style={[styles.title, { color: theme.text }]}>Deck Completion</Text>
-          <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
-            Matching deck cards against your personal collection
-          </Text>
+          <Text style={[styles.title, { color: theme.text }]}>{ui("Deck Completion")}</Text>
+          <Text style={[styles.subtitle, { color: theme.textSecondary }]}>{ui("Matching deck cards against your personal collection")}</Text>
         </View>
 
         <View style={[styles.pctBadge, { backgroundColor: pctColor + '20', borderColor: pctColor }]}>
-          <Text style={[styles.pctBadgeText, { color: pctColor }]}>{analysis.completionPct}% OWNED</Text>
+          <Text style={[styles.pctBadgeText, { color: pctColor }]}>{analysis.completionPct}{ui("% OWNED")}</Text>
         </View>
       </View>
 
@@ -161,14 +159,13 @@ function DeckCompletionWidgetComponent({ cards }: DeckCompletionWidgetProps) {
       {/* Stats Cards */}
       <View style={styles.statsGrid}>
         <View style={[styles.statBox, { backgroundColor: theme.background, borderColor: theme.border }]}>
-          <Text style={[styles.statBoxLabel, { color: theme.textMuted }]}>OWNED</Text>
+          <Text style={[styles.statBoxLabel, { color: theme.textMuted }]}>{ui("OWNED")}</Text>
           <Text style={[styles.statBoxValue, { color: '#22C55E' }]}>
-            {analysis.totalCardsOwned} / {analysis.totalCardsRequired} cards
-          </Text>
+            {analysis.totalCardsOwned} / {analysis.totalCardsRequired}{ui("cards")}</Text>
         </View>
 
         <View style={[styles.statBox, { backgroundColor: theme.background, borderColor: theme.border }]}>
-          <Text style={[styles.statBoxLabel, { color: theme.textMuted }]}>MISSING</Text>
+          <Text style={[styles.statBoxLabel, { color: theme.textMuted }]}>{ui("MISSING")}</Text>
           <Text style={[styles.statBoxValue, { color: analysis.totalMissing > 0 ? '#EF4444' : '#22C55E' }]}>
             {analysis.totalMissing === 0 ? '100% Complete' : `${analysis.totalMissing} cards`}
           </Text>
@@ -185,17 +182,13 @@ function DeckCompletionWidgetComponent({ cards }: DeckCompletionWidgetProps) {
           onPress={() => setShowMissingModal(true)}
         >
           <Feather name="alert-circle" size={14} color="#EF4444" />
-          <Text style={styles.viewMissingText}>
-            View {analysis.totalMissing} missing cards
-          </Text>
+          <Text style={styles.viewMissingText}>{ui("View")}{analysis.totalMissing}{ui("missing cards")}</Text>
           <Feather name="chevron-right" size={14} color="#EF4444" />
         </Pressable>
       ) : (
         <View style={styles.fullOwnedBadge}>
           <Feather name="check-circle" size={14} color="#22C55E" />
-          <Text style={styles.fullOwnedText}>
-            You own all cards in this deck!
-          </Text>
+          <Text style={styles.fullOwnedText}>{ui("You own all cards in this deck!")}</Text>
         </View>
       )}
 
@@ -211,11 +204,8 @@ function DeckCompletionWidgetComponent({ cards }: DeckCompletionWidgetProps) {
             <View style={styles.modalHeader}>
               <View>
                 <Text style={[styles.modalTitle, { color: theme.text }]}>
-                  {analysis.totalMissing} Missing Cards
-                </Text>
-                <Text style={[styles.modalSubtitle, { color: theme.textSecondary }]}>
-                  Cards needed from trade or singles to complete deck
-                </Text>
+                  {analysis.totalMissing}{ui("Missing Cards")}</Text>
+                <Text style={[styles.modalSubtitle, { color: theme.textSecondary }]}>{ui("Cards needed from trade or singles to complete deck")}</Text>
               </View>
               <Pressable onPress={() => setShowMissingModal(false)} hitSlop={10}>
                 <Feather name="x" size={20} color={theme.text} />
@@ -240,8 +230,7 @@ function DeckCompletionWidgetComponent({ cards }: DeckCompletionWidgetProps) {
                         {item.setCode ? (
                           <SetSymbol setCode={item.setCode} size={11} />
                         ) : null}
-                        <Text style={[styles.missingSubText, { color: theme.textMuted }]}>
-                          Needed: {item.needed} · Owned: {item.owned}
+                        <Text style={[styles.missingSubText, { color: theme.textMuted }]}>{ui("Needed:")}{item.needed}{ui("· Owned:")}{item.owned}
                         </Text>
                       </View>
                     </View>
@@ -254,7 +243,7 @@ function DeckCompletionWidgetComponent({ cards }: DeckCompletionWidgetProps) {
               style={[styles.modalCloseBtn, { backgroundColor: theme.accent }]}
               onPress={() => setShowMissingModal(false)}
             >
-              <Text style={styles.modalCloseBtnText}>Close</Text>
+              <Text style={styles.modalCloseBtnText}>{ui("Close")}</Text>
             </Pressable>
           </View>
         </View>

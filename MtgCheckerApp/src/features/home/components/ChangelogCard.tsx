@@ -1,3 +1,4 @@
+import { useUiText } from '@/lib/useUiText';
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
@@ -13,6 +14,7 @@ const ITEMS = [
 ];
 
 export function ChangelogCard() {
+  const ui = useUiText();
   const { theme } = useAppTheme();
   const [visible, setVisible] = useState(true);
   if (!visible) return null;
@@ -20,7 +22,7 @@ export function ChangelogCard() {
   return (
     <Card style={styles.card}>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: theme.text }]}>Latest changes</Text>
+        <Text style={[styles.title, { color: theme.text }]}>{ui("Latest changes")}</Text>
         <View style={styles.headerActions}>
           <Feather name="external-link" size={16} color={theme.textMuted} />
           <Pressable onPress={() => setVisible(false)} hitSlop={8}>

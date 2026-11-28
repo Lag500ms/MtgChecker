@@ -1,3 +1,5 @@
+import { useUiText } from '@/lib/useUiText';
+import { getApiErrorMessage } from '@/lib/apiError';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -10,12 +12,13 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { useToast } from '@/components/Toast';
 import { EmptyState } from '@/components/ui';
+import { SignInPrompt } from '@/features/auth/SignInPrompt';
 import { useAuth } from '@/features/auth/AuthProvider';
 import {
   clearCollectionDirty,
@@ -34,9 +37,9 @@ import { OwnedCardRow } from '../components/OwnedCardRow';
 const STALE_MS = 60_000;
 
 export function CollectionScreen() {
+  const ui = useUiText();
   const { theme } = useAppTheme();
   const { account } = useAuth();
-  const router = useRouter();
   const toast = useToast();
 
   const [summary, setSummary] = useState<CollectionSummary | null>(null);
@@ -70,7 +73,7 @@ export function CollectionScreen() {
         loadedForAccount.current = account.id;
         lastLoadedAt.current = Date.now();
       } catch (e: any) {
-        toast.error(e?.response?.data?.message || e?.message || 'Failed to load collection');
+        toast.error(ui(getApiErrorMessage(e)));
       } finally {
         setLoading(false);
       }
@@ -122,7 +125,7 @@ export function CollectionScreen() {
         };
       });
     } catch (e: any) {
-      toast.error(e?.response?.data?.message || e?.message || 'Update failed');
+      toast.error(ui(getApiErrorMessage(e)));
     }
   };
 
@@ -149,7 +152,7 @@ export function CollectionScreen() {
         };
       });
     } catch (e: any) {
-      toast.error(e?.response?.data?.message || e?.message || 'Delete failed');
+      toast.error(ui(getApiErrorMessage(e)));
     }
   };
 
@@ -189,15 +192,8 @@ export function CollectionScreen() {
   if (!account) {
     return (
       <View style={[styles.root, { backgroundColor: theme.background }]}>
-        <ScreenHeader title="Collection" />
-        <EmptyState
-          icon="lock"
-          title="Sign in to track cards"
-          message="Your collection and portfolio are tied to your account."
-        />
-        <Pressable onPress={() => router.push('/login')} style={styles.linkWrap}>
-          <Text style={[styles.link, { color: theme.accent }]}>Go to login</Text>
-        </Pressable>
+        <ScreenHeader title={ui("Collection")} />
+        <SignInPrompt purpose="collection" />
       </View>
     );
   }
@@ -209,7 +205,7 @@ export function CollectionScreen() {
 
   return (
     <View style={[styles.root, { backgroundColor: theme.background }]}>
-      <ScreenHeader title="Collection" />
+      <ScreenHeader title={ui("Collection")} />
 
       {loading && !summary ? (
         <ActivityIndicator color={theme.accent} style={{ marginTop: spacing.xxxl }} />
@@ -235,7 +231,7 @@ export function CollectionScreen() {
               >
                 <View style={styles.portfolioTopRow}>
                   <View>
-                    <Text style={styles.portfolioLabel}>TOTAL PORTFOLIO VALUE</Text>
+                    <Text style={styles.portfolioLabel}>{ui("TOTAL PORTFOLIO VALUE")}</Text>
                     <Text style={styles.portfolioAmount}>${totalValueFormatted}</Text>
                   </View>
 
@@ -260,13 +256,11 @@ export function CollectionScreen() {
                         {summary.deltaValue7d > 0 ? '+' : ''}${Math.abs(summary.deltaValue7d).toFixed(2)}
                         {summary.deltaPercent7d != null
                           ? ` (${summary.deltaPercent7d > 0 ? '+' : ''}${summary.deltaPercent7d.toFixed(1)}%)`
-                          : ''}{' '}
-                        7d
-                      </Text>
+                          : ''}{' '}{ui("7d")}</Text>
                     </View>
                   ) : (
                     <View style={styles.deltaNeutralBadge}>
-                      <Text style={styles.deltaNeutralText}>7d baseline set</Text>
+                      <Text style={styles.deltaNeutralText}>{ui("7d baseline set")}</Text>
                     </View>
                   )}
                 </View>
@@ -277,15 +271,13 @@ export function CollectionScreen() {
                   <View style={styles.statItem}>
                     <Feather name="layers" size={13} color="#B9C9C4" />
                     <Text style={styles.statText}>
-                      {summary?.totalCardsCount ?? 0} Cards Total
-                    </Text>
+                      {summary?.totalCardsCount ?? 0}{ui("Cards Total")}</Text>
                   </View>
                   <View style={styles.statDot} />
                   <View style={styles.statItem}>
                     <Feather name="grid" size={13} color="#B9C9C4" />
                     <Text style={styles.statText}>
-                      {summary?.uniqueCardsCount ?? 0} Unique
-                    </Text>
+                      {summary?.uniqueCardsCount ?? 0}{ui("Unique")}</Text>
                   </View>
                 </View>
               </View>
@@ -301,7 +293,7 @@ export function CollectionScreen() {
                   <TextInput
                     value={searchQuery}
                     onChangeText={setSearchQuery}
-                    placeholder="Search collection or set code…"
+                    placeholder={ui("Search collection or set code…")}
                     placeholderTextColor="#6B8A8C"
                     style={[styles.searchInput, { color: theme.text }]}
                   />
@@ -322,9 +314,7 @@ export function CollectionScreen() {
                         styles.sortPillText,
                         sortBy === 'price_desc' && styles.sortPillTextActive,
                       ]}
-                    >
-                      Top Value
-                    </Text>
+                    >{ui("Top Value")}</Text>
                   </Pressable>
 
                   <Pressable
@@ -333,9 +323,7 @@ export function CollectionScreen() {
                   >
                     <Text
                       style={[styles.sortPillText, sortBy === 'name' && styles.sortPillTextActive]}
-                    >
-                      Name A-Z
-                    </Text>
+                    >{ui("Name A-Z")}</Text>
                   </Pressable>
 
                   <Pressable
@@ -344,9 +332,7 @@ export function CollectionScreen() {
                   >
                     <Text
                       style={[styles.sortPillText, sortBy === 'qty' && styles.sortPillTextActive]}
-                    >
-                      Quantity
-                    </Text>
+                    >{ui("Quantity")}</Text>
                   </Pressable>
                 </View>
               </View>
@@ -355,7 +341,7 @@ export function CollectionScreen() {
           ListEmptyComponent={
             <EmptyState
               icon="layers"
-              title={searchQuery ? 'No matching cards' : 'Collection empty'}
+              title={searchQuery ? ui("No matching cards") : ui("Collection empty")}
               message={
                 searchQuery
                   ? 'Try a different card name or set code.'
@@ -512,6 +498,4 @@ const styles = StyleSheet.create({
     color: '#E0AD62',
     fontWeight: '700',
   },
-  linkWrap: { alignItems: 'center', marginTop: spacing.lg },
-  link: { ...typography.button },
 });

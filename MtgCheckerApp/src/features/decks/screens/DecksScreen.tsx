@@ -1,3 +1,5 @@
+import { useUiText } from '@/lib/useUiText';
+import { getApiErrorMessage } from '@/lib/apiError';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -11,11 +13,11 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { useAppTheme } from '@/lib/ThemeProvider';
 import { useToast } from '@/components/Toast';
-import { ConfirmModal, EmptyState } from '@/components/ui';
+import { ConfirmModal } from '@/components/ui';
+import { SignInPrompt } from '@/features/auth/SignInPrompt';
 import { useAuth } from '@/features/auth/AuthProvider';
 import {
   createDeck,
@@ -38,9 +40,9 @@ const COLOR_MAP: Record<string, { label: string; bg: string; text: string }> = {
 };
 
 export function DecksScreen() {
+  const ui = useUiText();
   const { theme } = useAppTheme();
   const { account } = useAuth();
-  const router = useRouter();
   const toast = useToast();
   const [formats, setFormats] = useState<DeckFormat[]>([]);
   const [decks, setDecks] = useState<DeckSummary[]>([]);
@@ -94,28 +96,23 @@ export function DecksScreen() {
     partnerCoverCardUri?: string,
     visibility?: string
   ) => {
-    try {
-      const created = await createDeck({
-        name,
-        formatId,
-        description,
-        commanderCardId,
-        commanderCardName,
-        commanderColorIdentity,
-        coverCardUri,
-        partnerCommanderCardId,
-        partnerCommanderCardName,
-        partnerCoverCardUri,
-        visibility,
-      });
-      await loadData();
-      setSelectedDeck(created);
-      setDetailModalVisible(true);
-      toast.success(`Created deck "${name}" successfully.`);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Could not create deck';
-      toast.error(msg, 'Error');
-    }
+    const created = await createDeck({
+      name,
+      formatId,
+      description,
+      commanderCardId,
+      commanderCardName,
+      commanderColorIdentity,
+      coverCardUri,
+      partnerCommanderCardId,
+      partnerCommanderCardName,
+      partnerCoverCardUri,
+      visibility,
+    });
+    await loadData();
+    setSelectedDeck(created);
+    setDetailModalVisible(true);
+    toast.success(`Created deck "${name}" successfully.`);
   };
 
   const handleOpenDeck = async (summary: DeckSummary) => {
@@ -124,7 +121,7 @@ export function DecksScreen() {
       setSelectedDeck(full);
       setDetailModalVisible(true);
     } else {
-      toast.error('Could not load deck details.', 'Error');
+      toast.error(ui("Could not load deck details."));
     }
   };
 
@@ -134,8 +131,8 @@ export function DecksScreen() {
       await deleteDeck(deckToDelete.id);
       setDecks((prev) => prev.filter((d) => d.id !== deckToDelete.id));
       toast.success(`Deleted deck "${deckToDelete.name}".`);
-    } catch {
-      toast.error('Could not delete deck at this time.', 'Error');
+    } catch (error) {
+      toast.error(ui(getApiErrorMessage(error)));
     } finally {
       setDeckToDelete(null);
     }
@@ -157,15 +154,8 @@ export function DecksScreen() {
   if (!account) {
     return (
       <View style={[styles.root, { backgroundColor: theme.background }]}>
-        <ScreenHeader title="My Decks" />
-        <EmptyState
-          icon="lock"
-          title="Sign in to view & manage decks"
-          message="Your decks and strategies are synced and secured with your account."
-        />
-        <Pressable onPress={() => router.push('/login')} style={styles.loginLinkWrap}>
-          <Text style={[styles.loginLink, { color: theme.accent }]}>Sign in now</Text>
-        </Pressable>
+        <ScreenHeader title={ui("My Decks")} />
+        <SignInPrompt purpose="decks" />
       </View>
     );
   }
@@ -173,7 +163,7 @@ export function DecksScreen() {
   return (
     <View style={[styles.root, { backgroundColor: theme.background }]}>
       <ScreenHeader
-        title="My Decks"
+        title={ui("My Decks")}
         rightAction={
           <Pressable
             style={[styles.createHeaderBtn, { backgroundColor: theme.accent }]}
@@ -185,9 +175,7 @@ export function DecksScreen() {
               numberOfLines={1}
               adjustsFontSizeToFit
               minimumFontScale={0.85}
-            >
-              New Deck
-            </Text>
+            >{ui("New Deck")}</Text>
           </Pressable>
         }
       />
@@ -203,7 +191,7 @@ export function DecksScreen() {
           <TextInput
             value={searchQuery}
             onChangeText={setSearchQuery}
-            placeholder="Search by deck or commander name..."
+            placeholder={ui("Search by deck or commander name...")}
             placeholderTextColor={theme.textSecondary}
             style={[styles.searchInput, { color: theme.text }]}
             autoCapitalize="none"
@@ -371,12 +359,11 @@ export function DecksScreen() {
                   <View style={styles.progressSection}>
                     <View style={styles.progressTextRow}>
                       <Text style={[styles.progressLabel, { color: hasCover ? '#E2E8F0' : theme.textSecondary }]}>
-                        {item.totalCount} / {targetCount} cards
-                      </Text>
+                        {item.totalCount} / {targetCount}{ui("cards")}</Text>
                       {isComplete && (
                         <View style={styles.completeBadge}>
                           <Feather name="check" size={10} color="#10B981" />
-                          <Text style={styles.completeLabel}>Complete</Text>
+                          <Text style={styles.completeLabel}>{ui("Complete")}</Text>
                         </View>
                       )}
                     </View>
@@ -413,7 +400,7 @@ export function DecksScreen() {
                   onPress={() => setCreateModalVisible(true)}
                 >
                   <Feather name="plus" size={16} color="#0D0E12" />
-                  <Text style={styles.emptyCreateBtnText}>Create New Deck</Text>
+                  <Text style={styles.emptyCreateBtnText}>{ui("Create New Deck")}</Text>
                 </Pressable>
               )}
             </View>
@@ -452,10 +439,10 @@ export function DecksScreen() {
 
       <ConfirmModal
         visible={!!deckToDelete}
-        title="Confirm Delete Deck"
+        title={ui("Confirm Delete Deck")}
         message={`Are you sure you want to delete deck "${deckToDelete?.name}"? All associated cards will be permanently removed.`}
-        confirmLabel="Delete Deck"
-        cancelLabel="Cancel"
+        confirmLabel={ui("Delete Deck")}
+        cancelLabel={ui("Cancel")}
         icon="trash-2"
         isDestructive
         onConfirm={handleConfirmDeleteDeck}
@@ -689,16 +676,5 @@ const styles = StyleSheet.create({
     color: '#0D0E12',
     fontSize: 13,
     fontWeight: '800',
-  },
-  loginLinkWrap: {
-    alignSelf: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    marginTop: 8,
-  },
-  loginLink: {
-    fontSize: 15,
-    fontWeight: '700',
-    textDecorationLine: 'underline',
   },
 });

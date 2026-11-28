@@ -1,3 +1,4 @@
+import { useUiText } from '@/lib/useUiText';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
@@ -9,18 +10,18 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { type Href, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { useToast } from '@/components/Toast';
 import { Card } from '@/components/ui';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { getApiErrorMessage } from '@/lib/apiError';
-import { API_BASE_URL } from '@/lib/apiConfig';
 import { useAppTheme } from '@/lib/ThemeProvider';
 import { borderRadius, spacing, typography } from '@/lib/theme';
 
 export function LoginScreen() {
+  const ui = useUiText();
   const { theme } = useAppTheme();
   const { login } = useAuth();
   const router = useRouter();
@@ -34,22 +35,18 @@ export function LoginScreen() {
     const passwordValue = password;
 
     if (!emailValue || !passwordValue) {
-      toast.info('Email and password are required', 'Login failed');
+      toast.info(ui("Email and password are required"), ui("Login failed"));
       return;
     }
 
     setLoading(true);
     try {
       await login({ email: emailValue, password: passwordValue });
-      toast.success('Signed in successfully.');
-      router.replace('/' as Href);
+      toast.success(ui("Signed in successfully."));
+      if (router.canGoBack()) router.back();
+      else router.replace('/');
     } catch (e: unknown) {
-      const msg = getApiErrorMessage(e);
-      const hint =
-        msg.toLowerCase().includes('network')
-          ? `${msg}\n\nAPI: ${API_BASE_URL}`
-          : msg;
-      toast.error(hint, 'Login failed');
+      toast.error(ui(getApiErrorMessage(e)));
     } finally {
       setLoading(false);
     }
@@ -57,7 +54,7 @@ export function LoginScreen() {
 
   return (
     <View style={[styles.root, { backgroundColor: theme.background }]}>
-      <ScreenHeader title="Sign in" showBack />
+      <ScreenHeader title={ui("Sign in")} showBack />
       <View style={styles.body}>
         <Card>
           <Text style={[styles.label, { color: theme.textSecondary }]}>Email</Text>
@@ -73,7 +70,7 @@ export function LoginScreen() {
             placeholderTextColor={theme.textMuted}
             style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.surfaceElevated }]}
           />
-          <Text style={[styles.label, { color: theme.textSecondary }]}>Password</Text>
+          <Text style={[styles.label, { color: theme.textSecondary }]}>{ui("Password")}</Text>
           <TextInput
             value={password}
             onChangeText={setPassword}
@@ -85,6 +82,7 @@ export function LoginScreen() {
             style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.surfaceElevated }]}
           />
           <Pressable
+            accessibilityRole="button"
             onPress={onSubmit}
             disabled={loading}
             style={[styles.btn, { backgroundColor: theme.accent, opacity: loading ? 0.7 : 1 }]}
@@ -92,15 +90,13 @@ export function LoginScreen() {
             {loading ? (
               <ActivityIndicator color={theme.accentContrast} />
             ) : (
-              <Text style={[styles.btnText, { color: theme.accentContrast }]}>Sign in</Text>
+              <Text style={[styles.btnText, { color: theme.accentContrast }]}>{ui("Sign in")}</Text>
             )}
           </Pressable>
-          <Pressable onPress={() => router.push('/register')} style={styles.linkWrap}>
-            <Text style={{ color: theme.accent }}>Need an account? Register</Text>
+          <Pressable onPress={() => router.replace('/register')} style={styles.linkWrap}>
+            <Text style={{ color: theme.accent }}>{ui("Need an account? Register")}</Text>
           </Pressable>
-          {__DEV__ ? (
-            <Text style={[styles.debug, { color: theme.textMuted }]}>{API_BASE_URL}</Text>
-          ) : null}
+
         </Card>
       </View>
     </View>
@@ -127,5 +123,4 @@ const styles = StyleSheet.create({
   },
   btnText: { ...typography.button },
   linkWrap: { alignItems: 'center', marginTop: spacing.lg },
-  debug: { ...typography.caption, marginTop: spacing.md, textAlign: 'center' },
 });

@@ -1,17 +1,13 @@
-/** Pull a short message from Spring Boot / axios errors. */
-export function getApiErrorMessage(error: unknown, fallback = 'Try again'): string {
-  const e = error as {
-    message?: string;
-    response?: { data?: { message?: string; detail?: string; title?: string } };
-  };
-  const data = e?.response?.data;
-  const raw = data?.detail || data?.message || e?.message || '';
-  if (!raw) return fallback;
-
-  const fieldMsg = [...String(raw).matchAll(/default message \[([^\]]+)\]/g)].map((m) => m[1]);
-  const useful = fieldMsg.filter((m) => !m.includes('.') && m !== 'email' && m !== 'password' && m !== 'loginRequest');
-  if (useful.length) return useful[useful.length - 1];
-
-  if (String(raw).includes('Validation failed')) return 'Email and password are required';
-  return String(raw);
+export function getApiErrorMessage(error: unknown): string {
+  const response = (error as { response?: { status?: number; data?: { message?: unknown; detail?: unknown } } } | null)?.response;
+  const message = response?.data?.message ?? response?.data?.detail;
+  if (typeof message === 'string' && message.trim()) {
+    if (/Validation failed|default message \[/i.test(message)) return 'Please check the information you entered.';
+    if (!/<!doctype|<html|https?:\/\/|exception|SQLState|JDBC|stack trace/i.test(message)) return message.trim();
+  }
+  if (!response) return 'Unable to connect. Please try again.';
+  if (response.status === 401) return 'Please sign in again.';
+  if (response.status === 403) return 'You do not have permission for this action.';
+  if (response.status === 429) return 'Too many requests. Please wait a moment.';
+  return 'Unable to complete this request. Please try again.';
 }

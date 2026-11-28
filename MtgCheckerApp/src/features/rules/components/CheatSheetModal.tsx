@@ -1,3 +1,4 @@
+import { useUiText } from '@/lib/useUiText';
 import React, { useMemo, useState } from 'react';
 import {
   Modal,
@@ -22,6 +23,7 @@ type CheatSheetModalProps = {
 };
 
 export function CheatSheetModal({ topic, visible, onClose }: CheatSheetModalProps) {
+  const ui = useUiText();
   const { theme } = useAppTheme();
   const insets = useSafeAreaInsets();
   const [filterText, setFilterText] = useState('');
@@ -98,7 +100,7 @@ export function CheatSheetModal({ topic, visible, onClose }: CheatSheetModalProp
             <TextInput
               value={filterText}
               onChangeText={setFilterText}
-              placeholder="Filter rules, keywords, CR citation..."
+              placeholder={ui("Filter rules, keywords, CR citation...")}
               placeholderTextColor={theme.textMuted}
               style={[styles.filterInput, { color: theme.text }]}
               autoCapitalize="none"
@@ -125,11 +127,8 @@ export function CheatSheetModal({ topic, visible, onClose }: CheatSheetModalProp
           {filteredSections.length === 0 ? (
             <View style={[styles.emptyFilterCard, { borderColor: theme.border }]}>
               <Feather name="search" size={24} color={theme.textMuted} />
-              <Text style={[styles.emptyFilterTitle, { color: theme.text }]}>
-                No matching rules found
-              </Text>
-              <Text style={[styles.emptyFilterSub, { color: theme.textSecondary }]}>
-                No entries in this cheat sheet match &quot;{filterText}&quot;.
+              <Text style={[styles.emptyFilterTitle, { color: theme.text }]}>{ui("No matching rules found")}</Text>
+              <Text style={[styles.emptyFilterSub, { color: theme.textSecondary }]}>{ui("No entries in this cheat sheet match &quot;")}{filterText}&quot;.
               </Text>
             </View>
           ) : (

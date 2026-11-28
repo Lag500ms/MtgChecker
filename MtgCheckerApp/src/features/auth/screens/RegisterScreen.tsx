@@ -1,3 +1,4 @@
+import { useUiText } from '@/lib/useUiText';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
@@ -9,18 +10,18 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { type Href, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { useToast } from '@/components/Toast';
 import { Card } from '@/components/ui';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { getApiErrorMessage } from '@/lib/apiError';
-import { API_BASE_URL } from '@/lib/apiConfig';
 import { useAppTheme } from '@/lib/ThemeProvider';
 import { borderRadius, spacing, typography } from '@/lib/theme';
 
 export function RegisterScreen() {
+  const ui = useUiText();
   const { theme } = useAppTheme();
   const { register } = useAuth();
   const router = useRouter();
@@ -36,11 +37,11 @@ export function RegisterScreen() {
     const passwordValue = password;
 
     if (!displayNameValue || !emailValue || !passwordValue) {
-      toast.info('Display name, email and password are required', 'Register failed');
+      toast.info(ui("Display name, email and password are required"), ui("Register failed"));
       return;
     }
     if (passwordValue.length < 8) {
-      toast.info('Password must be at least 8 characters', 'Register failed');
+      toast.info(ui("Password must be at least 8 characters"), ui("Register failed"));
       return;
     }
 
@@ -51,15 +52,11 @@ export function RegisterScreen() {
         email: emailValue,
         password: passwordValue,
       });
-      toast.success('Account created successfully!');
-      router.replace('/' as Href);
+      toast.success(ui("Account created successfully!"));
+      if (router.canGoBack()) router.back();
+      else router.replace('/');
     } catch (e: unknown) {
-      const msg = getApiErrorMessage(e);
-      const hint =
-        msg.toLowerCase().includes('network')
-          ? `${msg}\n\nAPI: ${API_BASE_URL}`
-          : msg;
-      toast.error(hint, 'Register failed');
+      toast.error(ui(getApiErrorMessage(e)));
     } finally {
       setLoading(false);
     }
@@ -67,10 +64,10 @@ export function RegisterScreen() {
 
   return (
     <View style={[styles.root, { backgroundColor: theme.background }]}>
-      <ScreenHeader title="Register" showBack />
+      <ScreenHeader title={ui("Register")} showBack />
       <View style={styles.body}>
         <Card>
-          <Text style={[styles.label, { color: theme.textSecondary }]}>Display name</Text>
+          <Text style={[styles.label, { color: theme.textSecondary }]}>{ui("Display name")}</Text>
           <TextInput
             value={displayName}
             onChangeText={setDisplayName}
@@ -93,7 +90,7 @@ export function RegisterScreen() {
             placeholderTextColor={theme.textMuted}
             style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.surfaceElevated }]}
           />
-          <Text style={[styles.label, { color: theme.textSecondary }]}>Password</Text>
+          <Text style={[styles.label, { color: theme.textSecondary }]}>{ui("Password")}</Text>
           <TextInput
             value={password}
             onChangeText={setPassword}
@@ -105,6 +102,7 @@ export function RegisterScreen() {
             style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.surfaceElevated }]}
           />
           <Pressable
+            accessibilityRole="button"
             onPress={onSubmit}
             disabled={loading}
             style={[styles.btn, { backgroundColor: theme.accent, opacity: loading ? 0.7 : 1 }]}
@@ -112,7 +110,7 @@ export function RegisterScreen() {
             {loading ? (
               <ActivityIndicator color={theme.accentContrast} />
             ) : (
-              <Text style={[styles.btnText, { color: theme.accentContrast }]}>Create account</Text>
+              <Text style={[styles.btnText, { color: theme.accentContrast }]}>{ui("Create account")}</Text>
             )}
           </Pressable>
         </Card>

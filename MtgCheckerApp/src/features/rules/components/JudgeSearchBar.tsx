@@ -1,3 +1,4 @@
+import { useUiText } from '@/lib/useUiText';
 import React from 'react';
 import {
   ActivityIndicator,
@@ -29,6 +30,7 @@ export function JudgeSearchBar({
   isLoading = false,
   placeholder = 'Ask judge or search rules (e.g. Doubling Season, Layers)...',
 }: JudgeSearchBarProps) {
+  const ui = useUiText();
   const { theme } = useAppTheme();
 
   return (
@@ -46,7 +48,7 @@ export function JudgeSearchBar({
         style={[styles.input, { color: theme.text }]}
         value={value}
         onChangeText={onChangeText}
-        placeholder={placeholder}
+        placeholder={ui(placeholder)}
         placeholderTextColor={theme.textMuted}
         returnKeyType="search"
         autoCapitalize="none"

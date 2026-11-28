@@ -1,3 +1,5 @@
+import { useUiText } from '@/lib/useUiText';
+import { getApiErrorMessage } from '@/lib/apiError';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
@@ -27,6 +29,7 @@ const TIMING_OPTIONS = [
 ];
 
 export function CardInteractionWidget({ onVerdictReady }: CardInteractionWidgetProps) {
+  const ui = useUiText();
   const { theme } = useAppTheme();
   const [isExpanded, setIsExpanded] = useState(false);
   const [cardA, setCardA] = useState('');
@@ -49,7 +52,7 @@ export function CardInteractionWidget({ onVerdictReady }: CardInteractionWidgetP
       );
       onVerdictReady(verdict);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Could not contact AI Judge';
+      const msg = ui(getApiErrorMessage(err));
       setErrorMessage(msg);
     } finally {
       setIsAnalyzing(false);
@@ -65,12 +68,10 @@ export function CardInteractionWidget({ onVerdictReady }: CardInteractionWidgetP
       >
         <View style={styles.headerTitleWrap}>
           <Feather name="git-merge" size={16} color="#E0AD62" />
-          <Text style={[styles.title, { color: theme.text }]}>Two-Card Interaction Matchup</Text>
+          <Text style={[styles.title, { color: theme.text }]}>{ui("Two-Card Interaction Matchup")}</Text>
         </View>
         <View style={styles.headerRightWrap}>
-          <Text style={[styles.badge, { backgroundColor: 'rgba(224, 173, 98, 0.15)', color: '#E0AD62' }]}>
-            AI Matchup
-          </Text>
+          <Text style={[styles.badge, { backgroundColor: 'rgba(224, 173, 98, 0.15)', color: '#E0AD62' }]}>{ui("AI Matchup")}</Text>
           <Feather
             name={isExpanded ? 'chevron-up' : 'chevron-down'}
             size={18}
@@ -81,9 +82,7 @@ export function CardInteractionWidget({ onVerdictReady }: CardInteractionWidgetP
 
       {isExpanded ? (
         <View style={styles.expandedContent}>
-          <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
-            Enter 2 cards to analyze Oracle text, Stack timing, and State-Based Actions:
-          </Text>
+          <Text style={[styles.subtitle, { color: theme.textSecondary }]}>{ui("Enter 2 cards to analyze Oracle text, Stack timing, and State-Based Actions:")}</Text>
 
           <View style={styles.inputsRow}>
             <View style={[styles.inputBox, { backgroundColor: theme.surfaceElevated, borderColor: theme.border }]}>
@@ -127,7 +126,7 @@ export function CardInteractionWidget({ onVerdictReady }: CardInteractionWidgetP
             </View>
           </View>
 
-          <Text style={[styles.timingLabel, { color: theme.textSecondary }]}>Timing / Phase:</Text>
+          <Text style={[styles.timingLabel, { color: theme.textSecondary }]}>{ui("Timing / Phase:")}</Text>
           <View style={styles.timingChips}>
             {TIMING_OPTIONS.map((opt) => {
               const isSelected = selectedTiming === opt.id;
@@ -184,9 +183,7 @@ export function CardInteractionWidget({ onVerdictReady }: CardInteractionWidgetP
                     styles.analyzeBtnText,
                     { color: (!cardA.trim() || !cardB.trim()) ? '#6B7280' : '#121212' },
                   ]}
-                >
-                  Analyze Interaction
-                </Text>
+                >{ui("Analyze Interaction")}</Text>
               </>
             )}
           </Pressable>

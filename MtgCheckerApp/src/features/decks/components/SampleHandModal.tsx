@@ -1,3 +1,4 @@
+import { useUiText } from '@/lib/useUiText';
 import React, { memo, useCallback, useEffect, useState } from 'react';
 import {
   Modal,
@@ -76,6 +77,7 @@ function SampleHandModalComponent({
   deckName,
   onClose,
 }: SampleHandModalProps) {
+  const ui = useUiText();
   const { theme } = useAppTheme();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
@@ -136,11 +138,9 @@ function SampleHandModalComponent({
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerTitleWrap}>
-              <Text style={[styles.title, { color: theme.text }]} numberOfLines={1}>
-                Playtest Hand: {deckName}
+              <Text style={[styles.title, { color: theme.text }]} numberOfLines={1}>{ui("Playtest Hand:")}{deckName}
               </Text>
-              <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
-                Hand: {hand.length} · Library: {library.length}
+              <Text style={[styles.subtitle, { color: theme.textSecondary }]}>{ui("Hand:")}{hand.length}{ui("· Library:")}{library.length}
               </Text>
             </View>
             <Pressable onPress={onClose} hitSlop={10} style={styles.closeBtn}>
@@ -151,7 +151,7 @@ function SampleHandModalComponent({
           {/* Status Bar */}
           <View style={[styles.statusBar, { backgroundColor: theme.background, borderColor: theme.border }]}>
             <View style={styles.statusCol}>
-              <Text style={[styles.statusLabel, { color: theme.textMuted }]}>Opening Lands</Text>
+              <Text style={[styles.statusLabel, { color: theme.textMuted }]}>{ui("Opening Lands")}</Text>
               <Text
                 style={[
                   styles.statusValue,
@@ -165,8 +165,7 @@ function SampleHandModalComponent({
                   },
                 ]}
               >
-                {landsInHand} / {hand.length} Lands
-              </Text>
+                {landsInHand} / {hand.length}{ui("Lands")}</Text>
             </View>
 
             <View style={styles.statusDivider} />
@@ -190,7 +189,7 @@ function SampleHandModalComponent({
               disabled={library.length === 0}
             >
               <Feather name="plus-circle" size={15} color={theme.accentContrast} />
-              <Text style={[styles.actionBtnText, { color: theme.accentContrast }]}>Draw 1 Card</Text>
+              <Text style={[styles.actionBtnText, { color: theme.accentContrast }]}>{ui("Draw 1 Card")}</Text>
             </Pressable>
 
             <Pressable
@@ -212,7 +211,7 @@ function SampleHandModalComponent({
               onPress={resetGame}
             >
               <Feather name="refresh-cw" size={15} color={theme.textMuted} />
-              <Text style={[styles.actionBtnSecText, { color: theme.textMuted }]}>Shuffle</Text>
+              <Text style={[styles.actionBtnSecText, { color: theme.textMuted }]}>{ui("Shuffle")}</Text>
             </Pressable>
           </View>
 
@@ -221,9 +220,7 @@ function SampleHandModalComponent({
             {hand.length === 0 ? (
               <View style={styles.emptyWrap}>
                 <Feather name="inbox" size={32} color={theme.textMuted} />
-                <Text style={[styles.emptyText, { color: theme.textMuted }]}>
-                  No cards in hand.
-                </Text>
+                <Text style={[styles.emptyText, { color: theme.textMuted }]}>{ui("No cards in hand.")}</Text>
               </View>
             ) : (
               <View style={styles.cardsGrid}>

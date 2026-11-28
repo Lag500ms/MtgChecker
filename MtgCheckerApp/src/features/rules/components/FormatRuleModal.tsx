@@ -1,3 +1,4 @@
+import { useUiText } from '@/lib/useUiText';
 import React from 'react';
 import {
   Modal,
@@ -27,6 +28,7 @@ export function FormatRuleModal({
   onClose,
   onOpenLifeTracker,
 }: FormatRuleModalProps) {
+  const ui = useUiText();
   const { theme } = useAppTheme();
   const insets = useSafeAreaInsets();
 
@@ -72,18 +74,18 @@ export function FormatRuleModal({
         >
           <View style={styles.statsRow}>
             <View style={[styles.statBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-              <Text style={styles.statLabel}>Starting Life</Text>
+              <Text style={styles.statLabel}>{ui("Starting Life")}</Text>
               <Text style={[styles.statValue, { color: theme.accent }]}>{format.startingLife} HP</Text>
             </View>
             <View style={[styles.statBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-              <Text style={styles.statLabel}>Deck Size</Text>
+              <Text style={styles.statLabel}>{ui("Deck Size")}</Text>
               <Text style={[styles.statValue, { color: theme.text }]}>
                 {format.maxDeckSize ? `${format.minDeckSize} Cards` : `${format.minDeckSize}+ Cards`}
               </Text>
             </View>
           </View>
 
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>Essential Format Rules</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>{ui("Essential Format Rules")}</Text>
 
           {format.keyRules.map((rule, idx) => (
             <View
@@ -117,9 +119,7 @@ export function FormatRuleModal({
               ]}
             >
               <Feather name="shield" size={16} color="#000" />
-              <Text style={styles.openTrackerBtnText}>
-                Start Game in Life Tracker ({format.startingLife} HP)
-              </Text>
+              <Text style={styles.openTrackerBtnText}>{ui("Start Game in Life Tracker (")}{format.startingLife}{ui("HP)")}</Text>
             </Pressable>
           )}
         </ScrollView>

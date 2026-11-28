@@ -1,3 +1,5 @@
+import { useUiText } from '@/lib/useUiText';
+import { getApiErrorMessage } from '@/lib/apiError';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -51,6 +53,7 @@ export function DeckDetailModal({
   onClose,
   onDeckUpdated,
 }: DeckDetailModalProps) {
+  const ui = useUiText();
   const { theme } = useAppTheme();
   const toast = useToast();
   const { width } = useWindowDimensions();
@@ -128,7 +131,7 @@ export function DeckDetailModal({
     try {
       const parsed = parseDeckText(importText);
       if (parsed.lines.length === 0) {
-        toast.info('No cards recognized from text.');
+        toast.info(ui("No cards recognized from text."));
         return;
       }
 
@@ -187,8 +190,8 @@ export function DeckDetailModal({
       setShowImportModal(false);
       setImportText('');
       toast.success(`Successfully imported ${parsed.totalCards} cards into deck!`);
-    } catch {
-      toast.error('Error importing card list');
+    } catch (error) {
+      toast.error(ui(getApiErrorMessage(error)));
     } finally {
       setIsImporting(false);
     }
@@ -324,8 +327,8 @@ export function DeckDetailModal({
       onDeckUpdated(syncedDeck);
       toast.success('Deck saved and synced to cloud.', 'Success');
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Sync error';
-      toast.error(`Could not sync: ${msg}`, 'Error');
+      const msg = ui(getApiErrorMessage(err));
+      toast.error(msg);
     } finally {
       setIsSyncing(false);
     }
@@ -351,17 +354,16 @@ export function DeckDetailModal({
                 </Text>
               </View>
               <Text style={[styles.cardCountText, { color: theme.textSecondary }]}>
-                {totalCardCount} cards
-              </Text>
+                {totalCardCount}{ui("cards")}</Text>
               {illegalCardsCount > 0 ? (
                 <View style={styles.illegalPill}>
                   <Feather name="alert-triangle" size={12} color="#FFF" />
-                  <Text style={styles.illegalPillText}>{illegalCardsCount} illegal</Text>
+                  <Text style={styles.illegalPillText}>{illegalCardsCount}{ui("illegal")}</Text>
                 </View>
               ) : (
                 <View style={styles.legalPill}>
                   <Feather name="check" size={12} color="#10B981" />
-                  <Text style={styles.legalPillText}>Legal</Text>
+                  <Text style={styles.legalPillText}>{ui("Legal")}</Text>
                 </View>
               )}
             </View>
@@ -425,9 +427,7 @@ export function DeckDetailModal({
                           ]}
                         >
                           <Feather name="users" size={13} color="#38BDF8" />
-                          <Text style={[styles.commanderBadgeText, { color: '#38BDF8' }]}>
-                            PARTNER
-                          </Text>
+                          <Text style={[styles.commanderBadgeText, { color: '#38BDF8' }]}>{ui("PARTNER")}</Text>
                         </View>
                       ) : null}
                     </View>
@@ -497,7 +497,7 @@ export function DeckDetailModal({
                     onPress={() => setShowSampleHand(true)}
                   >
                     <Feather name="play-circle" size={13} color={theme.accent} />
-                    <Text style={[styles.toolBtnText, { color: theme.accent }]}>Playtest</Text>
+                    <Text style={[styles.toolBtnText, { color: theme.accent }]}>{ui("Playtest")}</Text>
                   </Pressable>
 
                   <Pressable
@@ -505,7 +505,7 @@ export function DeckDetailModal({
                     onPress={() => setShowImportModal(true)}
                   >
                     <Feather name="file-text" size={13} color={theme.text} />
-                    <Text style={[styles.toolBtnText, { color: theme.text }]}>Import</Text>
+                    <Text style={[styles.toolBtnText, { color: theme.text }]}>{ui("Import")}</Text>
                   </Pressable>
 
                   <View style={[styles.viewModeToggle, { borderColor: theme.border }]}>
@@ -652,9 +652,7 @@ export function DeckDetailModal({
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Feather name="inbox" size={36} color={theme.textSecondary} />
-              <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
-                No cards in this section yet.
-              </Text>
+              <Text style={[styles.emptyText, { color: theme.textSecondary }]}>{ui("No cards in this section yet.")}</Text>
             </View>
           }
         />
@@ -666,7 +664,7 @@ export function DeckDetailModal({
                 styles.searchInput,
                 { backgroundColor: theme.background, borderColor: theme.border, color: theme.text },
               ]}
-              placeholder="Quick add: card name (Lightning Bolt, Counterspell...)"
+              placeholder={ui("Quick add: card name (Lightning Bolt, Counterspell...)")}
               placeholderTextColor={theme.textSecondary}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -710,10 +708,10 @@ export function DeckDetailModal({
 
         <ConfirmModal
           visible={!!cardToDelete}
-          title="Remove Card"
+          title={ui("Remove Card")}
           message={`Are you sure you want to remove "${cardToDelete?.name}" from this deck?`}
-          confirmLabel="Remove"
-          cancelLabel="Cancel"
+          confirmLabel={ui("Remove")}
+          cancelLabel={ui("Cancel")}
           icon="trash-2"
           isDestructive
           onConfirm={handleConfirmRemoveCard}
@@ -724,8 +722,8 @@ export function DeckDetailModal({
           visible={!!infoModalData}
           title={infoModalData?.title || ''}
           message={infoModalData?.message || ''}
-          confirmLabel="Understood"
-          cancelLabel="Close"
+          confirmLabel={ui("Understood")}
+          cancelLabel={ui("Close")}
           icon="alert-circle"
           isDestructive={false}
           onConfirm={() => setInfoModalData(null)}
@@ -755,8 +753,7 @@ export function DeckDetailModal({
                     {editingCard?.name}
                   </Text>
                   <Text style={[styles.switchModalSub, { color: theme.textSecondary }]}>
-                    {editingCard?.setCode?.toUpperCase()} #{editingCard?.collectorNumber} • Tap printing to switch
-                  </Text>
+                    {editingCard?.setCode?.toUpperCase()} #{editingCard?.collectorNumber}{ui("• Tap printing to switch")}</Text>
                 </View>
                 <Pressable
                   onPress={() => setEditingCard(null)}
@@ -796,7 +793,7 @@ export function DeckDetailModal({
                   }}
                 >
                   <Feather name="trash-2" size={14} color="#EF4444" />
-                  <Text style={styles.removeCardText}>Remove from deck</Text>
+                  <Text style={styles.removeCardText}>{ui("Remove from deck")}</Text>
                 </Pressable>
               </View>
 
@@ -804,9 +801,7 @@ export function DeckDetailModal({
                 <View style={styles.printingsSectionHeader}>
                   <View style={styles.printingsTitleRow}>
                     <Feather name="layers" size={14} color="#E0AD62" />
-                    <Text style={[styles.printingsSectionTitle, { color: theme.text }]}>
-                      All Printings
-                    </Text>
+                    <Text style={[styles.printingsSectionTitle, { color: theme.text }]}>{ui("All Printings")}</Text>
                   </View>
                   {loadingPrintings && <ActivityIndicator size="small" color="#E0AD62" />}
                 </View>
@@ -849,7 +844,7 @@ export function DeckDetailModal({
                         <Text style={styles.printingPrice}>${price}</Text>
                         {isCurrent && (
                           <View style={[styles.currentVersionBadge, { backgroundColor: theme.accent }]}>
-                            <Text style={styles.currentVersionText}>Current</Text>
+                            <Text style={styles.currentVersionText}>{ui("Current")}</Text>
                           </View>
                         )}
                       </Pressable>
@@ -879,15 +874,13 @@ export function DeckDetailModal({
           <View style={styles.importOverlay}>
             <View style={[styles.importBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
               <View style={styles.importHeader}>
-                <Text style={[styles.importTitle, { color: theme.text }]}>Import Decklist (Text)</Text>
+                <Text style={[styles.importTitle, { color: theme.text }]}>{ui("Import Decklist (Text)")}</Text>
                 <Pressable onPress={() => setShowImportModal(false)} hitSlop={10}>
                   <Feather name="x" size={18} color={theme.text} />
                 </Pressable>
               </View>
 
-              <Text style={[styles.importSubtitle, { color: theme.textSecondary }]}>
-                Paste decklist format from MTG Arena, Moxfield, or plain text:
-              </Text>
+              <Text style={[styles.importSubtitle, { color: theme.textSecondary }]}>{ui("Paste decklist format from MTG Arena, Moxfield, or plain text:")}</Text>
 
               <TextInput
                 style={[
@@ -907,7 +900,7 @@ export function DeckDetailModal({
                   style={[styles.importCancelBtn, { borderColor: theme.border }]}
                   onPress={() => setShowImportModal(false)}
                 >
-                  <Text style={[styles.importCancelText, { color: theme.text }]}>Cancel</Text>
+                  <Text style={[styles.importCancelText, { color: theme.text }]}>{ui("Cancel")}</Text>
                 </Pressable>
 
                 <Pressable
@@ -918,7 +911,7 @@ export function DeckDetailModal({
                   {isImporting ? (
                     <ActivityIndicator size="small" color="#000" />
                   ) : (
-                    <Text style={styles.importConfirmText}>Import Cards</Text>
+                    <Text style={styles.importConfirmText}>{ui("Import Cards")}</Text>
                   )}
                 </Pressable>
               </View>

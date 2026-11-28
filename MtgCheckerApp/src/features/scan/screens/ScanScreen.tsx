@@ -1,3 +1,5 @@
+import { useUiText } from '@/lib/useUiText';
+import { getApiErrorMessage } from '@/lib/apiError';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -36,6 +38,7 @@ import {
 import { parseMtgCardCode } from '../utils/ocrParser';
 
 export function ScanScreen() {
+  const ui = useUiText();
   const router = useRouter();
   const toast = useToast();
   const insets = useSafeAreaInsets();
@@ -145,24 +148,25 @@ export function ScanScreen() {
     height?: number,
   ) => {
     setIsProcessing(true);
-    setStatusText('Reading card…');
+    setStatusText(ui("Reading card…"));
 
     try {
       const result: ScanCardResult = await scanCardBase64(base64);
 
       if (result && result.card) {
-        setStatusText('Card recognized!');
+        setStatusText(ui("Card recognized!"));
         setConfidence(result.confidence);
         setRecognizedText(result.recognizedText);
         setCurrentCard(result.card);
         setLastScannedCard(result.card);
         setShowDetailSheet(true);
       } else {
-        throw new Error('Could not identify card from image.');
+        setStatusText(ui('Card not recognized. Enter the set and collector number.'));
+        setShowManualModal(true);
       }
     } catch (err: any) {
-      const msg = err?.response?.data?.message || err?.message || 'Could not recognize card.';
-      setStatusText('Scan incomplete: ' + msg);
+      const msg = ui(getApiErrorMessage(err));
+      setStatusText(msg);
 
       const parsed = parseMtgCardCode(msg);
       if (parsed) {
@@ -207,8 +211,8 @@ export function ScanScreen() {
       if (photo && photo.base64) {
         await handlePhotoScan(photo.base64, photo.uri, photo.width, photo.height);
       }
-    } catch (e: any) {
-      toast.error(e?.message || 'Could not capture photo at this moment.', 'Capture Error');
+    } catch {
+      toast.error(ui('Could not capture photo at this moment.'));
     }
   };
 
@@ -228,8 +232,8 @@ export function ScanScreen() {
           await handlePhotoScan(asset.base64, asset.uri, asset.width, asset.height);
         }
       }
-    } catch (e: any) {
-      toast.error(e?.message || 'Could not pick image from library.', 'Photo Library Error');
+    } catch {
+      toast.error(ui('Could not pick image from library.'));
     }
   };
 
@@ -237,7 +241,7 @@ export function ScanScreen() {
     const cleanSet = setCode.trim().toLowerCase();
     const cleanNum = collectorNumber.trim();
     if (!cleanSet || !cleanNum) {
-      toast.info('Please enter Set Code and Collector Number.', 'Missing info');
+      toast.info(ui("Please enter Set Code and Collector Number."), 'Missing info');
       return;
     }
 
@@ -256,7 +260,7 @@ export function ScanScreen() {
       }
     } catch (e: any) {
       toast.error(
-        e?.response?.data?.message || e?.message || 'Check Set code and Number.',
+        ui(getApiErrorMessage(e)),
         'Card Not Found'
       );
     } finally {
@@ -288,16 +292,14 @@ export function ScanScreen() {
           <View style={styles.permissionIconCircle}>
             <Feather name="camera-off" size={44} color="#E0AD62" />
           </View>
-          <Text style={styles.permissionTitle}>Camera Access Needed</Text>
-          <Text style={styles.permissionSubtitle}>
-            Camera permission is required to detect MTG cards in real-time.
-          </Text>
+          <Text style={styles.permissionTitle}>{ui("Camera Access Needed")}</Text>
+          <Text style={styles.permissionSubtitle}>{ui("Camera permission is required to detect MTG cards in real-time.")}</Text>
           <Pressable
             onPress={requestPermission}
             style={styles.permissionButton}
           >
             <Feather name="camera" size={18} color="#0E2A2C" />
-            <Text style={styles.permissionButtonText}>Allow Camera Access</Text>
+            <Text style={styles.permissionButtonText}>{ui("Allow Camera Access")}</Text>
           </Pressable>
         </View>
       ) : isFocused ? (
@@ -329,7 +331,7 @@ export function ScanScreen() {
             <View style={styles.reticleCornerBL} />
             <View style={styles.reticleCornerBR} />
             <View style={styles.reticleZone}>
-              <Text style={styles.reticleZoneText}>COLLECTOR CODE</Text>
+              <Text style={styles.reticleZoneText}>{ui("COLLECTOR CODE")}</Text>
             </View>
           </View>
           <Text style={styles.reticleHintText}>
@@ -430,7 +432,7 @@ export function ScanScreen() {
               style={styles.miniPreviewThumb}
             />
             <View style={styles.miniPreviewInfo}>
-              <Text style={styles.miniPreviewTag}>LAST SCANNED</Text>
+              <Text style={styles.miniPreviewTag}>{ui("LAST SCANNED")}</Text>
               <Text style={styles.miniPreviewTitle} numberOfLines={1}>
                 {lastScannedCard.name}
               </Text>
@@ -442,7 +444,7 @@ export function ScanScreen() {
               </View>
             </View>
             <View style={styles.miniPreviewAction}>
-              <Text style={styles.miniPreviewActionText}>View</Text>
+              <Text style={styles.miniPreviewActionText}>{ui("View")}</Text>
             </View>
           </Pressable>
         )}
@@ -505,7 +507,7 @@ export function ScanScreen() {
             <View style={styles.manualHeader}>
               <View style={styles.manualHeaderLeft}>
                 <Feather name="hash" size={18} color="#E0AD62" />
-                <Text style={styles.manualTitle}>Manual Card Entry</Text>
+                <Text style={styles.manualTitle}>{ui("Manual Card Entry")}</Text>
               </View>
               <Pressable
                 onPress={() => setShowManualModal(false)}
@@ -515,13 +517,11 @@ export function ScanScreen() {
               </Pressable>
             </View>
 
-            <Text style={styles.manualSub}>
-              Enter Set code and Collector number, or paste raw OCR footer text.
-            </Text>
+            <Text style={styles.manualSub}>{ui("Enter Set code and Collector number, or paste raw OCR footer text.")}</Text>
 
             <View style={styles.manualRow}>
               <View style={styles.manualCol}>
-                <Text style={styles.manualLabel}>SET CODE</Text>
+                <Text style={styles.manualLabel}>{ui("SET CODE")}</Text>
                 <TextInput
                   value={manualSet}
                   onChangeText={(t) => setManualSet(t.toUpperCase())}
@@ -534,7 +534,7 @@ export function ScanScreen() {
               </View>
 
               <View style={styles.manualCol}>
-                <Text style={styles.manualLabel}>NUMBER</Text>
+                <Text style={styles.manualLabel}>{ui("NUMBER")}</Text>
                 <TextInput
                   value={manualNumber}
                   onChangeText={setManualNumber}
@@ -572,14 +572,14 @@ export function ScanScreen() {
                 disabled={manualLoading}
                 style={styles.rawBtn}
               >
-                <Text style={styles.rawBtnText}>Parse</Text>
+                <Text style={styles.rawBtnText}>{ui("Parse")}</Text>
               </Pressable>
             </View>
           </View>
         </KeyboardAvoidingView>
       </Modal>
 
-      <CardDetailSheet
+      {showDetailSheet && <CardDetailSheet
         card={currentCard}
         visible={showDetailSheet}
         confidence={confidence}
@@ -593,7 +593,7 @@ export function ScanScreen() {
           lockGuard.current = false;
         }}
         onSelectPrinting={(p) => setCurrentCard(p)}
-      />
+      />}
     </View>
   );
 }

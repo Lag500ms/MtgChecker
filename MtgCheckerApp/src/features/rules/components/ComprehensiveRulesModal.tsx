@@ -1,3 +1,4 @@
+import { useUiText } from '@/lib/useUiText';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -37,6 +38,7 @@ export function ComprehensiveRulesModal({
   initialRuleNumber,
   onClose,
 }: ComprehensiveRulesModalProps) {
+  const ui = useUiText();
   const { theme } = useAppTheme();
 
   const [activeTab, setActiveTab] = useState<'rules' | 'glossary'>('rules');
@@ -166,12 +168,8 @@ export function ComprehensiveRulesModal({
               <Feather name="book-open" size={18} color="#E0AD62" />
             </View>
             <View>
-              <Text style={[styles.headerTitle, { color: theme.text }]}>
-                Comprehensive Rules
-              </Text>
-              <Text style={[styles.headerSubtitle, { color: theme.textMuted }]}>
-                MTG Rules & Glossary Compendium
-              </Text>
+              <Text style={[styles.headerTitle, { color: theme.text }]}>{ui("Comprehensive Rules")}</Text>
+              <Text style={[styles.headerSubtitle, { color: theme.textMuted }]}>{ui("MTG Rules & Glossary Compendium")}</Text>
             </View>
           </View>
           <Pressable onPress={onClose} style={[styles.closeBtn, { backgroundColor: theme.surface }]}>
@@ -200,9 +198,7 @@ export function ComprehensiveRulesModal({
                 styles.tabText,
                 { color: activeTab === 'rules' ? '#E0AD62' : theme.textMuted },
               ]}
-            >
-              Rules (3,165 CR)
-            </Text>
+            >{ui("Rules (3,165 CR)")}</Text>
           </Pressable>
 
           <Pressable
@@ -225,9 +221,7 @@ export function ComprehensiveRulesModal({
                 styles.tabText,
                 { color: activeTab === 'glossary' ? '#E0AD62' : theme.textMuted },
               ]}
-            >
-              Glossary Terms (727)
-            </Text>
+            >{ui("Glossary Terms (727)")}</Text>
           </Pressable>
         </View>
 
@@ -255,7 +249,7 @@ export function ComprehensiveRulesModal({
         {loading && (
           <View style={styles.loadingWrap}>
             <ActivityIndicator size="small" color="#E0AD62" />
-            <Text style={[styles.loadingText, { color: theme.textMuted }]}>Loading rules...</Text>
+            <Text style={[styles.loadingText, { color: theme.textMuted }]}>{ui("Loading rules...")}</Text>
           </View>
         )}
 
@@ -275,8 +269,7 @@ export function ComprehensiveRulesModal({
               ListEmptyComponent={
                 !loading ? (
                   <View style={styles.emptyWrap}>
-                    <Text style={[styles.emptyText, { color: theme.textMuted }]}>
-                      No rules matching "{searchQuery}"
+                    <Text style={[styles.emptyText, { color: theme.textMuted }]}>{ui("No rules matching \"")}{searchQuery}"
                     </Text>
                   </View>
                 ) : undefined
@@ -287,7 +280,7 @@ export function ComprehensiveRulesModal({
               <View style={[styles.navBreadcrumb, { backgroundColor: theme.surface, borderColor: theme.border }]}>
                 <Pressable style={styles.backBtn} onPress={handleResetView}>
                   <Feather name="chevron-left" size={18} color="#E0AD62" />
-                  <Text style={styles.backText}>Chapters</Text>
+                  <Text style={styles.backText}>{ui("Chapters")}</Text>
                 </Pressable>
                 <Text style={[styles.breadcrumbTitle, { color: theme.text }]} numberOfLines={1}>
                   CR {selectedChapter.chapterNumber}: {selectedChapter.chapterTitle}
@@ -310,9 +303,7 @@ export function ComprehensiveRulesModal({
             </View>
           ) : (
             <ScrollView contentContainerStyle={styles.listContent}>
-              <Text style={[styles.sectionHeading, { color: theme.textMuted }]}>
-                9 OFFICIAL COMPREHENSIVE RULES SECTIONS
-              </Text>
+              <Text style={[styles.sectionHeading, { color: theme.textMuted }]}>{ui("9 OFFICIAL COMPREHENSIVE RULES SECTIONS")}</Text>
               {sections.map((sec, secIdx) => (
                 <View key={`sec-${sec.sectionNumber}-${secIdx}`} style={[styles.sectionCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
                   <Pressable
@@ -362,7 +353,7 @@ export function ComprehensiveRulesModal({
                   <Text style={[styles.glossaryTerm, { color: theme.text }]}>{item.term}</Text>
                   {item.isObsolete && (
                     <View style={styles.obsoleteBadge}>
-                      <Text style={styles.obsoleteText}>Obsolete</Text>
+                      <Text style={styles.obsoleteText}>{ui("Obsolete")}</Text>
                     </View>
                   )}
                 </View>
@@ -375,7 +366,7 @@ export function ComprehensiveRulesModal({
                     onPress={() => openRuleDirectly(item.seeRule!)}
                   >
                     <Feather name="external-link" size={12} color="#E0AD62" />
-                    <Text style={styles.seeRuleText}>View CR Rule {item.seeRule}</Text>
+                    <Text style={styles.seeRuleText}>{ui("View CR Rule")}{item.seeRule}</Text>
                   </Pressable>
                 )}
               </View>
@@ -383,9 +374,7 @@ export function ComprehensiveRulesModal({
             ListEmptyComponent={
               !loading ? (
                 <View style={styles.emptyWrap}>
-                  <Text style={[styles.emptyText, { color: theme.textMuted }]}>
-                    No glossary terms found
-                  </Text>
+                  <Text style={[styles.emptyText, { color: theme.textMuted }]}>{ui("No glossary terms found")}</Text>
                 </View>
               ) : undefined
             }
@@ -407,6 +396,7 @@ function RuleCard({
   isHighlighted?: boolean;
   onSelectRef: (ruleNumber: string) => void;
 }) {
+  const ui = useUiText();
   return (
     <View
       style={[
@@ -434,7 +424,7 @@ function RuleCard({
         <View style={[styles.exampleBox, { backgroundColor: theme.surfaceAlt || 'rgba(0,0,0,0.2)' }]}>
           <View style={styles.exampleHeader}>
             <Feather name="info" size={11} color="#E0AD62" />
-            <Text style={styles.exampleLabel}>OFFICIAL EXAMPLES</Text>
+            <Text style={styles.exampleLabel}>{ui("OFFICIAL EXAMPLES")}</Text>
           </View>
           <Text style={[styles.exampleText, { color: theme.textSecondary }]}>
             {rule.examplesText}
@@ -444,7 +434,7 @@ function RuleCard({
 
       {rule.crossReferences && rule.crossReferences.length > 0 && (
         <View style={styles.crossRefRow}>
-          <Text style={[styles.crossRefLabel, { color: theme.textMuted }]}>References:</Text>
+          <Text style={[styles.crossRefLabel, { color: theme.textMuted }]}>{ui("References:")}</Text>
           {rule.crossReferences.map((ref, idx) => (
             <Pressable key={`ref-${rule.ruleNumber}-${ref}-${idx}`} style={styles.crossRefPill} onPress={() => onSelectRef(ref)}>
               <Text style={styles.crossRefText}>CR {ref}</Text>

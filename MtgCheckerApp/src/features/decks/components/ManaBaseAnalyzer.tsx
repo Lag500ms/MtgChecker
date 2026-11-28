@@ -1,3 +1,4 @@
+import { useUiText } from '@/lib/useUiText';
 import React, { memo, useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useAppTheme } from '@/lib/ThemeProvider';
@@ -114,6 +115,7 @@ function analyzeManaBase(cards: DeckCardItem[]): {
 }
 
 function ManaBaseAnalyzerComponent({ cards }: ManaBaseAnalyzerProps) {
+  const ui = useUiText();
   const { theme } = useAppTheme();
 
   const analysis = useMemo(() => analyzeManaBase(cards), [cards]);
@@ -126,15 +128,12 @@ function ManaBaseAnalyzerComponent({ cards }: ManaBaseAnalyzerProps) {
     <View style={[styles.container, { backgroundColor: theme.surface, borderColor: theme.border }]}>
       <View style={styles.headerRow}>
         <View>
-          <Text style={[styles.title, { color: theme.text }]}>Mana Base Balance</Text>
-          <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
-            Compare Mana Pip Demand (Spells) vs Land Production (Lands)
-          </Text>
+          <Text style={[styles.title, { color: theme.text }]}>{ui("Mana Base Balance")}</Text>
+          <Text style={[styles.subtitle, { color: theme.textSecondary }]}>{ui("Compare Mana Pip Demand (Spells) vs Land Production (Lands)")}</Text>
         </View>
         <View style={styles.landBadge}>
           <Text style={[styles.landBadgeText, { color: theme.accent }]}>
-            {analysis.totalLands} Lands / {analysis.totalSpells} Spells
-          </Text>
+            {analysis.totalLands}{ui("Lands /")}{analysis.totalSpells}{ui("Spells")}</Text>
         </View>
       </View>
 
@@ -154,11 +153,9 @@ function ManaBaseAnalyzerComponent({ cards }: ManaBaseAnalyzerProps) {
               <View style={styles.barsCol}>
                 {/* Needs Bar */}
                 <View style={styles.barLabelRow}>
-                  <Text style={[styles.barLabel, { color: theme.textSecondary }]}>
-                    Demand: {stat.pips} ({stat.pipPct}%)
+                  <Text style={[styles.barLabel, { color: theme.textSecondary }]}>{ui("Demand:")}{stat.pips} ({stat.pipPct}%)
                   </Text>
-                  <Text style={[styles.barLabel, { color: theme.textSecondary }]}>
-                    Sources: {stat.sources} ({stat.sourcePct}%)
+                  <Text style={[styles.barLabel, { color: theme.textSecondary }]}>{ui("Sources:")}{stat.sources} ({stat.sourcePct}%)
                   </Text>
                 </View>
 
@@ -194,7 +191,7 @@ function ManaBaseAnalyzerComponent({ cards }: ManaBaseAnalyzerProps) {
               <View style={styles.diffWrap}>
                 {isWarning ? (
                   <View style={styles.warningBadge}>
-                    <Text style={styles.warningText}>Low</Text>
+                    <Text style={styles.warningText}>{ui("Low")}</Text>
                   </View>
                 ) : (
                   <Text style={[styles.diffText, { color: diff >= 0 ? '#22C55E' : theme.textMuted }]}>

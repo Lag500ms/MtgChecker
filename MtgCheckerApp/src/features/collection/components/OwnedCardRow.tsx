@@ -1,3 +1,4 @@
+import { useUiText } from '@/lib/useUiText';
 import React, { memo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
@@ -17,6 +18,7 @@ type OwnedCardRowProps = {
 };
 
 function OwnedCardRowComponent({ card, onInc, onDec, onDelete, onPress }: OwnedCardRowProps) {
+  const ui = useUiText();
   const { theme } = useAppTheme();
 
   const isFoil = card.finish.toLowerCase() === 'foil';
@@ -83,8 +85,7 @@ function OwnedCardRowComponent({ card, onInc, onDec, onDelete, onPress }: OwnedC
             ${card.priceUsd ?? '—'}
           </Text>
           {hasMultiple && card.totalPriceUsd ? (
-            <Text style={[styles.priceTotal, { color: theme.textSecondary }]}>
-              (Total: ${card.totalPriceUsd})
+            <Text style={[styles.priceTotal, { color: theme.textSecondary }]}>{ui("(Total: $")}{card.totalPriceUsd})
             </Text>
           ) : null}
         </View>

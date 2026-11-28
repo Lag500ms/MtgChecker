@@ -38,8 +38,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
     (async () => {
-      if (mounted) setReady(true);
-      await refreshAccount();
+      try {
+        await refreshAccount();
+      } catch (error) {
+        console.warn("Could not restore account session", error);
+      } finally {
+        if (mounted) setReady(true);
+      }
     })();
     return () => {
       mounted = false;

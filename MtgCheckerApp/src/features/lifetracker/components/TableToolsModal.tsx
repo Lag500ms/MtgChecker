@@ -1,3 +1,4 @@
+import { useUiText } from '@/lib/useUiText';
 import React, { useState } from 'react';
 import {
   Modal,
@@ -29,6 +30,7 @@ export function TableToolsModal({
   players,
   history,
 }: TableToolsModalProps) {
+  const ui = useUiText();
   const { theme } = useAppTheme();
   const { t } = useLanguage();
   const { width, height } = useWindowDimensions();
@@ -207,9 +209,7 @@ export function TableToolsModal({
             <View style={styles.diceSection}>
               <View style={[styles.cardBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
                 <Text style={[styles.boxTitle, { color: theme.text }]}>D20</Text>
-                <Text style={[styles.boxDesc, { color: theme.textSecondary }]}>
-                  Roll for turn order or MTG dice-rolling mechanics.
-                </Text>
+                <Text style={[styles.boxDesc, { color: theme.textSecondary }]}>{ui("Roll for turn order or MTG dice-rolling mechanics.")}</Text>
                 <View style={styles.resultCircle}>
                   <Text style={[styles.resultNumber, { color: d20Result === 20 ? '#22C55E' : d20Result === 1 ? '#EF4444' : theme.text }]}>
                     {d20Result !== null ? d20Result : '-'}
@@ -231,10 +231,8 @@ export function TableToolsModal({
               </View>
 
               <View style={[styles.cardBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-                <Text style={[styles.boxTitle, { color: theme.text }]}>6-Sided Die (D6)</Text>
-                <Text style={[styles.boxDesc, { color: theme.textSecondary }]}>
-                  Track counters, tokens, or roll standard D6 effects.
-                </Text>
+                <Text style={[styles.boxTitle, { color: theme.text }]}>{ui("6-Sided Die (D6)")}</Text>
+                <Text style={[styles.boxDesc, { color: theme.textSecondary }]}>{ui("Track counters, tokens, or roll standard D6 effects.")}</Text>
                 <View style={styles.resultSquare}>
                   <Text style={[styles.resultNumberSmall, { color: theme.text }]}>
                     {d6Result !== null ? d6Result : '-'}
@@ -258,9 +256,7 @@ export function TableToolsModal({
           {activeTab === 'coin' && (
             <View style={[styles.cardBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
               <Text style={[styles.boxTitle, { color: theme.text }]}>{t('flipCoin')}</Text>
-              <Text style={[styles.boxDesc, { color: theme.textSecondary }]}>
-                Official MTG ruling: Heads or Tails.
-              </Text>
+              <Text style={[styles.boxDesc, { color: theme.textSecondary }]}>{ui("Official MTG ruling: Heads or Tails.")}</Text>
               <View style={styles.coinCircle}>
                 <Text style={styles.coinEmoji}>
                   {coinResult === 'HEADS' ? '🪙 ' + t('heads') : coinResult === 'TAILS' ? '🪙 ' + t('tails') : '🪙'}
@@ -285,10 +281,8 @@ export function TableToolsModal({
 
           {activeTab === 'picker' && (
             <View style={[styles.cardBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-              <Text style={[styles.boxTitle, { color: theme.text }]}>Random First Player</Text>
-              <Text style={[styles.boxDesc, { color: theme.textSecondary }]}>
-                Randomly pick 1 out of {players.length} players to go first.
-              </Text>
+              <Text style={[styles.boxTitle, { color: theme.text }]}>{ui("Random First Player")}</Text>
+              <Text style={[styles.boxDesc, { color: theme.textSecondary }]}>{ui("Randomly pick 1 out of")}{players.length}{ui("players to go first.")}</Text>
               <View style={[styles.pickedPlayerBox, { borderColor: theme.accent }]}>
                 <Feather name="award" size={24} color={theme.accent} />
                 <Text style={[styles.pickedPlayerName, { color: theme.text }]}>
@@ -304,7 +298,7 @@ export function TableToolsModal({
                 ]}
               >
                 <Feather name="shuffle" size={16} color="#000" />
-                <Text style={styles.actionBtnText}>Pick First Player</Text>
+                <Text style={styles.actionBtnText}>{ui("Pick First Player")}</Text>
               </Pressable>
             </View>
           )}

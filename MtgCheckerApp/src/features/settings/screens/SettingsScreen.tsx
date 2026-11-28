@@ -1,3 +1,4 @@
+import { useUiText } from '@/lib/useUiText';
 import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
@@ -6,7 +7,7 @@ import { type Href, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Card, ConfirmModal, ListRow, SectionPill } from '@/components/ui';
 import { useAuth } from '@/features/auth/AuthProvider';
-import { APP_NAME, API_BASE_URL } from '@/lib/apiConfig';
+import { APP_NAME } from '@/lib/apiConfig';
 import { useAppTheme } from '@/lib/ThemeProvider';
 import { useLanguage } from '@/lib/LanguageProvider';
 import { borderRadius, spacing, typography } from '@/lib/theme';
@@ -14,9 +15,10 @@ import { borderRadius, spacing, typography } from '@/lib/theme';
 import { ThemePicker } from '../components/ThemePicker';
 
 export function SettingsScreen() {
+  const ui = useUiText();
   const { theme } = useAppTheme();
   const { language, setLanguage, t } = useLanguage();
-  const { account, logout } = useAuth();
+  const { account, ready, logout } = useAuth();
   const router = useRouter();
   const [logoutConfirmVisible, setLogoutConfirmVisible] = useState(false);
 
@@ -26,9 +28,9 @@ export function SettingsScreen() {
 
   return (
     <View style={[styles.root, { backgroundColor: theme.background }]}>
-      <ScreenHeader title="Settings" showBack />
+      <ScreenHeader title={ui("Settings")} showBack />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Card>
+        {ready && <Card>
           <View style={styles.accountRow}>
             <View style={[styles.avatar, { backgroundColor: theme.accent }]}>
               <Feather name="user" size={22} color={theme.accentContrast} />
@@ -47,16 +49,13 @@ export function SettingsScreen() {
               </Pressable>
             ) : (
               <Pressable onPress={() => router.push('/login')}>
-                <Text style={{ color: theme.accent, fontWeight: '700' }}>Login</Text>
+                <Text style={{ color: theme.accent, fontWeight: '700' }}>{ui("Login")}</Text>
               </Pressable>
             )}
           </View>
-        </Card>
+        </Card>}
 
-        <SectionPill label="Appearance" icon="droplet" />
-        <Text style={[styles.hint, { color: theme.textMuted }]}>
-          MTG-inspired accents, desaturated for night use. Background stays dark.
-        </Text>
+        <SectionPill label={ui("Appearance")} icon="droplet" />
         <ThemePicker />
 
         <SectionPill label={t('language')} icon="globe" />
@@ -75,14 +74,13 @@ export function SettingsScreen() {
             </Pressable>
           ))}
         </View>
-        <SectionPill label="General" icon="sliders" />
-        <ListRow icon="cloud" title="API endpoint" subtitle={API_BASE_URL} />
-        <ListRow icon="info" title="App" subtitle={`${APP_NAME} · 1.0.0`} />
-        {!account ? (
+        <SectionPill label={ui("General")} icon="sliders" />
+        <ListRow icon="info" title={ui("App")} subtitle={`${APP_NAME} · 1.0.0`} />
+        {ready && !account ? (
           <ListRow
             icon="user-plus"
-            title="Create account"
-            subtitle="Register with email"
+            title={ui("Create account")}
+            subtitle={ui("Register with email")}
             onPress={() => router.push('/register')}
           />
         ) : null}
@@ -90,10 +88,10 @@ export function SettingsScreen() {
 
       <ConfirmModal
         visible={logoutConfirmVisible}
-        title="Log Out"
-        message="Are you sure you want to log out of your account on this device?"
-        confirmLabel="Log Out"
-        cancelLabel="Cancel"
+        title={ui("Log Out")}
+        message={ui("Are you sure you want to log out of your account on this device?")}
+        confirmLabel={ui("Log Out")}
+        cancelLabel={ui("Cancel")}
         icon="log-out"
         isDestructive={true}
         onConfirm={() => {

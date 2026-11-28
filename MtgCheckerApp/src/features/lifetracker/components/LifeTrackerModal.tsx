@@ -65,8 +65,15 @@ export function LifeTrackerModal({
 
   useEffect(() => () => {
     if (rollTimeout.current) clearTimeout(rollTimeout.current);
-    void ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (!visible) return;
+    return () => {
+      void ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP)
+        .catch((error) => console.warn('Could not restore portrait orientation:', error));
+    };
+  }, [visible]);
 
   useEffect(() => {
     if (!hydrated || !visible) return;
@@ -158,29 +165,24 @@ export function LifeTrackerModal({
         paddingTop: insets.top, paddingBottom: insets.bottom,
         paddingLeft: insets.left, paddingRight: insets.right,
       }]}>
-        {match.playerCount === 4 ? (
-          <View style={styles.board}>
-            <View style={styles.row}>{renderPlayer(2, true)}{renderPlayer(1, true)}</View>
-            <View style={styles.row}>{renderPlayer(0, false)}{renderPlayer(3, false)}</View>
+        <View style={styles.board}>
+          <View style={styles.row}>
+            {match.playerCount === 4 && renderPlayer(2, true)}
+            {renderPlayer(1, true)}
           </View>
-        ) : match.playerCount === 3 ? (
-          <View style={styles.board}>
-            <View style={styles.row}>{renderPlayer(1, true)}</View>
-            <View style={styles.row}>{renderPlayer(0, false)}{renderPlayer(2, false)}</View>
+          <View style={styles.row}>
+            {renderPlayer(0, false)}
+            {match.playerCount > 2 && renderPlayer(match.playerCount - 1, false)}
           </View>
-        ) : (
-          <View style={styles.board}>
-            <View style={styles.row}>{renderPlayer(1, true)}</View>
-            <View style={styles.row}>{renderPlayer(0, false)}</View>
+          <View pointerEvents="box-none" style={styles.centerOverlay}>
+            <Pressable style={styles.centerButton} accessibilityRole="button"
+              accessibilityLabel={t('gameControl')}
+              onPress={() => setGameControlsVisible(true)}>
+              <Feather name="hexagon" size={24} color="#201B0D" />
+              <View style={styles.dieDot}><Text style={styles.dieDotText}>20</Text></View>
+            </Pressable>
           </View>
-        )}
-
-        <Pressable style={styles.centerButton} accessibilityRole="button"
-          accessibilityLabel={t('gameControl')}
-          onPress={() => setGameControlsVisible(true)}>
-          <Feather name="hexagon" size={24} color="#201B0D" />
-          <View style={styles.dieDot}><Text style={styles.dieDotText}>20</Text></View>
-        </Pressable>
+        </View>
 
         <Modal transparent visible={gameControlsVisible} animationType="fade"
           supportedOrientations={['portrait', 'landscape']}
@@ -316,9 +318,8 @@ const styles = StyleSheet.create({
   board: { flex: 1 },
   row: { flex: 1, flexDirection: 'row' },
   playerSlot: { flex: 1, minWidth: 0, minHeight: 0, position: 'relative' },
+  centerOverlay: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center' },
   centerButton: {
-    position: 'absolute', top: '50%', alignSelf: 'center',
-    transform: [{ translateY: -27 }], zIndex: 5,
     width: 54, height: 54, borderRadius: 27, alignItems: 'center',
     justifyContent: 'center', borderWidth: 5, borderColor: '#080B10',
     backgroundColor: '#D9B66B', elevation: 12,

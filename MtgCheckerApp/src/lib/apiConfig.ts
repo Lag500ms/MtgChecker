@@ -36,11 +36,6 @@ function buildApiUrl(host: string, port: string): string {
   return stripTrailingSlash(`http://${host}:${port}${API_PATH}`);
 }
 
-/**
- * - Web: localhost is fine.
- * - Android emulator: 10.0.2.2 → host machine.
- * - Physical device / Expo Go: PC LAN IP from Expo (never localhost).
- */
 function resolveApiBaseUrl(): string {
   const fromEnv = process.env.EXPO_PUBLIC_API_BASE_URL?.trim() ?? '';
   const apiPort = process.env.EXPO_PUBLIC_API_PORT?.trim() || DEFAULT_API_PORT;

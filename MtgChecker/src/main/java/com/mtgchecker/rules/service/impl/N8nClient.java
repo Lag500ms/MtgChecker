@@ -1,22 +1,31 @@
 package com.mtgchecker.rules.service.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mtgchecker.rules.service.ILlmClient;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import java.net.http.HttpClient;
+import java.time.Duration;
 import java.util.Map;
 
-@Slf4j
 @Component("n8nClient")
-@RequiredArgsConstructor
 public class N8nClient implements ILlmClient {
 
-    private final ObjectMapper objectMapper;
+    private final RestClient restClient;
+
+    public N8nClient(@Value("${n8n.timeout-ms:60000}") int timeoutMs) {
+        // Use HTTP/1.1 directly for the internal n8n webhook.
+        HttpClient http = HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_1_1)
+                .connectTimeout(Duration.ofMillis(timeoutMs))
+                .build();
+        JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(http);
+        factory.setReadTimeout(Duration.ofMillis(timeoutMs));
+        restClient = RestClient.builder().requestFactory(factory).build();
+    }
 
     @Value("${n8n.webhook-url:http://localhost:5678/webhook/mtg-judge}")
     private String webhookUrl;
@@ -41,8 +50,6 @@ public class N8nClient implements ILlmClient {
                 "systemPrompt", systemPrompt,
                 "requestId", "req_" + System.currentTimeMillis()
         );
-
-        RestClient restClient = RestClient.builder().build();
 
         return restClient.post()
                 .uri(webhookUrl)

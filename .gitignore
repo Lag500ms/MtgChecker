@@ -94,4 +94,5 @@ docker-compose.override.yml
 **/.claude/
 .kilo/
 **/.kilo/
+!README.md
 
